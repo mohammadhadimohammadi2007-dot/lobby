@@ -1,0 +1,48 @@
+# =====================================================================
+#  Messages - every text players see.
+#  Format: MiniMessage, see https://docs.advntr.dev/minimessage/format
+#  Words in <angle-brackets> that are listed under a message are filled in by the server.
+#  Reload with /lobby reload.
+# =====================================================================
+
+# Added in front of command replies with <prefix>.
+prefix: "<dark_gray>[<gold>Lobby</gold>]</dark_gray> "
+
+no-permission: "<prefix><red>You don't have permission to do that."
+players-only: "<prefix><red>Only players can use this command."
+
+# /spawn
+spawn-teleported: "<prefix><gray>Teleported to spawn."
+
+# /lobby
+lobby-usage: "<prefix><gray>Usage: <white>/lobby reload</white>, <white>/lobby setspawn</white> or <white>/lobby info"
+reload-done: "<prefix><green>Configuration reloaded."
+# <options> = list of changed options that only apply after a restart
+reload-restart-needed: "<prefix><yellow>These changes need a full restart: <white><options>"
+# <error> = what went wrong
+reload-failed: "<prefix><red>Reload failed, nothing was changed: <error>"
+# <warnings> = how many problems were found (details are in the console)
+reload-warnings: "<prefix><yellow><warnings> problem(s) found in the config files. See the console for details."
+# <x> <y> <z> <yaw> <pitch>
+setspawn-done: "<prefix><green>Spawn set to <white><x>, <y>, <z></white> (yaw <yaw>, pitch <pitch>)."
+setspawn-failed: "<prefix><red>Could not save the spawn: <error>"
+
+# /lobby info
+# <mode> <players> <max-players> <tps> <mspt> <memory-used> <memory-max>
+# <world> <world-format> <chunks> <integrations> <bridge>
+info: |-
+  <gold><bold>Lobby info</bold></gold>
+  <gray>Mode: <white><mode>
+  <gray>Players: <white><players>/<max-players>
+  <gray>TPS: <white><tps></white>  MSPT: <white><mspt>
+  <gray>Memory: <white><memory-used> MB / <memory-max> MB
+  <gray>World: <white><world></white> (<world-format>, <chunks> chunks)
+  <gray>Integrations: <white><integrations>
+  <gray>Bridge: <white><bridge>
+
+# Shown when a player cannot join.
+kick-server-full: "<red>The lobby is full. Please try again in a moment."
+# <reason> <banned-by> <expires>
+kick-banned: "<red><bold>You are banned from this server.</bold></red><newline><newline><gray>Reason: <white><reason><newline><gray>Banned by: <white><banned-by><newline><gray>Expires: <white><expires>"
+# Shown as <expires> for permanent bans.
+ban-never-expires: "Never"

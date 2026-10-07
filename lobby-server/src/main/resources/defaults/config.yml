@@ -1,0 +1,81 @@
+# =====================================================================
+#  Lobby server - main configuration
+#  After editing, run /lobby reload in game (or restart the server).
+#  /lobby reload tells you which changes need a full restart.
+# =====================================================================
+
+# ---------------- Server ----------------
+server:
+  # The address to listen on. "0.0.0.0" means all network interfaces.
+  host: "0.0.0.0"
+  # The port players (or your proxy) connect to.
+  port: 25565
+  # Shown in the server list. Uses MiniMessage colors: https://docs.advntr.dev/minimessage/format
+  # Only used in standalone mode (behind a proxy, the proxy shows its own MOTD).
+  motd: "<gold><bold>My Network</bold></gold> <gray>- Lobby"
+  # Players allowed on this lobby at the same time. New players are refused when it is full.
+  max-players: 200
+
+# ---------------- Connection ----------------
+# How players reach this server:
+#   standalone - players join this server directly, no proxy
+#   velocity   - behind a Velocity proxy using modern forwarding (recommended)
+#   bungeecord - behind BungeeCord/Waterfall using legacy forwarding
+mode: standalone
+
+# Only used when mode is "standalone". Behind a proxy, the proxy decides this.
+#   true  - only premium (paid Minecraft) accounts can join
+#   false - offline mode: anyone can join with any username, no premium account needed
+online-mode: false
+
+# Only used in standalone offline mode. Gives offline players the skin of the premium
+# account with the same name (looked up from Mojang). true or false.
+fetch-skins-for-offline-players: true
+
+# Must match "forwarding-secret" in Velocity (the text inside Velocity's forwarding.secret file).
+# Only used when mode is "velocity".
+velocity-secret: ""
+
+# Optional BungeeGuard tokens. Leave empty to disable. Only used when mode is "bungeecord".
+# Example: ["my-long-random-token"]
+bungeeguard-tokens: []
+
+# ---------------- World ----------------
+world:
+  # A .polar file OR an Anvil world folder (the folder that contains "region/").
+  # Build your map between Y 0 and Y 255 so old 1.8 clients can see all of it.
+  path: "worlds/lobby.polar"
+  # Convert an Anvil world to .polar on first start (faster loading, lower memory).
+  # The original folder is kept. true or false.
+  convert-anvil-to-polar: true
+  # How many chunks around spawn are loaded before players can join (1-32).
+  preload-radius: 6
+  # How many chunks players can see around them (2-32).
+  view-distance: 8
+  # Fixed time of day (0-24000, 6000 = noon). Use -1 for a normal day/night cycle.
+  time: 6000
+  # Players who fall below this Y are sent back to spawn.
+  void-y: 0
+
+# Where players appear when they join or use /spawn. Set it in game with /lobby setspawn.
+spawn:
+  x: 0.5
+  y: 65
+  z: 0.5
+  yaw: 0
+  pitch: 0
+
+# ---------------- Protection ----------------
+# true = players CAN do it, false = it is blocked.
+# Players with permission "lobby.bypass.protection" ignore all of these.
+protection:
+  block-break: false
+  block-place: false
+  damage: false
+  hunger: false
+  item-drop: false
+
+# ---------------- Operators ----------------
+# Only used when LuckPerms is disabled (see integrations.yml).
+# Usernames listed here get every permission. Example: ["Notch", "jeb_"]
+operators: []

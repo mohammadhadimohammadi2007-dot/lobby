@@ -1,0 +1,57 @@
+# =====================================================================
+#  Integrations - everything here is optional and disabled by default.
+#  Changes in this file need a full server restart.
+#  Setup guides: see the docs/ folder on GitHub.
+# =====================================================================
+
+# ---------------- Database ----------------
+# One MariaDB/MySQL connection shared by every integration below.
+# Point it at the SAME database your LuckPerms, LiteBans and SkinsRestorer use.
+# It is only used if at least one database integration is enabled.
+database:
+  host: "localhost"
+  port: 3306
+  database: "minecraft"
+  username: "root"
+  password: ""
+  # How many connections to keep open (1-50). 4 is plenty for a lobby.
+  pool-size: 4
+
+# ---------------- LuckPerms ----------------
+# Permissions, ranks, prefixes and suffixes from LuckPerms.
+# Reads the tables starting with "luckperms_" in the database above.
+# Rank changes made on the proxy or other servers apply here live.
+# When disabled, the "operators" list in config.yml is used instead.
+luckperms:
+  enabled: false
+  # This server's name for LuckPerms server-specific permissions (the "server" context).
+  server-name: "lobby"
+  # Table prefix. Must match "table-prefix" in your other LuckPerms configs.
+  table-prefix: "luckperms_"
+
+# ---------------- LiteBans ----------------
+# Reads bans and mutes from LiteBans tables (read only, never writes).
+#   - In standalone mode, banned players cannot join.
+#   - In every mode, muted players are known to the chat system.
+litebans:
+  enabled: false
+  # Table prefix. Must match "table_prefix" in your LiteBans config.
+  table-prefix: "litebans_"
+  # How often to check for new mutes, in seconds (1-60).
+  check-interval: 3
+
+# ---------------- SkinsRestorer ----------------
+# Reads skins stored by SkinsRestorer (read only).
+# Not needed for players' own skins behind a proxy - the proxy already sends them.
+# Used later for NPC skins.
+skinsrestorer:
+  enabled: false
+  # Table prefix. Must match "tablePrefix" in your SkinsRestorer config.
+  table-prefix: "sr_"
+
+# ---------------- Bridge ----------------
+# Receives information from the lobby-bridge plugin on your Velocity proxy
+# (real client versions, player counts of other servers).
+# Only works when mode is "velocity" or "bungeecord" in config.yml.
+bridge:
+  enabled: false
