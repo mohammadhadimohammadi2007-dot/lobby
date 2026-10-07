@@ -69,10 +69,15 @@ spawn:
 # true = players CAN do it, false = it is blocked.
 # Players with permission "lobby.bypass.protection" ignore all of these.
 protection:
+  # Breaking blocks.
   block-break: false
+  # Placing blocks.
   block-place: false
+  # Taking damage (falling, other players...).
   damage: false
+  # Losing food. false keeps the food bar full.
   hunger: false
+  # Dropping items from the inventory.
   item-drop: false
 
 # ---------------- Operators ----------------
