@@ -15,6 +15,9 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.mariadb)
     implementation(libs.gson)
+    // Polar's class files reference fastutil types; Minestom only ships it at runtime.
+    compileOnly(libs.fastutil)
+    testCompileOnly(libs.fastutil)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
@@ -23,6 +26,12 @@ dependencies {
 
 application {
     mainClass.set("io.github.mohammadhadimohammadi2007_dot.lobby.server.LobbyMain")
+    // zstd (used by Polar) loads a native library.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.test {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 // `./gradlew :lobby-server:run` starts a local server inside lobby-server/run/
@@ -36,6 +45,13 @@ tasks.named<JavaExec>("run") {
 tasks.shadowJar {
     archiveFileName.set("lobby-server.jar")
     mergeServiceFiles()
+    manifest {
+        attributes(
+            "Implementation-Version" to project.version,
+            // Same as --enable-native-access=ALL-UNNAMED for `java -jar` (zstd loads a native library).
+            "Enable-Native-Access" to "ALL-UNNAMED",
+        )
+    }
 }
 
 tasks.build {
