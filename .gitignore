@@ -19,3 +19,6 @@ lobby-server/run/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Log files written by the server and by tests
+logs/
