@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
@@ -63,6 +64,7 @@ public final class LobbyServer implements ServerInfo {
     private DatabasePool database;
     private LiteBansService liteBans;
     private SkinsRestorerReader skinsRestorer;
+    private BridgeService bridge;
 
     public LobbyServer(ConfigManager configManager) {
         this.configManager = configManager;
@@ -148,6 +150,12 @@ public final class LobbyServer implements ServerInfo {
             }
         }
 
+        boolean bridgeEnabled = settings.bridge().enabled();
+        if (bridgeEnabled && !connection.mode().behindProxy()) {
+            LOGGER.warn("The bridge is enabled but mode is standalone, so it is ignored (there is no proxy to trust).");
+        }
+        bridge = new BridgeService(bridgeEnabled && connection.mode().behindProxy());
+
         // Standalone offline mode is the only mode where nobody else provides skins.
         boolean offlineStandalone = connection.mode() == ConnectionMode.STANDALONE && !connection.onlineMode();
         MojangSkinFetcher mojang = connection.fetchSkinsForOfflinePlayers() ? new MojangSkinFetcher() : null;
@@ -162,6 +170,7 @@ public final class LobbyServer implements ServerInfo {
         global.addChild(playerEvents);
 
         new SpawnListener(configManager, world.instance()).register(playerEvents);
+        bridge.register(playerEvents);
         new PlayerLimitListener(configManager).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager).register();
@@ -189,6 +198,7 @@ public final class LobbyServer implements ServerInfo {
         LOGGER.info("Mode: {}", AuthFactory.describe(config.connection()));
         LOGGER.info("Map: {} ({}, {} chunks)", world.name(), world.format().name().toLowerCase(), world.chunkCount());
         LOGGER.info("Permissions: {}", permissions.name());
+        LOGGER.info("Bridge: {}", bridge.status());
         for (IntegrationStatus status : integrations) {
             if (status.state() == IntegrationStatus.State.FAILED) {
                 LOGGER.error("{}", status.describe());
@@ -263,6 +273,11 @@ public final class LobbyServer implements ServerInfo {
 
     @Override
     public String bridgeStatus() {
-        return "disabled";
+        return bridge.status();
+    }
+
+    /** Client versions and network player counts from the proxy bridge. */
+    public BridgeService bridge() {
+        return bridge;
     }
 }

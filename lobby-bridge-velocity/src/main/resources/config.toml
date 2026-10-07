@@ -1,0 +1,17 @@
+# =====================================================================
+#  Lobby Bridge - sends network information to your Minestom lobbies.
+#  After editing, restart the proxy.
+# =====================================================================
+
+# Names of your lobby servers, exactly as written in velocity.toml under [servers].
+# Only these servers receive bridge messages.
+lobby-servers = ["lobby"]
+
+# How often player counts are sent to the lobbies, in seconds (1-60).
+update-interval = 2
+
+# Server groups the lobby can show, for example in a server selector.
+# Each line is: group-name = ["server", "server", ...] using names from velocity.toml.
+[groups]
+# bedwars = ["bw-1", "bw-2"]
+# skywars = ["sw-1"]

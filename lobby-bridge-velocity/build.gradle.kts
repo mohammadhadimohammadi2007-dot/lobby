@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+// Java 21 bytecode so the plugin loads on Velocity 3.5 (Java 21) as well as Velocity 4 (Java 25).
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(21)
+}
+
 dependencies {
     implementation(project(":lobby-common"))
 

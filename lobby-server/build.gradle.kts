@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.minestom.testing)
     testRuntimeOnly(libs.junit.launcher)
 }
 
@@ -32,6 +33,8 @@ application {
 
 tasks.test {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    // Lets Minestom's test harness create fake players on normal threads.
+    systemProperty("minestom.inside-test", "true")
 }
 
 // `./gradlew :lobby-server:run` starts a local server inside lobby-server/run/
