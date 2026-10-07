@@ -28,6 +28,10 @@ luckperms:
   server-name: "lobby"
   # Table prefix. Must match "table-prefix" in your other LuckPerms configs.
   table-prefix: "luckperms_"
+  # How rank changes reach this server. Must match "messaging-service" in your other LuckPerms configs.
+  #   sql       - through the database (recommended, works even when nobody is online)
+  #   pluginmsg - through the proxy (needs at least one player on this lobby)
+  messaging-service: "sql"
 
 # ---------------- LiteBans ----------------
 # Reads bans and mutes from LiteBans tables (read only, never writes).

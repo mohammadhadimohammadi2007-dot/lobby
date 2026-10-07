@@ -9,6 +9,15 @@ subprojects {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/") // Velocity API
         maven("https://repo.viaversion.com/") // ViaVersion API
+        // LuckPerms Minestom port, only used with -PwithLuckPerms (docs/integrations/luckperms.md).
+        // First your local Maven cache (filled by `publishToMavenLocal` in the port's folder), then the
+        // port's own repository. Only dev.lu15 artifacts are looked up here.
+        mavenLocal {
+            content { includeGroup("dev.lu15") }
+        }
+        maven("https://repo.hypera.dev/snapshots/") {
+            content { includeGroup("dev.lu15") }
+        }
     }
 
     extensions.configure<JavaPluginExtension> {

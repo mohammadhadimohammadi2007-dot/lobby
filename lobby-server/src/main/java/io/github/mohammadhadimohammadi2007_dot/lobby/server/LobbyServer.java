@@ -16,6 +16,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsC
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.LiteBansService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.luckperms.LuckPermsIntegration;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Starts and stops the lobby: connection mode, map, listeners, commands and integrations.
@@ -114,10 +116,7 @@ public final class LobbyServer implements ServerInfo {
             }
         }
 
-        permissions = new OperatorPermissionService(configManager);
-        integrations.add(settings.luckPerms().enabled()
-                ? IntegrationStatus.failed(LUCKPERMS, "not available in this build yet")
-                : IntegrationStatus.disabled(LUCKPERMS));
+        permissions = startLuckPerms(settings);
 
         if (!settings.liteBans().enabled()) {
             integrations.add(IntegrationStatus.disabled(LITEBANS));
@@ -161,6 +160,30 @@ public final class LobbyServer implements ServerInfo {
         MojangSkinFetcher mojang = connection.fetchSkinsForOfflinePlayers() ? new MojangSkinFetcher() : null;
         if (offlineStandalone && (skinsRestorer != null || mojang != null)) {
             new OfflineSkinListener(skinsRestorer, mojang).register(global);
+        }
+    }
+
+    /** LuckPerms if enabled and included in this build; otherwise the operators list. */
+    private PermissionService startLuckPerms(IntegrationsConfig settings) {
+        PermissionService operators = new OperatorPermissionService(configManager);
+        if (!settings.luckPerms().enabled()) {
+            integrations.add(IntegrationStatus.disabled(LUCKPERMS));
+            return operators;
+        }
+        Optional<LuckPermsIntegration> luckPerms = LuckPermsIntegration.find();
+        if (luckPerms.isEmpty()) {
+            integrations.add(IntegrationStatus.failed(LUCKPERMS, "this build does not include LuckPerms support"
+                    + " (see docs/integrations/luckperms.md). Using the operators list instead"));
+            return operators;
+        }
+        try {
+            PermissionService service = luckPerms.get().start(configManager.dataDir(), settings.database(), settings.luckPerms());
+            integrations.add(IntegrationStatus.active(LUCKPERMS, "messaging: " + settings.luckPerms().messagingService()));
+            return service;
+        } catch (Exception | LinkageError e) {
+            LOGGER.error("LuckPerms could not start", e);
+            integrations.add(IntegrationStatus.failed(LUCKPERMS, e.getMessage() + ". Using the operators list instead"));
+            return operators;
         }
     }
 

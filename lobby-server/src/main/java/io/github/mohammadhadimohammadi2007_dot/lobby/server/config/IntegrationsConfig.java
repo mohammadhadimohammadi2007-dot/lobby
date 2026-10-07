@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -35,7 +36,7 @@ public record IntegrationsConfig(
     }
 
     /** {@code luckperms:} section. */
-    public record LuckPerms(boolean enabled, String serverName, String tablePrefix) {
+    public record LuckPerms(boolean enabled, String serverName, String tablePrefix, String messagingService) {
     }
 
     /** {@code litebans:} section. */
@@ -71,7 +72,8 @@ public record IntegrationsConfig(
         LuckPerms luckPerms = new LuckPerms(
                 reader.bool("luckperms.enabled"),
                 reader.string("luckperms.server-name"),
-                prefix(reader, "luckperms.table-prefix"));
+                prefix(reader, "luckperms.table-prefix"),
+                reader.choice("luckperms.messaging-service", Set.of("sql", "pluginmsg")));
         LiteBans liteBans = new LiteBans(
                 reader.bool("litebans.enabled"),
                 prefix(reader, "litebans.table-prefix"),
