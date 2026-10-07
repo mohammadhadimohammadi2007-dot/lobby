@@ -1,5 +1,11 @@
 # Lobby
 
+[![Build](https://github.com/mohammadhadimohammadi2007-dot/lobby/actions/workflows/build.yml/badge.svg)](https://github.com/mohammadhadimohammadi2007-dot/lobby/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Java 25](https://img.shields.io/badge/Java-25-orange)
+![Minestom](https://img.shields.io/badge/Minestom-2026.10.05--26.2-purple)
+![Clients](https://img.shields.io/badge/clients-1.8.9%20to%20latest-brightgreen)
+
 A fast, open-source Minecraft **lobby server** built on [Minestom](https://minestom.net).
 It is a standalone server (not a Paper plugin) made to sit behind a Velocity proxy as the hub of a
 network, and it also runs completely on its own for testing or small servers.
