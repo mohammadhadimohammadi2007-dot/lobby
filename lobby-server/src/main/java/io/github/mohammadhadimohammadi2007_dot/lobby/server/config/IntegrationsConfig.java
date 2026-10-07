@@ -39,7 +39,7 @@ public record IntegrationsConfig(
     }
 
     /** {@code litebans:} section. */
-    public record LiteBans(boolean enabled, String tablePrefix, int checkIntervalSeconds) {
+    public record LiteBans(boolean enabled, String tablePrefix, String serverName, int checkIntervalSeconds) {
     }
 
     /** {@code skinsrestorer:} section. */
@@ -75,6 +75,7 @@ public record IntegrationsConfig(
         LiteBans liteBans = new LiteBans(
                 reader.bool("litebans.enabled"),
                 prefix(reader, "litebans.table-prefix"),
+                reader.string("litebans.server-name").trim(),
                 reader.integer("litebans.check-interval", 1, MAX_CHECK_INTERVAL_SECONDS));
         SkinsRestorer skinsRestorer = new SkinsRestorer(
                 reader.bool("skinsrestorer.enabled"),

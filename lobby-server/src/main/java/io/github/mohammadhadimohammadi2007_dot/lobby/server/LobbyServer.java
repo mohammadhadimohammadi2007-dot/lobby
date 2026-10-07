@@ -11,7 +11,14 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.AuthFacto
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.PlayerLimitListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ServerListListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.LiteBansService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
@@ -30,6 +37,7 @@ import net.minestom.server.event.trait.PlayerEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,12 +50,19 @@ public final class LobbyServer implements ServerInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(LobbyServer.class);
     private static final String BRAND = "Lobby";
     private static final long NANOS_PER_MILLI = 1_000_000L;
+    private static final String LUCKPERMS = "LuckPerms";
+    private static final String LITEBANS = "LiteBans";
+    private static final String SKINSRESTORER = "SkinsRestorer";
 
     private final ConfigManager configManager;
     private final TickStats tickStats = new TickStats();
     private final List<IntegrationStatus> integrations = new ArrayList<>();
     private PermissionService permissions;
+    private MuteService muteService = MuteService.NONE;
     private LobbyWorld world;
+    private DatabasePool database;
+    private LiteBansService liteBans;
+    private SkinsRestorerReader skinsRestorer;
 
     public LobbyServer(ConfigManager configManager) {
         this.configManager = configManager;
@@ -78,11 +93,67 @@ public final class LobbyServer implements ServerInfo {
         printSummary(config, (System.nanoTime() - startNanos) / NANOS_PER_MILLI);
     }
 
+    /**
+     * Starts each enabled integration. A failing integration is reported and skipped; the lobby
+     * always starts. Runs before the port opens, so blocking database calls are fine here.
+     */
     private void startIntegrations(ConfigSnapshot snapshot) {
+        IntegrationsConfig settings = snapshot.integrations();
+        LobbyConfig.Connection connection = snapshot.config().connection();
+        EventNode<Event> global = MinecraftServer.getGlobalEventHandler();
+
+        if (settings.needsDatabase()) {
+            try {
+                database = DatabasePool.connect(settings.database());
+                LOGGER.info("Connected to the database {}", settings.database());
+            } catch (SQLException e) {
+                LOGGER.error("{}", e.getMessage());
+                LOGGER.error("Database integrations are turned off until this is fixed and the server restarts.");
+            }
+        }
+
         permissions = new OperatorPermissionService(configManager);
-        integrations.add(IntegrationStatus.disabled("LuckPerms"));
-        integrations.add(IntegrationStatus.disabled("LiteBans"));
-        integrations.add(IntegrationStatus.disabled("SkinsRestorer"));
+        integrations.add(settings.luckPerms().enabled()
+                ? IntegrationStatus.failed(LUCKPERMS, "not available in this build yet")
+                : IntegrationStatus.disabled(LUCKPERMS));
+
+        if (!settings.liteBans().enabled()) {
+            integrations.add(IntegrationStatus.disabled(LITEBANS));
+        } else if (database == null) {
+            integrations.add(IntegrationStatus.failed(LITEBANS, "no database connection"));
+        } else {
+            try {
+                liteBans = LiteBansService.start(database, settings.liteBans(), configManager);
+                boolean checkBans = connection.mode() == ConnectionMode.STANDALONE;
+                liteBans.register(global, checkBans);
+                muteService = liteBans;
+                integrations.add(IntegrationStatus.active(LITEBANS, checkBans ? "bans and mutes" : "mutes"));
+            } catch (SQLException e) {
+                integrations.add(IntegrationStatus.failed(LITEBANS, e.getMessage()));
+            }
+        }
+
+        if (!settings.skinsRestorer().enabled()) {
+            integrations.add(IntegrationStatus.disabled(SKINSRESTORER));
+        } else if (database == null) {
+            integrations.add(IntegrationStatus.failed(SKINSRESTORER, "no database connection"));
+        } else {
+            try {
+                SkinsRestorerReader reader = new SkinsRestorerReader(database, settings.skinsRestorer().tablePrefix());
+                reader.checkTables();
+                skinsRestorer = reader;
+                integrations.add(IntegrationStatus.active(SKINSRESTORER, "read only"));
+            } catch (SQLException e) {
+                integrations.add(IntegrationStatus.failed(SKINSRESTORER, e.getMessage()));
+            }
+        }
+
+        // Standalone offline mode is the only mode where nobody else provides skins.
+        boolean offlineStandalone = connection.mode() == ConnectionMode.STANDALONE && !connection.onlineMode();
+        MojangSkinFetcher mojang = connection.fetchSkinsForOfflinePlayers() ? new MojangSkinFetcher() : null;
+        if (offlineStandalone && (skinsRestorer != null || mojang != null)) {
+            new OfflineSkinListener(skinsRestorer, mojang).register(global);
+        }
     }
 
     private void registerListeners() {
@@ -118,7 +189,13 @@ public final class LobbyServer implements ServerInfo {
         LOGGER.info("Mode: {}", AuthFactory.describe(config.connection()));
         LOGGER.info("Map: {} ({}, {} chunks)", world.name(), world.format().name().toLowerCase(), world.chunkCount());
         LOGGER.info("Permissions: {}", permissions.name());
-        integrations.forEach(status -> LOGGER.info("{}", status.describe()));
+        for (IntegrationStatus status : integrations) {
+            if (status.state() == IntegrationStatus.State.FAILED) {
+                LOGGER.error("{}", status.describe());
+            } else {
+                LOGGER.info("{}", status.describe());
+            }
+        }
         AuthFactory.logSafetyWarnings(config.connection(), config.server().port());
         if (config.connection().mode() == ConnectionMode.STANDALONE && !config.connection().onlineMode()
                 && !config.operators().isEmpty()) {
@@ -133,8 +210,30 @@ public final class LobbyServer implements ServerInfo {
     private void shutdown() {
         LOGGER.info("Shutting down...");
         permissions.shutdown();
+        if (liteBans != null) {
+            liteBans.shutdown();
+        }
+        if (database != null) {
+            database.close();
+            LOGGER.info("Database connections closed.");
+        }
         Async.shutdown();
         LOGGER.info("Goodbye!");
+    }
+
+    /** Whether players are muted (LiteBans), for the chat system. */
+    public MuteService muteService() {
+        return muteService;
+    }
+
+    /** SkinsRestorer skins for NPCs, or {@code null} if that integration is off. */
+    public SkinsRestorerReader skinsRestorer() {
+        return skinsRestorer;
+    }
+
+    /** Permission checks and rank meta. */
+    public PermissionService permissions() {
+        return permissions;
     }
 
     @Override

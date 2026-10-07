@@ -37,6 +37,9 @@ litebans:
   enabled: false
   # Table prefix. Must match "table_prefix" in your LiteBans config.
   table-prefix: "litebans_"
+  # Global bans and mutes always apply. Punishments limited to one server ("server scope")
+  # only apply here if their server name matches this one.
+  server-name: "lobby"
   # How often to check for new mutes, in seconds (1-60).
   check-interval: 3
 
