@@ -48,3 +48,85 @@ kick-server-full: "<red>The lobby is full. Please try again in a moment."
 kick-banned: "<red><bold>You are banned from this server.</bold></red><newline><newline><gray>Reason: <white><reason><newline><gray>Banned by: <white><banned-by><newline><gray>Expires: <white><expires>"
 # Shown as <expires> for permanent bans.
 ban-never-expires: "Never"
+
+# ---------------- Chat ----------------
+# <reason> <expires> (date, or ban-never-expires for permanent mutes)
+chat-muted: "<red>You are muted. <gray>Reason: <white><reason></white>, expires: <white><expires>"
+chat-muted-command: "<red>You cannot use this command while muted."
+# <seconds> = how long to wait
+chat-cooldown: "<red>Slow down! You can chat again in <white><seconds>s</white>."
+chat-duplicate: "<red>Please do not repeat the same message."
+# <max> = longest allowed message
+chat-too-long: "<red>Your message is too long (max <max> characters)."
+# <seconds> = time left
+chat-new-player-wait: "<red>New players can chat in <white><seconds>s</white>."
+chat-new-player-move: "<red>Move a little before you start chatting."
+chat-slowmode: "<red>Slow mode is on: you can chat again in <white><seconds>s</white>."
+chat-locked: "<red>The chat is locked right now."
+chat-blocked: "<red>Your message was not sent: it breaks the chat rules."
+chat-warning: "<yellow>Please keep the chat friendly. Repeated rule breaking leads to a mute."
+chat-link-warning: "<yellow>Advertising other servers or websites is not allowed."
+# <minutes>
+chat-auto-muted: "<red>You were muted for <minutes> minutes for breaking the chat rules repeatedly."
+chat-disabled-for-you: "<gray>You have hidden the chat. Type <white>/chat toggle</white> to show it again."
+
+# Staff. <player> <category> <detail> <message>
+chat-staff-notify: "<dark_gray>[<red>Filter</red>]</dark_gray> <white><player></white> <gray>(<category>: <detail>):</gray> <message>"
+# <player> <reason> <message>
+chat-spy: "<dark_gray>[<aqua>Spy</aqua>]</dark_gray> <white><player></white> <gray>blocked (<reason>):</gray> <message>"
+# Shown in the name hover for staff. <id>
+chat-staff-hover: "<dark_gray>Message id: <id></dark_gray>"
+# <player> <minutes>
+chat-staff-auto-muted: "<dark_gray>[<red>Filter</red>]</dark_gray> <white><player></white> <gray>was auto-muted for <minutes> minutes."
+
+# Channels. <channel> <channels>
+channel-switched: "<prefix><gray>You are now talking in <white><channel></white>."
+channel-unknown: "<prefix><red>Unknown channel. Channels: <white><channels>"
+channel-no-permission: "<prefix><red>You cannot use the <channel> channel."
+ch-usage: "<prefix><gray>Usage: <white>/ch <channel></white>. Channels: <white><channels>"
+
+# /chat
+chat-usage: "<prefix><gray>Usage: <white>/chat toggle</white>, <white>/chat persian</white>, <white>/chat mentions</white>"
+chat-staff-usage: "<prefix><gray>Staff: <white>/chat clear</white>, <white>/chat lock</white>, <white>/chat delete <id></white>, <white>/chat spy</white>, <white>/slowmode <seconds|off></white>"
+chat-hidden: "<prefix><gray>Chat hidden. Type <white>/chat toggle</white> to show it again."
+chat-shown: "<prefix><gray>Chat shown again."
+persian-on: "<prefix><gray>Persian text fixing is now <green>on</green>."
+persian-off: "<prefix><gray>Persian text fixing is now <red>off</red>."
+mentions-on: "<prefix><gray>Mention notifications are now <green>on</green>."
+mentions-off: "<prefix><gray>Mention notifications are now <red>off</red>."
+feature-disabled: "<prefix><red>This feature is turned off on this server."
+# <player> = who mentioned you (shown in the action bar)
+mention-actionbar: "<yellow><player> mentioned you"
+
+# /ignore. <player> <players>
+ignore-added: "<prefix><gray>You no longer see messages from <white><player></white>."
+ignore-removed: "<prefix><gray>You see messages from <white><player></white> again."
+ignore-self: "<prefix><red>You cannot ignore yourself."
+ignore-list: "<prefix><gray>Ignored: <white><players>"
+ignore-empty: "<prefix><gray>You are not ignoring anyone."
+ignore-usage: "<prefix><gray>Usage: <white>/ignore <player></white> or <white>/ignore list"
+# <name>
+player-not-found: "<prefix><red>Player <white><name></white> is not online."
+
+# Private messages (only if private-messages-enabled is true in chat.yml). <name> <message>
+msg-to: "<gray>[<white>me</white> → <white><name></white>] <white><message>"
+msg-from: "<gray>[<white><name></white> → <white>me</white>] <white><message>"
+msg-no-reply: "<prefix><red>Nobody to reply to."
+msg-usage: "<prefix><gray>Usage: <white>/msg <player> <message>"
+msg-ignored: "<prefix><red>That player is ignoring you."
+
+# Staff tools. <staff> <seconds> <id>
+chat-cleared: "<prefix><gray>The chat was cleared by <white><staff></white>."
+chat-locked-on: "<prefix><red>The chat was locked by <white><staff></white>."
+chat-locked-off: "<prefix><green>The chat was unlocked by <white><staff></white>."
+slowmode-on: "<prefix><gray>Slow mode: one message every <white><seconds>s</white>."
+slowmode-off: "<prefix><gray>Slow mode is off."
+slowmode-usage: "<prefix><gray>Usage: <white>/slowmode <seconds|off>"
+message-deleted: "<prefix><gray>Message deleted."
+message-not-found: "<prefix><red>No recent message with id <white><id></white>."
+spy-on: "<prefix><gray>Chat spy <green>on</green>: you see blocked messages."
+spy-off: "<prefix><gray>Chat spy <red>off</red>."
+
+# Join and quit (only if enabled in chat.yml). Placeholders are about the player who joined.
+join-message: "<dark_gray>[<green>+</green>]</dark_gray> <gray>%player_name%"
+quit-message: "<dark_gray>[<red>-</red>]</dark_gray> <gray>%player_name%"

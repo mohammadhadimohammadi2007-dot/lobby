@@ -45,6 +45,15 @@ public final class ConfigReader {
         return invalid(path, value, allowed, defaultString(path));
     }
 
+    /**
+     * Records that {@code value} at {@code path} is not allowed, without looking up a default. For entries
+     * a server owner adds themselves, which have no bundled default; the caller decides what to do instead.
+     */
+    public void reportInvalid(String path, Object value, String allowed) {
+        warnings.add(fileName + ": option '" + path + "' has an invalid value '" + value + "'. Allowed: " + allowed
+                + ". It is ignored.");
+    }
+
     /** Reads any text value. */
     public String string(String path) {
         Object raw = userValue(path);
@@ -143,6 +152,96 @@ public final class ConfigReader {
             return invalid(path, node.raw(), "a list like [\"a\", \"b\"]", fallback);
         }
         return listOf(node);
+    }
+
+    // ---- Entries a server owner adds (chat formats, channels, emojis...) ----
+    // These have no counterpart in the bundled file, so a missing option uses the given fallback quietly.
+
+    /**
+     * Names in a map section, in file order: the user's if the section exists, otherwise the bundled ones
+     * (with a "missing" warning).
+     */
+    public List<String> keys(String path) {
+        ConfigurationNode node = user.node(split(path));
+        if (node.virtual() || !node.isMap()) {
+            ConfigurationNode bundled = defaults.node(split(path));
+            if (node.virtual()) {
+                warnMissing(path, "the bundled entries");
+            } else {
+                warnings.add(fileName + ": option '" + path + "' must be a section with named entries. Using the defaults.");
+            }
+            return keysOf(bundled);
+        }
+        return keysOf(node);
+    }
+
+    private static List<String> keysOf(ConfigurationNode node) {
+        List<String> keys = new ArrayList<>();
+        for (Object key : node.childrenMap().keySet()) {
+            keys.add(String.valueOf(key));
+        }
+        return keys;
+    }
+
+    /** Text at {@code path}; the bundled value if the user has none, else {@code fallback}. */
+    public String string(String path, String fallback) {
+        Object raw = optionalValue(path);
+        if (raw == null) {
+            return fallback;
+        }
+        if (raw instanceof String || raw instanceof Number || raw instanceof Boolean) {
+            return String.valueOf(raw);
+        }
+        return invalid(path, raw, "a text value", fallback);
+    }
+
+    /** Whole number at {@code path}; the bundled value if the user has none, else {@code fallback}. */
+    public int integer(String path, int min, int max, int fallback) {
+        Object raw = optionalValue(path);
+        if (raw == null) {
+            return fallback;
+        }
+        Long value = asLong(raw);
+        if (value == null || value < min || value > max) {
+            return invalid(path, raw, "a whole number from " + min + " to " + max, fallback);
+        }
+        return value.intValue();
+    }
+
+    /** {@code true}/{@code false} at {@code path}; the bundled value if the user has none, else {@code fallback}. */
+    public boolean bool(String path, boolean fallback) {
+        Object raw = optionalValue(path);
+        if (raw == null) {
+            return fallback;
+        }
+        Boolean value = asBoolean(raw);
+        if (value == null) {
+            return invalid(path, raw, "true or false", fallback);
+        }
+        return value;
+    }
+
+    /** List of text at {@code path}; the bundled value if the user has none, else {@code fallback}. */
+    public List<String> stringList(String path, List<String> fallback) {
+        ConfigurationNode node = user.node(split(path));
+        if (node.virtual() || node.raw() == null) {
+            ConfigurationNode bundled = defaults.node(split(path));
+            return bundled.virtual() || !bundled.isList() ? fallback : listOf(bundled);
+        }
+        if (!node.isList()) {
+            return invalid(path, node.raw(), "a list like [\"a\", \"b\"]", fallback);
+        }
+        return listOf(node);
+    }
+
+    /** The user's value, or the bundled one, or {@code null}; never warns about missing options. */
+    private Object optionalValue(String path) {
+        ConfigurationNode node = user.node(split(path));
+        if (!node.virtual() && node.raw() != null) {
+            return node.raw();
+        }
+        ConfigurationNode bundled = defaults.node(split(path));
+        return bundled.virtual() ? null : bundled.raw();
     }
 
     private static List<String> listOf(ConfigurationNode node) {

@@ -1,0 +1,275 @@
+# =====================================================================
+#  Chat - formats, channels, filter, anti-spam and more.
+#  After editing, run /lobby reload. Full guide with examples: docs/chat.md
+#  Player-facing texts (warnings, mute message...) are in messages.yml.
+# =====================================================================
+
+# ---------------- General ----------------
+# true: the lobby handles chat (formats, filter, channels...). false: plain Minecraft chat.
+enabled: true
+# Longest message players may send, in characters (16-256).
+max-length: 256
+# Players with permission "lobby.chat.formatting" may style their messages with these MiniMessage tags.
+# Allowed values: color, bold, italic, underlined, strikethrough, obfuscated, gradient, rainbow.
+# Tags such as click, hover, insertion and font are never available to players.
+player-formatting: [color, bold, italic, underlined, strikethrough]
+# Lobby commands muted players cannot use (without "/").
+# Commands handled by your proxy (for example /msg from a Velocity plugin) never reach the lobby,
+# so only that proxy plugin can block them.
+muted-blocked-commands: [msg, tell, w, r, me]
+
+# ---------------- Persian / Arabic text ----------------
+# Minecraft does not join Persian letters or show right-to-left text in the right order,
+# so Persian chat looks like separate letters backwards. The lobby can fix it before showing it.
+# Every player can switch this for themselves with /chat persian.
+persian:
+  # Fix Persian for players who have not chosen yet. true or false.
+  default: true
+  # Also fix Persian in server messages (messages.yml, broadcasts, join messages). true or false.
+  server-messages: true
+  # Newer clients may fix Persian themselves when their game language is Persian, Arabic or Hebrew.
+  # If those players see Persian chat backwards, set this to true: the lobby then skips them.
+  trust-rtl-clients: false
+
+# ---------------- Channels ----------------
+# Players switch with /ch <name>, or send one message to a channel by starting it with its prefix
+# (for example "!hello" goes to global).
+#   enabled:         true or false
+#   prefix:          one character, or "" for none
+#   permission:      needed to see and use the channel ("" = everyone)
+#   send-permission: also needed to write in it ("" = nothing extra)
+#   network:         true = shared with every lobby through the bridge (stays on this lobby without it)
+#   format:          how messages look; <format> is replaced by the rank format below
+channels:
+  local:
+    enabled: true
+    prefix: ""
+    permission: ""
+    send-permission: ""
+    network: false
+    format: "<format>"
+  global:
+    enabled: true
+    prefix: "!"
+    permission: ""
+    send-permission: "lobby.chat.channel.global"
+    network: true
+    format: "<dark_gray>[<aqua>G</aqua>]</dark_gray> <format>"
+  staff:
+    enabled: true
+    prefix: "#"
+    permission: "lobby.chat.channel.staff"
+    send-permission: ""
+    network: true
+    format: "<dark_gray>[<red>Staff</red>]</dark_gray> <format>"
+  announce:
+    enabled: true
+    prefix: ""
+    permission: ""
+    send-permission: "lobby.chat.channel.announce"
+    network: true
+    format: "<gold><bold>ANNOUNCEMENT</bold></gold> <white><message>"
+# Channel players start in. Must be one of the channels above.
+default-channel: "local"
+
+# ---------------- Formats ----------------
+# How a player's name and message look. The matching format with the highest priority is used.
+# A format matches if the player's LuckPerms primary group is in "groups", or if the player has the
+# permission "lobby.chat.format.<format name>". "default" is used when nothing else matches.
+#   format:        MiniMessage. Tags: <name> <message> <prefix> <suffix>, plus any %placeholder% about the sender
+#   legacy:        version for clients older than 1.19.4 (16 colors). "" = made from "format" automatically
+#   message-color: color of the message text, e.g. "<gray>"
+#   hover:         lines shown when hovering the name ("" or [] for none)
+#   click:         what clicking the name does: "suggest_command:/msg <name> ", "run_command:/...",
+#                  "open_url:https://...", or "" for nothing
+formats:
+  default:
+    priority: 0
+    groups: [default]
+    format: "%luckperms_prefix%<gray><name></gray><dark_gray>:</dark_gray> <message>"
+    legacy: ""
+    message-color: "<gray>"
+    hover:
+      - "<gray>Rank: <white>%luckperms_primary_group_name%"
+      - "<gray>Version: <white>%player_client_version%"
+    click: "suggest_command:/msg <name> "
+  vip:
+    priority: 10
+    groups: [vip, mvp]
+    format: "%luckperms_prefix%<gold><name></gold><dark_gray>:</dark_gray> <message>"
+    legacy: ""
+    message-color: "<white>"
+    hover:
+      - "<gold>VIP member"
+      - "<gray>Version: <white>%player_client_version%"
+    click: "suggest_command:/msg <name> "
+  staff:
+    priority: 100
+    groups: [owner, admin, mod, helper]
+    format: "%luckperms_prefix%<red><name></red>%luckperms_suffix%<dark_gray> »</dark_gray> <message>"
+    legacy: "<red><name><dark_gray>:</dark_gray> <message>"
+    message-color: "<white>"
+    hover:
+      - "<red>Staff member"
+      - "<gray>Rank: <white>%luckperms_primary_group_name%"
+    click: "suggest_command:/msg <name> "
+
+# ---------------- Anti-spam ----------------
+# Players with "lobby.chat.bypass.spam" skip every check in this section.
+anti-spam:
+  # Seconds between messages (0-60). A rank can get its own with the permission
+  # "lobby.chat.cooldown.<seconds>" (the lowest one counts), e.g. lobby.chat.cooldown.1
+  cooldown: 2
+  # Messages that may be sent right after each other before the cooldown applies (1-10).
+  burst: 3
+  # Block a message that is almost the same as one of the player's last messages. true or false.
+  duplicate-check: true
+  # How many of the player's last messages are compared (1-10).
+  duplicate-history: 3
+  # How alike counts as "the same", in percent (50-100).
+  duplicate-similarity: 85
+  # Messages with more capital letters than this percent are made lower case (0-100; 100 = off).
+  max-caps-percent: 70
+  # The capitals check only applies from this many letters on (1-100).
+  caps-min-length: 6
+  # A character repeated more often than this is shortened ("!!!!!!" becomes "!!!!"). 0 = off.
+  max-repeated-characters: 4
+  # New players can only chat this many seconds after joining (0-600, 0 = off).
+  new-player-delay: 0
+  # New players can only chat after they have moved once (stops simple bots). true or false.
+  require-move: true
+
+# ---------------- Filter ----------------
+# Word lists are in the filters/ folder; the comments in those files explain the format.
+# For each kind of problem, choose what happens (one or more):
+#   block  - the message is not sent
+#   censor - the bad words become ***** (links and IPs cannot be partly hidden, so for them it blocks)
+#   warn   - the player gets a warning
+#   notify - staff with "lobby.chat.notify" are told
+# "points" add up per player; see auto-mute. Players with "lobby.chat.bypass.filter" are not filtered.
+filter:
+  enabled: true
+  blocked-words:
+    actions: [block, warn, notify]
+    points: 3
+  censored-words:
+    actions: [censor]
+    points: 1
+  links:
+    actions: [block, warn]
+    points: 2
+  ips:
+    actions: [block, warn, notify]
+    points: 3
+  # Domains players may post (your own), including their subdomains.
+  allowed-domains: ["example.com"]
+  # Character used to hide censored words.
+  censor-character: "*"
+  auto-mute:
+    # Mute players who keep breaking the filter. Off by default. true or false.
+    enabled: false
+    # Points that trigger a mute (1-1000). Points slowly go away again.
+    threshold: 10
+    # Points that go away per minute (0-100).
+    decay-per-minute: 1
+    # Mute length in minutes (1-10080).
+    minutes: 10
+    # With the bridge, this command runs on the proxy, so LiteBans there mutes the player on the whole
+    # network. Its first word must be in "allowed-commands" of the bridge config. <player> and <minutes>
+    # are filled in. Without the bridge, the player is muted on this lobby only.
+    proxy-command: "tempmute <player> <minutes>m Chat filter (automatic)"
+
+# ---------------- Mentions ----------------
+# Writing a player's name (or @name) highlights it for them and plays a sound.
+mentions:
+  enabled: true
+  # Color of the highlighted name for the mentioned player.
+  highlight: "<yellow>"
+  # Minecraft sound played for the mentioned player, e.g. "entity.experience_orb.pickup". "" = none.
+  sound: "entity.experience_orb.pickup"
+  # Seconds before the same player can notify someone again (0-300). Stops mention spam.
+  cooldown: 10
+  # "@everyone" mentions all players; needs the permission "lobby.chat.mention.everyone".
+
+# ---------------- Emojis ----------------
+# ":name:" in chat becomes a symbol for players with "lobby.chat.emoji".
+# Clients older than 1.19.4 get the "legacy" text instead.
+emojis:
+  enabled: true
+  list:
+    heart:
+      symbol: "❤"
+      legacy: "<3"
+    star:
+      symbol: "★"
+      legacy: "*"
+    smile:
+      symbol: "☺"
+      legacy: ":)"
+    check:
+      symbol: "✔"
+      legacy: "v"
+    cross:
+      symbol: "✖"
+      legacy: "x"
+    music:
+      symbol: "♫"
+      legacy: "#"
+    sun:
+      symbol: "☀"
+      legacy: "(sun)"
+    peace:
+      symbol: "✌"
+      legacy: "(v)"
+
+# ---------------- Player tools ----------------
+# Turn these off if your proxy already provides them.
+# /ignore <player>: hide a player's messages. true or false.
+ignore-enabled: true
+# /chat toggle: hide all public chat for yourself. true or false.
+chat-toggle-enabled: true
+# /msg and /r private messages. Off by default: keep it off if a proxy plugin already handles
+# private messages, otherwise players get two different /msg commands.
+private-messages-enabled: false
+
+# ---------------- Staff ----------------
+# How many recent messages are kept, so staff can delete one with /chat delete <id> (10-500).
+history-size: 100
+
+# ---------------- Join and quit ----------------
+# Show "<player> joined" and "<player> left" (texts in messages.yml) to everyone. true or false.
+# Off by default: lobbies are busy places.
+join-message: false
+quit-message: false
+# Announcements for ranks when they join. The first entry whose permission the player has is used.
+# Delete the entries you do not want.
+join-announcements:
+  vip:
+    permission: "lobby.chat.announce.vip"
+    message: "%luckperms_prefix%<white>%player_name%</white> <gold>joined the lobby!"
+
+# ---------------- Broadcasts ----------------
+broadcasts:
+  # Send the messages below automatically. true or false.
+  enabled: false
+  # Minutes between messages (1-1440).
+  interval: 5
+  # true: random order. false: one after another.
+  random: false
+  # MiniMessage with %placeholders% about the player who receives it.
+  messages:
+    - "<gold>Tip:</gold> <gray>Use <white>/ch global</white> to talk to players in every lobby."
+    - "<gold>Tip:</gold> <gray>Persian text looks wrong? Type <white>/chat persian</white>."
+  # Optional shorter versions for clients older than 1.19.4, in the same order. [] = use the ones above.
+  legacy-messages: []
+
+# ---------------- Storage ----------------
+storage:
+  # Table prefix for the lobby's own tables (player chat settings and chat log) in the shared database.
+  table-prefix: "lobby_"
+  # With the database set up: save every chat message (with what the filter did) in a table. true or false.
+  log-to-database: true
+  # Delete chat log rows older than this many days (1-3650).
+  log-retention-days: 30
+  # Without a database: write chat to daily files in logs/chat/. true or false.
+  log-to-file: true

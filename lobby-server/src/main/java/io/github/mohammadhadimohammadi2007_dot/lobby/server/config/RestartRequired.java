@@ -8,7 +8,7 @@ import java.util.Objects;
  * Finds options that changed between two loads but only take effect after a restart.
  *
  * <p>Everything not listed here is applied live by {@code /lobby reload}: MOTD, max players,
- * spawn, protections, time of day, void Y, operators and all messages.
+ * spawn, protections, time of day, void Y, operators, all messages, and chat.yml except storage.
  */
 public final class RestartRequired {
 
@@ -34,6 +34,8 @@ public final class RestartRequired {
         check(changed, "world.view-distance", a.world().viewDistance(), b.world().viewDistance());
         // integrations.yml is read once at startup.
         check(changed, "integrations.yml", before.integrations(), after.integrations());
+        // Chat storage (tables, log files) is opened once at startup; everything else in chat.yml reloads.
+        check(changed, "chat.yml storage", before.chat().storage(), after.chat().storage());
         return changed;
     }
 
