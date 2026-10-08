@@ -27,8 +27,8 @@ Minestom port in `third_party/luckperms` is built from source together with the 
 
 ### Database tests
 
-`DatabaseReadersIT` (LiteBans, SkinsRestorer) and `LuckPermsLiveIT` (LuckPerms with SQL messaging) run
-against a real MariaDB. They are skipped
+`DatabaseReadersIT` (LiteBans, SkinsRestorer), `ChatStorageIT` (chat settings and chat log) and
+`LuckPermsLiveIT` (LuckPerms with SQL messaging) run against a real MariaDB. They are skipped
 unless you set `LOBBY_TEST_DB_PORT` (and optionally `LOBBY_TEST_DB_HOST`, `LOBBY_TEST_DB_NAME`,
 `LOBBY_TEST_DB_USER`, `LOBBY_TEST_DB_PASSWORD`). They create and drop their own `lobbytest_` tables and
 `lobby_luckperms_it` database. Never point them at a production database.
@@ -36,6 +36,18 @@ unless you set `LOBBY_TEST_DB_PORT` (and optionally `LOBBY_TEST_DB_HOST`, `LOBBY
 ```bash
 LOBBY_TEST_DB_PORT=3306 LOBBY_TEST_DB_PASSWORD=secret ./gradlew test
 ```
+
+### Chat load test
+
+`ChatLoadTest` joins 200 fake players who each send 2 messages per second for 60 seconds and reports tick
+time, chat thread allocations, renders per message and delivery latency (also written to
+`lobby-server/build/reports/chat-load-test.txt`). It takes about two minutes, so it only runs when asked:
+
+```bash
+LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test --tests '*ChatLoadTest'
+```
+
+`LOBBY_LOAD_TEST_SECONDS` changes the duration. Run it after changing anything in the chat pipeline.
 
 ## Commits and pull requests
 

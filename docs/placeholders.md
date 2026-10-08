@@ -4,8 +4,8 @@ Placeholders are words between `%` signs that the lobby replaces with live value
 `%player_name%` or `%bungee_total%`. They use the same syntax and, where possible, the same names as
 [PlaceholderAPI](https://wiki.placeholderapi.com/) on Paper, so texts copied from your other servers keep working.
 
-They work in `messages.yml`, the MOTD in `config.yml`, and (from Phase 2 on) chat formats, broadcasts,
-scoreboards and holograms.
+They work in `messages.yml`, the MOTD in `config.yml`, chat formats, join announcements and broadcasts,
+and (from Phase 3 on) scoreboards and holograms.
 
 ```yaml
 spawn-teleported: "<prefix><gray>Welcome back, %luckperms_prefix%%player_name%!"

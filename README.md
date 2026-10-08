@@ -14,10 +14,11 @@ network, and it also runs completely on its own for testing or small servers.
 - Simple, commented config files written for server owners, not programmers.
 - Built for **200+ players per lobby** (the lobby world is read-only and fully in memory).
 - Players on **1.8.9 through the latest version** can join through ViaVersion on your proxy.
+- A complete **chat system** with a filter that sees through spelling tricks and proper **Persian/Arabic** display.
 
-> Status: **Phase 1 of 5** (foundation). See the [roadmap](#roadmap).
+> Status: **Phase 2 of 5** (placeholders and chat) done. See the [roadmap](#roadmap).
 
-## Features (Phase 1)
+## Features
 
 | Area | What you get |
 |---|---|
@@ -26,7 +27,9 @@ network, and it also runs completely on its own for testing or small servers.
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
 | Commands | `/spawn`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
-| Bridge | Velocity plugin that tells the lobby each player's real client version and live player counts per server |
+| Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
+| Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
+| Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
 ## Quick start (standalone, about a minute)
 
@@ -51,7 +54,9 @@ Type `stop` in the console to shut the server down.
 |---|---|---|
 | `config.yml` | Port, MOTD, max players, connection mode, world, spawn, protections, operators | `/lobby reload` (it tells you if something needs a restart) |
 | `integrations.yml` | Database, LuckPerms, LiteBans, SkinsRestorer, bridge | Restart |
-| `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format) | `/lobby reload` |
+| `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/lobby reload` |
+| `filters/` | Blocked, censored and allowed word lists | `/lobby reload` |
+| `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/lobby reload` |
 
 Every option has a comment above it. Missing options use the default (with a warning in the console),
 and invalid values are reported with the option name and the allowed values.
@@ -66,6 +71,8 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.info` | `/lobby info` |
 | `lobby.bypass.protection` | Ignore the protection settings |
 
+Chat permissions are listed in the [chat guide](docs/chat.md#permissions).
+
 Without LuckPerms, players listed under `operators:` in `config.yml` have every permission.
 
 ## Guides
@@ -75,6 +82,8 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [BungeeCord / Waterfall setup](docs/bungeecord.md)
 - [Maps: Polar, Anvil and conversion](docs/maps.md)
 - [Supported client versions](docs/client-versions.md)
+- [Chat](docs/chat.md)
+- [Placeholders](docs/placeholders.md)
 - Integrations: [Database](docs/integrations/database.md) ·
   [LuckPerms](docs/integrations/luckperms.md) ·
   [LiteBans](docs/integrations/litebans.md) ·
@@ -83,8 +92,8 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 
 ## Roadmap
 
-1. **Foundation** - core, config, connection modes, world loading, integrations, lobby basics, bridge v1 ← *current*
-2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, Persian/RTL support, channels)
+1. **Foundation** - core, config, connection modes, world loading, integrations, lobby basics, bridge v1
+2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, Persian/RTL support, channels) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
    server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads
 4. **Fun, social and staff tools** - parkour, PvP area, cosmetics, daily rewards, vanish, in-game editors
