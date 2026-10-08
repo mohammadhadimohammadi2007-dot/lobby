@@ -109,6 +109,29 @@ public final class PlaceholderService {
     }
 
     /**
+     * Fills placeholders into plain text, for commands, server names and other non-chat text. Values are
+     * inserted without colors; line breaks are removed so a value can never start a second command.
+     * Unknown placeholders are kept as written.
+     */
+    public String plainText(String template, @Nullable Player player) {
+        PlaceholderTemplate parsed = template(template);
+        if (!parsed.hasReferences()) {
+            return template;
+        }
+        StringBuilder out = new StringBuilder(template.length() + 16);
+        for (PlaceholderTemplate.Piece piece : parsed.pieces()) {
+            switch (piece) {
+                case PlaceholderTemplate.Literal literal -> out.append(literal.text());
+                case PlaceholderTemplate.Reference reference -> {
+                    Cached value = value(reference.key(), player, player);
+                    out.append(value == null ? '%' + reference.key() + '%' : value.plain().replaceAll("[\\r\\n]", " "));
+                }
+            }
+        }
+        return out.toString();
+    }
+
+    /**
      * The value of one placeholder as a component, or {@code null} if unknown.
      *
      * @param key without the {@code %} signs, e.g. {@code luckperms_prefix}

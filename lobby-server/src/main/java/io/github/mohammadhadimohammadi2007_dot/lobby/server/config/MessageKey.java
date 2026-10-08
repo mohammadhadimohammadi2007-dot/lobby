@@ -75,7 +75,10 @@ public enum MessageKey {
     SPY_ON("spy-on"),
     SPY_OFF("spy-off"),
     JOIN_MESSAGE("join-message"),
-    QUIT_MESSAGE("quit-message");
+    QUIT_MESSAGE("quit-message"),
+    CONNECT_NOT_AVAILABLE("connect-not-available"),
+    CONNECTING("connecting"),
+    TRANSFER_NOT_SUPPORTED("transfer-not-supported");
 
     private final String path;
 

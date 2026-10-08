@@ -132,3 +132,11 @@ spy-off: "<prefix><gray>Chat spy <red>off</red>."
 # Join and quit (only if enabled in chat.yml). Placeholders are about the player who joined.
 join-message: "<dark_gray>[<green>+</green>]</dark_gray> <gray>%player_name%"
 quit-message: "<dark_gray>[<red>-</red>]</dark_gray> <gray>%player_name%"
+
+# ---------------- Actions (NPCs, holograms, menus, hotbar items, portals) ----------------
+# A "connect" action when the lobby cannot send players to other servers (standalone, no bridge).
+connect-not-available: "<prefix><red>Switching servers is not available right now."
+# Shown while the proxy moves the player. <server>
+connecting: "<prefix><gray>Sending you to <white><server></white>..."
+# A "transfer" action for a client older than 1.20.5, which cannot be transferred. <host>
+transfer-not-supported: "<prefix><red>Your Minecraft version cannot switch servers this way. Join <white><host></white> directly."

@@ -14,6 +14,9 @@ public final class ProtocolVersions {
     /** Minecraft 1.8 to 1.8.9, the oldest client supported through ViaRewind. */
     public static final int V1_8 = 47;
 
+    /** Minecraft 1.13, the first version without the 16-character limit on team prefixes and suffixes. */
+    public static final int V1_13 = 393;
+
     /** Minecraft 1.16, the first version with RGB colors in chat. */
     public static final int V1_16 = 735;
 
@@ -22,6 +25,12 @@ public final class ProtocolVersions {
      * (for example text display entities), so the lobby treats them as "legacy".
      */
     public static final int V1_19_4 = 762;
+
+    /** Minecraft 1.20.3, the first version that can hide the numbers of the sidebar. */
+    public static final int V1_20_3 = 765;
+
+    /** Minecraft 1.20.5, the first version that understands the transfer packet. */
+    public static final int V1_20_5 = 766;
 
     /** Release protocol versions from 1.8 on, copied from ViaVersion 5.12's ProtocolVersion list. */
     private static final TreeMap<Integer, String> NAMES = new TreeMap<>(Map.ofEntries(
