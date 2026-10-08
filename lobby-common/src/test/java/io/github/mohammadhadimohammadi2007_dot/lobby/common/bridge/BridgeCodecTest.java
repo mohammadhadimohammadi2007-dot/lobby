@@ -64,8 +64,59 @@ class BridgeCodecTest {
     }
 
     @Test
-    void rejectsUnknownType() {
-        assertThrows(BridgeFormatException.class, () -> BridgeCodec.decode(new byte[]{1, 42}));
+    void unknownTypeIsIgnoredNotRejected() throws BridgeFormatException {
+        // A newer sender may add types; older readers must not fail on them.
+        assertEquals(new BridgeMessage.Unknown(42), BridgeCodec.decode(new byte[]{1, 42, 7, 7, 7}));
+    }
+
+    @Test
+    void unknownCannotBeEncoded() {
+        assertThrows(IllegalArgumentException.class, () -> BridgeCodec.encode(new BridgeMessage.Unknown(42)));
+    }
+
+    @Test
+    void serverStatusRoundTrip() throws BridgeFormatException {
+        Map<String, BridgeMessage.ServerStatus.Status> servers = new LinkedHashMap<>();
+        servers.put("bw-1", new BridgeMessage.ServerStatus.Status(true, 100));
+        servers.put("bw-2", new BridgeMessage.ServerStatus.Status(false, 0));
+        var original = new BridgeMessage.ServerStatus(servers);
+
+        var decoded = assertInstanceOf(BridgeMessage.ServerStatus.class, BridgeCodec.decode(BridgeCodec.encode(original)));
+        assertEquals(original, decoded);
+        assertEquals(List.of("bw-1", "bw-2"), List.copyOf(decoded.servers().keySet()));
+    }
+
+    @Test
+    void chatRelayRoundTripWithPersianText() throws BridgeFormatException {
+        String persian = "سلام به همه! این یک پیام آزمایشی است ‌ با نیم‌فاصله و ۱۲۳";
+        var original = new BridgeMessage.ChatRelay("a1b2", "global", "lobby-1", UUID.randomUUID(), "Ali",
+                "&6[VIP] ", "", "vip", Map.of("chat_color", "<yellow>"), persian.repeat(10));
+
+        assertEquals(original, BridgeCodec.decode(BridgeCodec.encode(original)));
+    }
+
+    @Test
+    void chatRelayTooLongIsRejectedOnEncode() {
+        var tooLong = new BridgeMessage.ChatRelay("a", "global", "lobby", UUID.randomUUID(), "x", "", "", "default",
+                Map.of(), "x".repeat(BridgeProtocol.MAX_TEXT_BYTES + 1));
+        assertThrows(IllegalArgumentException.class, () -> BridgeCodec.encode(tooLong));
+    }
+
+    @Test
+    void commandRequestAndResultRoundTrip() throws BridgeFormatException {
+        var request = new BridgeMessage.CommandRequest("r1", "tempmute Steve 10m Spam (auto)", "chat auto-mute");
+        var result = new BridgeMessage.CommandResult("r1", false, "command 'op' is not in allowed-commands");
+
+        assertEquals(request, BridgeCodec.decode(BridgeCodec.encode(request)));
+        assertEquals(result, BridgeCodec.decode(BridgeCodec.encode(result)));
+    }
+
+    @Test
+    void oldMessageLayoutsAreUnchanged() {
+        // Version 1 readers from Phase 1 must still understand snapshots: same bytes as before.
+        byte[] encoded = BridgeCodec.encode(new BridgeMessage.NetworkSnapshot(5, Map.of("a", 5), Map.of()));
+        byte[] expected = {1, 2, 0, 0, 0, 5, 0, 1, 0, 1, 'a', 0, 0, 0, 5, 0, 0};
+        assertArrayEquals(expected, encoded);
     }
 
     @Test

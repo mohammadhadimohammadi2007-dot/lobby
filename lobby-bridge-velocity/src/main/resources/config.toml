@@ -1,17 +1,26 @@
 # =====================================================================
-#  Lobby Bridge - sends network information to your Minestom lobbies.
+#  Lobby Bridge - connects your Minestom lobbies to the network.
 #  After editing, restart the proxy.
 # =====================================================================
 
 # Names of your lobby servers, exactly as written in velocity.toml under [servers].
-# Only these servers receive bridge messages.
+# Only these servers receive bridge messages, and global/staff chat is shared between them.
 lobby-servers = ["lobby"]
 
 # How often player counts are sent to the lobbies, in seconds (1-60).
 update-interval = 2
 
+# How often every server is pinged to see if it is online, in seconds (5-300).
+status-interval = 10
+
+# Console commands lobbies are allowed to ask the proxy to run. Used by the chat filter's auto-mute
+# (off by default in the lobby's chat.yml). Only the first word is checked, without the "/".
+# Every command that runs is written to the proxy log. Use [] to allow nothing.
+allowed-commands = ["mute", "tempmute", "warn"]
+
 # Server groups the lobby can show, for example in a server selector.
 # Each line is: group-name = ["server", "server", ...] using names from velocity.toml.
+# A group called "lobbies" with your lobby-servers is added automatically if you do not define it.
 [groups]
 # bedwars = ["bw-1", "bw-2"]
 # skywars = ["sw-1"]

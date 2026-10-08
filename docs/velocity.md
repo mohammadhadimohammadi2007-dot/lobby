@@ -45,11 +45,14 @@ scoreboards and holograms.
    It works on Velocity 3.5 (Java 21) and Velocity 4 (Java 25).
 2. Edit `plugins/lobby-bridge/config.toml`:
    ```toml
-   lobby-servers = ["lobby"]   # names from velocity.toml
-   update-interval = 2
+   lobby-servers = ["lobby-1", "lobby-2"]   # names from velocity.toml; global and staff chat are shared between them
+   update-interval = 2                      # seconds between player count updates
+   status-interval = 10                     # seconds between online/offline pings
+   allowed-commands = ["mute", "tempmute", "warn"]   # console commands lobbies may request (chat auto-mute)
    [groups]
    bedwars = ["bw-1", "bw-2"]
    ```
+   A `lobbies` group with your `lobby-servers` is added automatically (used by `%lobby_count%`).
 3. In the lobby's `integrations.yml`, set:
    ```yaml
    bridge:
@@ -58,7 +61,13 @@ scoreboards and holograms.
 4. Restart the lobby. `/lobby info` shows `Bridge: connected (last update 1s ago)` once a player is on it.
 
 If ViaVersion is installed on the proxy, the bridge asks it for the real client version; otherwise it
-uses Velocity's. Without the bridge, every player counts as a modern client and all counts are 0.
+uses Velocity's. Without the bridge, every player counts as a modern client, all counts are 0, every
+server shows as offline, global and staff chat stay on the local lobby, and chat auto-mute falls back to a
+local temporary mute.
+
+The bridge only ever runs console commands whose first word is in `allowed-commands`, and only when a lobby
+server (never a player) asks. Every command it runs is written to the proxy log. Set `allowed-commands = []`
+to turn this off completely. Wire format and security details: [bridge-protocol.md](bridge-protocol.md).
 
 ## Skins
 

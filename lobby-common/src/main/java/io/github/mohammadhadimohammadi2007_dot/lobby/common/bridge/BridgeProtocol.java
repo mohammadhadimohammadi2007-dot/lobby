@@ -11,13 +11,17 @@ public final class BridgeProtocol {
     public static final String CHANNEL = "lobby:bridge";
 
     /**
-     * Current protocol version. Increase it whenever the binary format changes in a way that
-     * older readers cannot understand. Readers reject messages with a different version.
+     * Current protocol version. Increase it only when an existing message type changes its layout.
+     * Readers reject messages with a different version. New message types do not need a new version:
+     * readers ignore types they do not know.
      */
     public static final int VERSION = 1;
 
-    /** Longest string (in UTF-8 bytes) a message may contain, e.g. a server name. */
+    /** Longest short string (in UTF-8 bytes), e.g. a server or player name. */
     public static final int MAX_STRING_BYTES = 256;
+
+    /** Longest long text (in UTF-8 bytes), e.g. a chat message or a command. Persian letters take 2 bytes. */
+    public static final int MAX_TEXT_BYTES = 4096;
 
     /** Largest number of entries in any list or map inside a message. */
     public static final int MAX_ENTRIES = 1024;

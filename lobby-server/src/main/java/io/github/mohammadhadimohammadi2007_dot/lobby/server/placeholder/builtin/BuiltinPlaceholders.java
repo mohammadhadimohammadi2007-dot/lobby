@@ -37,7 +37,7 @@ public final class BuiltinPlaceholders {
     public static void registerAll(PlaceholderRegistry registry, Sources sources) {
         registry.register("player", new PlayerNamespace(sources.bridge(), sources.config()));
         registry.register("luckperms", new LuckPermsNamespace(sources.permissions()));
-        registry.register("server", new ServerNamespace(sources.config(), sources.serverInfo()));
+        registry.register("server", new ServerNamespace(sources.config(), sources.serverInfo(), sources.bridge().networkState()));
         registry.register("bungee", new BungeeNamespace(sources.bridge().networkState()));
         registry.register("group", new GroupNamespace(sources.bridge().networkState()));
         registry.register("lobby", new LobbyNamespace(sources.config(), sources.bridge().networkState()));

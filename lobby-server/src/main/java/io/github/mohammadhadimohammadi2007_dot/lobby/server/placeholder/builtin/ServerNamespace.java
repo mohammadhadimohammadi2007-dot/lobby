@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.NetworkState;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placeholder;
@@ -10,17 +11,23 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Locale;
 
 /**
- * {@code %server_...%}: {@code online} (this lobby), {@code max_players}, {@code name}, {@code tps}
- * and {@code mspt}. {@code %server_status_<server>%} is added in {@code ServerStatusNamespace}.
+ * {@code %server_...%}: {@code online} (this lobby), {@code max_players}, {@code name}, {@code tps},
+ * {@code mspt}, and {@code status_<server>} ({@code online}/{@code offline}, from the bridge's pings).
  */
 final class ServerNamespace implements PlaceholderNamespace {
 
+    private static final String STATUS = "status_";
+    static final String ONLINE = "online";
+    static final String OFFLINE = "offline";
+
     private final ConfigManager config;
     private final ServerInfo serverInfo;
+    private final NetworkState network;
 
-    ServerNamespace(ConfigManager config, ServerInfo serverInfo) {
+    ServerNamespace(ConfigManager config, ServerInfo serverInfo, NetworkState network) {
         this.config = config;
         this.serverInfo = serverInfo;
+        this.network = network;
     }
 
     @Override
@@ -35,7 +42,14 @@ final class ServerNamespace implements PlaceholderNamespace {
                     () -> String.format(Locale.ROOT, "%.1f", serverInfo.tps()));
             case "mspt" -> Placeholder.global(BuiltinPlaceholders.SHORT_CACHE,
                     () -> String.format(Locale.ROOT, "%.2f", serverInfo.mspt()));
-            default -> null;
+            default -> {
+                if (params.startsWith(STATUS) && params.length() > STATUS.length()) {
+                    String server = params.substring(STATUS.length());
+                    yield Placeholder.global(BuiltinPlaceholders.SHORT_CACHE,
+                            () -> network.serverOnline(server) ? ONLINE : OFFLINE);
+                }
+                yield null;
+            }
         };
     }
 }

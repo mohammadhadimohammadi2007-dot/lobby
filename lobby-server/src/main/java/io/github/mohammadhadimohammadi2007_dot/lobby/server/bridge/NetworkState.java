@@ -7,19 +7,25 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The latest network snapshot from the proxy bridge: player counts per server and server groups.
- * Before any snapshot arrives (or without a bridge) every count is 0.
- * Thread-safe and cheap; later phases read it from scoreboards and menus.
+ * The latest network data from the proxy bridge: player counts per server, server groups and whether
+ * each server is online. Before any data arrives (or without a bridge) every count is 0 and every
+ * server counts as offline. Thread-safe and cheap; placeholders and menus read it.
  */
 public final class NetworkState {
 
     private volatile BridgeMessage.NetworkSnapshot snapshot = BridgeMessage.NetworkSnapshot.empty();
+    private volatile Map<String, BridgeMessage.ServerStatus.Status> statuses = Map.of();
     private volatile long lastUpdateMillis;
 
     /** Replaces the snapshot. Called by the bridge listener (and by tests). */
     public void update(BridgeMessage.NetworkSnapshot newSnapshot) {
         snapshot = newSnapshot;
         lastUpdateMillis = System.currentTimeMillis();
+    }
+
+    /** Replaces the server statuses. Called by the bridge listener (and by tests). */
+    public void update(BridgeMessage.ServerStatus newStatus) {
+        statuses = newStatus.servers();
     }
 
     /** Players online on the whole network. */
@@ -45,6 +51,18 @@ public final class NetworkState {
     /** All groups, in the order from the bridge config. */
     public Map<String, List<String>> groups() {
         return snapshot.groups();
+    }
+
+    /** True if the proxy's last ping of this server succeeded. Unknown servers count as offline. */
+    public boolean serverOnline(String serverName) {
+        BridgeMessage.ServerStatus.Status status = statuses.get(serverName);
+        return status != null && status.online();
+    }
+
+    /** The player limit the server reported, or 0 if offline or unknown. */
+    public int serverMaxPlayers(String serverName) {
+        BridgeMessage.ServerStatus.Status status = statuses.get(serverName);
+        return status == null ? 0 : status.maxPlayers();
     }
 
     /** When the last snapshot arrived, or empty if none has arrived yet. */
