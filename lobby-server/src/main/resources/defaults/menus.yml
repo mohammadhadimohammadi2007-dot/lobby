@@ -1,0 +1,79 @@
+# =====================================================================
+#  Menus - the chest windows players open from NPCs, items and commands.
+#  After editing, run /lobby reload. Full guide with examples: docs/menus.md
+# =====================================================================
+#
+# Every menu is one entry below "menus:". Open one with the action "open_menu: <name>",
+# for example from an NPC, a hotbar item or a portal.
+#
+#   title:   the window title (MiniMessage, %placeholders% work)
+#   rows:    1-6 rows of nine slots
+#   refresh: ticks between rebuilds while the menu is open (0 = never, 20 = once a second).
+#            Use it for menus that show live numbers like player counts.
+#   fill:    item put in every empty slot ("" for none)
+#   items:   the items, each with:
+#              slot / slots:    where it goes. 0 is the top left corner, 8 the top right.
+#              material:        item name, e.g. "diamond_sword"
+#              amount:          1-64
+#              name:            display name (MiniMessage, placeholders)
+#              lore:            lines under the name
+#              glow:            true to make it shimmer
+#              show-if:         conditions that must all hold, otherwise this entry is skipped.
+#                               "permission: lobby.vip", or a comparison such as
+#                               "%server_online% > 10". Two entries may share a slot: the first
+#                               one whose conditions hold is shown, so a slot can look
+#                               different per player.
+#              actions:         what a click does (same actions as everywhere else)
+#              click-cooldown:  milliseconds before the same player may click it again
+#
+# Items are read-only: players can never take, drop or move them.
+
+menus:
+  # Opened with /lobby or from a hotbar item. Replace these items with your own.
+  lobby:
+    title: "<dark_gray>Lobby"
+    rows: 3
+    refresh: 20
+    fill: "gray_stained_glass_pane"
+    items:
+      spawn:
+        slot: 11
+        material: "compass"
+        name: "<gold><bold>Spawn"
+        lore:
+          - "<gray>Go back to the middle of the lobby."
+        actions:
+          - "close_menu"
+          - "teleport: spawn"
+      persian:
+        slot: 13
+        material: "book"
+        name: "<aqua>Persian chat"
+        lore:
+          - "<gray>Switch the Persian and Arabic text fix"
+          - "<gray>for yourself."
+          - ""
+          - "<yellow>Click to switch"
+        actions:
+          - "close_menu"
+          - "player_command: chat persian"
+      # Two entries share slot 15: staff see the first one, everybody else the second.
+      staff-info:
+        slot: 15
+        material: "redstone_torch"
+        name: "<red>Server status"
+        lore:
+          - "<gray>Players here: <white>%server_online%</white>/<white>%server_max%"
+          - "<gray>Ticks per second: <white>%server_tps%"
+          - "<gray>Your version: <white>%player_client_version%"
+        show-if:
+          - "permission: lobby.command.info"
+        actions:
+          - "player_command: lobby info"
+      player-info:
+        slot: 15
+        material: "paper"
+        name: "<green>Players online"
+        lore:
+          - "<gray>Here: <white>%server_online%</white>/<white>%server_max%"
+          - "<gray>Your version: <white>%player_client_version%"

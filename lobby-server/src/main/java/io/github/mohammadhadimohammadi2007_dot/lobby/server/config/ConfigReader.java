@@ -35,6 +35,16 @@ public final class ConfigReader {
     }
 
     /** Problems found so far, in a form that can be logged as-is. */
+    /** The file these options come from, e.g. {@code menus.yml}, for messages about them. */
+    public String fileName() {
+        return fileName;
+    }
+
+    /** Adds a warning worded by the caller (for values only that feature can check, like actions). */
+    public void addWarning(String warning) {
+        warnings.add(warning);
+    }
+
     public List<String> warnings() {
         return List.copyOf(warnings);
     }

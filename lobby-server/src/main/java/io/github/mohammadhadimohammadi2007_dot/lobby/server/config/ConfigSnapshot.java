@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuConfig;
 
 import java.util.List;
 
@@ -10,11 +11,12 @@ import java.util.List;
  * @param config       config.yml
  * @param integrations integrations.yml
  * @param chat         chat.yml
+ * @param menus        menus.yml
  * @param messages     messages.yml
  * @param warnings     non-fatal problems found while loading, ready to be logged
  */
-public record ConfigSnapshot(LobbyConfig config, IntegrationsConfig integrations, ChatConfig chat, Messages messages,
-                             List<String> warnings) {
+public record ConfigSnapshot(LobbyConfig config, IntegrationsConfig integrations, ChatConfig chat, MenuConfig menus,
+                             Messages messages, List<String> warnings) {
     public ConfigSnapshot {
         warnings = List.copyOf(warnings);
     }
