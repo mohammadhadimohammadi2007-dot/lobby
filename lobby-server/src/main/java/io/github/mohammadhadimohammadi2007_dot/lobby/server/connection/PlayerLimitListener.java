@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.connection;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -12,9 +13,11 @@ import net.minestom.server.event.player.AsyncPlayerPreLoginEvent;
 public final class PlayerLimitListener {
 
     private final ConfigManager configManager;
+    private final LobbyText text;
 
-    public PlayerLimitListener(ConfigManager configManager) {
+    public PlayerLimitListener(ConfigManager configManager, LobbyText text) {
         this.configManager = configManager;
+        this.text = text;
     }
 
     /** Registers the listener on {@code node}. */
@@ -23,7 +26,7 @@ public final class PlayerLimitListener {
             ConfigSnapshot snapshot = configManager.current();
             int online = MinecraftServer.getConnectionManager().getOnlinePlayerCount();
             if (online >= snapshot.config().server().maxPlayers()) {
-                event.getConnection().kick(snapshot.messages().render(MessageKey.KICK_SERVER_FULL));
+                event.getConnection().kick(text.message(MessageKey.KICK_SERVER_FULL));
             }
         });
     }

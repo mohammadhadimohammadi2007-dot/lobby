@@ -37,6 +37,14 @@ public final class ConfigReader {
         return List.copyOf(warnings);
     }
 
+    /**
+     * Records that {@code value} at {@code path} is not allowed and returns the bundled default instead.
+     * For checks this class cannot do itself, like a pattern.
+     */
+    public String invalidValue(String path, String value, String allowed) {
+        return invalid(path, value, allowed, defaultString(path));
+    }
+
     /** Reads any text value. */
     public String string(String path) {
         Object raw = userValue(path);

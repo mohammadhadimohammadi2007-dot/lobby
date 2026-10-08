@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsC
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Connections;
 import net.minestom.server.MinecraftServer;
@@ -48,6 +49,7 @@ public final class LiteBansService implements MuteService {
     private final DatabasePool database;
     private final LiteBansQueries queries;
     private final ConfigManager configManager;
+    private final LobbyText text;
     private final Duration checkInterval;
 
     /** Online players: id to IP address, used to match new IP mutes. */
@@ -57,7 +59,9 @@ public final class LiteBansService implements MuteService {
     private volatile long lastMuteId;
     private Task pollTask;
 
-    private LiteBansService(DatabasePool database, IntegrationsConfig.LiteBans settings, ConfigManager configManager) {
+    private LiteBansService(DatabasePool database, IntegrationsConfig.LiteBans settings, ConfigManager configManager,
+                            LobbyText text) {
+        this.text = text;
         this.database = database;
         this.queries = new LiteBansQueries(settings.tablePrefix(), settings.serverName());
         this.configManager = configManager;
@@ -70,8 +74,8 @@ public final class LiteBansService implements MuteService {
      * @throws SQLException with a readable message if the tables are missing
      */
     public static LiteBansService start(DatabasePool database, IntegrationsConfig.LiteBans settings,
-                                        ConfigManager configManager) throws SQLException {
-        LiteBansService service = new LiteBansService(database, settings, configManager);
+                                        ConfigManager configManager, LobbyText text) throws SQLException {
+        LiteBansService service = new LiteBansService(database, settings, configManager, text);
         service.lastMuteId = database.queryNow(connection -> {
             service.queries.checkTables(connection);
             return service.queries.latestMuteId(connection);
@@ -130,7 +134,7 @@ public final class LiteBansService implements MuteService {
             String expires = punishment.permanent()
                     ? messages.template(MessageKey.BAN_NEVER_EXPIRES)
                     : EXPIRY_FORMAT.format(Instant.ofEpochMilli(punishment.untilMillis()));
-            event.getConnection().kick(messages.render(MessageKey.KICK_BANNED,
+            event.getConnection().kick(text.message(MessageKey.KICK_BANNED,
                     Messages.text("reason", punishment.reason()),
                     Messages.text("banned-by", punishment.punishedBy()),
                     Messages.text("expires", expires)));

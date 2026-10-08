@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.Connectio
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -40,9 +41,11 @@ public record LobbyConfig(
     private static final int MIN_VIEW_DISTANCE = 2;
     /** Coordinates further than this from 0 are almost certainly typos. */
     private static final double MAX_COORDINATE = 30_000_000;
+    /** Allowed characters for the lobby name. */
+    private static final Pattern SERVER_NAME = Pattern.compile("[A-Za-z0-9_-]{1,32}");
 
     /** {@code server:} section. */
-    public record Server(String host, int port, String motd, int maxPlayers) {
+    public record Server(String name, String host, int port, String motd, int maxPlayers) {
     }
 
     /** Connection options at the top of the file. */
@@ -78,6 +81,13 @@ public record LobbyConfig(
                              boolean itemDrop) {
     }
 
+    /** Reads {@code server.name}; falls back to the default if it has characters that are not allowed. */
+    private static String serverName(ConfigReader reader) {
+        String name = reader.string("server.name").trim();
+        return SERVER_NAME.matcher(name).matches() ? name : reader.invalidValue("server.name", name,
+                "letters, digits, - and _ (1-32 characters)");
+    }
+
     /**
      * Reads and validates config.yml.
      *
@@ -85,6 +95,7 @@ public record LobbyConfig(
      */
     public static LobbyConfig read(ConfigReader reader) throws ConfigException {
         Server server = new Server(
+                serverName(reader),
                 reader.string("server.host"),
                 reader.integer("server.port", 1, MAX_PORT),
                 reader.string("server.motd"),

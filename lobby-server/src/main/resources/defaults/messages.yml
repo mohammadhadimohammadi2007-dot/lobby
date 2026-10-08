@@ -2,6 +2,8 @@
 #  Messages - every text players see.
 #  Format: MiniMessage, see https://docs.advntr.dev/minimessage/format
 #  Words in <angle-brackets> that are listed under a message are filled in by the server.
+#  Every message can also use placeholders such as %player_name% or %luckperms_prefix%
+#  (full list: docs/placeholders.md). They describe the player who receives the message.
 #  Reload with /lobby reload.
 # =====================================================================
 
@@ -12,7 +14,7 @@ no-permission: "<prefix><red>You don't have permission to do that."
 players-only: "<prefix><red>Only players can use this command."
 
 # /spawn
-spawn-teleported: "<prefix><gray>Teleported to spawn."
+spawn-teleported: "<prefix><gray>Welcome back to spawn, <white>%player_name%</white>."
 
 # /lobby
 lobby-usage: "<prefix><gray>Usage: <white>/lobby reload</white>, <white>/lobby setspawn</white> or <white>/lobby info"

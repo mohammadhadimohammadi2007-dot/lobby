@@ -16,8 +16,8 @@ public final class NetworkState {
     private volatile BridgeMessage.NetworkSnapshot snapshot = BridgeMessage.NetworkSnapshot.empty();
     private volatile long lastUpdateMillis;
 
-    /** Replaces the snapshot. Called by the bridge listener. */
-    void update(BridgeMessage.NetworkSnapshot newSnapshot) {
+    /** Replaces the snapshot. Called by the bridge listener (and by tests). */
+    public void update(BridgeMessage.NetworkSnapshot newSnapshot) {
         snapshot = newSnapshot;
         lastUpdateMillis = System.currentTimeMillis();
     }

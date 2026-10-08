@@ -6,13 +6,16 @@
 
 # ---------------- Server ----------------
 server:
+  # Name of this lobby, shown by %server_name% and %lobby_id%. Letters, digits, - and _ only.
+  name: "lobby"
   # The address to listen on. "0.0.0.0" means all network interfaces.
   host: "0.0.0.0"
   # The port players (or your proxy) connect to.
   port: 25565
   # Shown in the server list. Uses MiniMessage colors: https://docs.advntr.dev/minimessage/format
+  # and global placeholders like %server_online% (see docs/placeholders.md).
   # Only used in standalone mode (behind a proxy, the proxy shows its own MOTD).
-  motd: "<gold><bold>My Network</bold></gold> <gray>- Lobby"
+  motd: "<gold><bold>My Network</bold></gold> <gray>- Lobby <dark_gray>(%server_online% online)"
   # Players allowed on this lobby at the same time. New players are refused when it is full.
   max-players: 200
 

@@ -5,6 +5,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
@@ -67,8 +73,12 @@ class LobbyBasicsEnvTest {
 
     private static PermissionService register(Env env, ConfigManager config, Instance instance) {
         PermissionService permissions = new OperatorPermissionService(config);
-        env.process().command().register(new SpawnCommand(config, permissions));
-        env.process().command().register(new LobbyCommand(config, permissions, fakeInfo(instance)));
+        PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
+        BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
+                config, permissions, MuteService.NONE, new BridgeService(false), fakeInfo(instance)));
+        LobbyText text = new LobbyText(config, placeholders);
+        env.process().command().register(new SpawnCommand(config, text, permissions));
+        env.process().command().register(new LobbyCommand(config, text, permissions, fakeInfo(instance)));
         new ProtectionListener(config, permissions).register(env.process().eventHandler());
         EventNode<PlayerEvent> players = EventNode.type("test", EventFilter.PLAYER);
         env.process().eventHandler().addChild(players);
@@ -89,7 +99,7 @@ class LobbyBasicsEnvTest {
         env.tick();
 
         assertEquals(SPAWN, player.getPosition());
-        assertEquals(List.of("[Lobby] Teleported to spawn."), texts(chat));
+        assertEquals(List.of("[Lobby] Welcome back to spawn, RandName."), texts(chat));
     }
 
     @Test

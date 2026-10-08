@@ -21,6 +21,10 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
@@ -67,9 +71,12 @@ public final class LobbyServer implements ServerInfo {
     private LiteBansService liteBans;
     private SkinsRestorerReader skinsRestorer;
     private BridgeService bridge;
+    private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
+    private final LobbyText text;
 
     public LobbyServer(ConfigManager configManager) {
         this.configManager = configManager;
+        this.text = new LobbyText(configManager, placeholders);
     }
 
     /** Boots everything in order and opens the port. Players can only join after the map is loaded. */
@@ -86,6 +93,7 @@ public final class LobbyServer implements ServerInfo {
         WorldRules.apply(world.instance(), config.world());
 
         startIntegrations(snapshot);
+        startPlaceholders();
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
@@ -124,7 +132,7 @@ public final class LobbyServer implements ServerInfo {
             integrations.add(IntegrationStatus.failed(LITEBANS, "no database connection"));
         } else {
             try {
-                liteBans = LiteBansService.start(database, settings.liteBans(), configManager);
+                liteBans = LiteBansService.start(database, settings.liteBans(), configManager, text);
                 boolean checkBans = connection.mode() == ConnectionMode.STANDALONE;
                 liteBans.register(global, checkBans);
                 muteService = liteBans;
@@ -187,6 +195,14 @@ public final class LobbyServer implements ServerInfo {
         }
     }
 
+    /** Registers the built-in placeholders and keeps their caches fresh. */
+    private void startPlaceholders() {
+        BuiltinPlaceholders.registerAll(placeholders.registry(),
+                new BuiltinPlaceholders.Sources(configManager, permissions, muteService, bridge, this));
+        // Rank changes (LuckPerms) drop the player's cached prefix, suffix and permissions.
+        permissions.onMetaChange(placeholders::invalidate);
+    }
+
     private void registerListeners() {
         EventNode<Event> global = MinecraftServer.getGlobalEventHandler();
         EventNode<PlayerEvent> playerEvents = EventNode.type("lobby-players", EventFilter.PLAYER);
@@ -194,20 +210,23 @@ public final class LobbyServer implements ServerInfo {
 
         new SpawnListener(configManager, world.instance()).register(playerEvents);
         bridge.register(playerEvents);
-        new PlayerLimitListener(configManager).register(global);
+        placeholders.register(playerEvents);
+        new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
-        new ServerListListener(configManager).register();
+        new ServerListListener(configManager, text).register();
         tickStats.register();
     }
 
     private void registerCommands() {
         var commands = MinecraftServer.getCommandManager();
-        commands.register(new SpawnCommand(configManager, permissions));
-        commands.register(new LobbyCommand(configManager, permissions, this));
+        commands.register(new SpawnCommand(configManager, text, permissions));
+        commands.register(new LobbyCommand(configManager, text, permissions, this));
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
     private void applyReload(ConfigSnapshot reloaded) {
+        // Config values used by placeholders (operators, server name...) may have changed.
+        placeholders.invalidateAll();
         Async.onTickThread(() -> {
             WorldRules.apply(world.instance(), reloaded.config().world());
             // The operators list may have changed, which changes which commands players can see.
@@ -262,6 +281,11 @@ public final class LobbyServer implements ServerInfo {
     /** SkinsRestorer skins for NPCs, or {@code null} if that integration is off. */
     public SkinsRestorerReader skinsRestorer() {
         return skinsRestorer;
+    }
+
+    /** Placeholders and message rendering, for later phases. */
+    public LobbyText text() {
+        return text;
     }
 
     /** Permission checks and rank meta. */
