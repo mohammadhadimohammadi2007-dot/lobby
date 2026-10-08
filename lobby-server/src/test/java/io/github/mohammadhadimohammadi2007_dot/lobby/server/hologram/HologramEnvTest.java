@@ -2,15 +2,22 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldFormat;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.EntityType;
@@ -78,6 +85,9 @@ class HologramEnvTest {
         PermissionService permissions = new OperatorPermissionService(config);
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
+        // The real placeholders, so %server_online% is known and counts as a global one.
+        BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
+                config, permissions, MuteService.NONE, bridge, serverInfo(map), LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
         ActionServices actions = new ActionServices(config, text, permissions, bridge);
         ClientObjectRenderer renderer = new ClientObjectRenderer();
@@ -101,6 +111,42 @@ class HologramEnvTest {
         return collector.collect().stream()
                 .filter(packet -> packet.type().equals(EntityType.TEXT_DISPLAY))
                 .toList();
+    }
+
+    /** Enough of a ServerInfo for the built-in placeholders. */
+    private static ServerInfo serverInfo(InstanceContainer map) {
+        LobbyWorld world = new LobbyWorld(map, "test-map", WorldFormat.POLAR, 1, 0, 0, false);
+        return new ServerInfo() {
+            @Override
+            public String modeDescription() {
+                return "standalone";
+            }
+
+            @Override
+            public double tps() {
+                return 20;
+            }
+
+            @Override
+            public double mspt() {
+                return 1;
+            }
+
+            @Override
+            public LobbyWorld world() {
+                return world;
+            }
+
+            @Override
+            public List<IntegrationStatus> integrations() {
+                return List.of();
+            }
+
+            @Override
+            public String bridgeStatus() {
+                return "off";
+            }
+        };
     }
 
     private static void sendPacket(Env env, Player player, ClientPacket packet) {

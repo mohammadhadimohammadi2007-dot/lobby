@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.YamlDataStore;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderScope;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
@@ -161,7 +162,6 @@ class HologramCodecTest {
                 """);
 
         assertEquals(Block.DIAMOND_BLOCK, loaded.get("statue").block());
-        assertFalse(loaded.get("statue").hasPlaceholders());
     }
 
     @Test
@@ -179,6 +179,9 @@ class HologramCodecTest {
                   update-interval: 100
                 """);
 
+        // The hologram service classifies the text; the codec only reads what was written.
+        loaded.get("live").textScope(PlaceholderScope.GLOBAL);
+        loaded.get("fixed").textScope(PlaceholderScope.GLOBAL);
         assertEquals(0, loaded.get("still").effectiveUpdateIntervalTicks(), "text that cannot change needs no rebuild");
         assertEquals(HologramData.PLACEHOLDER_UPDATE_TICKS, loaded.get("live").effectiveUpdateIntervalTicks());
         assertEquals(100, loaded.get("fixed").effectiveUpdateIntervalTicks());

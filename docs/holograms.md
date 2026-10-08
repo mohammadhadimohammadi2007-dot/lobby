@@ -12,7 +12,7 @@ Everything is in `data/holograms.yml`, which `/hologram` writes for you.
 /hologram create welcome
 /hologram addline welcome <gold><bold>My Network
 /hologram addline welcome <gray>Players online: <white>%server_online%
-/hologram teleport welcome          brings it to where you stand
+/hologram movehere welcome          brings it to where you stand
 ```
 
 `/hologram create` puts the hologram where you are standing, with your own name as its first line.
@@ -29,11 +29,12 @@ Permission: `lobby.command.hologram` (give it to staff only). Aliases: `/hologra
 | `/hologram create <name> [text\|item\|block] [item or block]` | Creates one where you stand |
 | `/hologram delete <name>` | Deletes it |
 | `/hologram copy <name> <new name>` | Copies it, including its lines and look |
-| `/hologram teleport <name>` | Moves the hologram to you |
-| `/hologram goto <name>` | Moves you to the hologram |
+| `/hologram movehere <name>` | Moves the hologram to you |
+| `/hologram teleport <name>` | Moves **you** to the hologram |
 | `/hologram addline <name> <text>` | Adds a line at the bottom |
 | `/hologram setline <name> <number> <text>` | Replaces one line |
-| `/hologram insertline <name> <number> <text>` | Puts a line in the middle |
+| `/hologram insertline <name> <number> <text>` | Puts a line before that line |
+| `/hologram insertafter <name> <number> <text>` | Puts a line after that line |
 | `/hologram removeline <name> <number>` | Removes one line |
 | `/hologram set <name> <property> <value>` | Changes one property (below) |
 | `/hologram action add <name> <action>` | Adds an action for clicks |
@@ -41,6 +42,27 @@ Permission: `lobby.command.hologram` (give it to staff only). Aliases: `/hologra
 | `/hologram import` | Imports a FancyHolograms file (below) |
 
 Line numbers start at 1. Names may use letters, digits, `-` and `_`, and are not case-sensitive.
+
+### Coming from FancyHolograms
+
+The subcommand names match FancyHolograms, including which way `teleport` and `movehere` go. Where this
+lobby's name is different, FancyHolograms' name works as an alias:
+
+| FancyHolograms | Here | |
+|---|---|---|
+| `remove <name>` | `delete <name>` | `remove` also works |
+| `nearby <radius>` | `near <radius>` | `nearby` also works |
+| `edit <name> <property> <value>` | `set <name> <property> <value>` | `edit` also works |
+| `edit <name> addline <text>` | `addline <name> <text>` | the line commands are on their own here; typing it the FancyHolograms way tells you the command to use |
+| `edit <name> insertbefore <n> <text>` | `insertline <name> <n> <text>` | `insertbefore` also works |
+| `edit <name> visibilitydistance <n>` | `set <name> view-distance <n>` | `visibilitydistance` also works |
+| `edit <name> updatetextinterval <n>` | `set <name> update-interval <n>` | the name works, but **this lobby counts ticks, not seconds** (importing a file does convert them) |
+| `edit <name> textshadow`, `seethrough`, `textalignment` | `text-shadow`, `see-through`, `alignment` | the FancyHolograms spellings also work |
+| `edit <name> position` / `movehere` | `movehere <name>` | `position` and `here` also work |
+
+Not here (yet): `rotate`, `rotatepitch`, `translate`, `center`, `brightness`, `shadowradius`,
+`shadowstrength`, `linkwithnpc`/`unlinkwithnpc`, and FancyHolograms' `visibility` modes. This lobby
+hides a hologram with `set <name> permission <node>` instead, and NPCs get their own name holograms.
 
 ## Text
 
@@ -160,12 +182,29 @@ exists is never overwritten. Check the result with `/hologram list` afterwards.
 
 ## What it costs
 
+Every hologram is **classified** when it is loaded or edited, from the placeholders its lines use:
+
+| The lines use | Rendered | Rebuilt |
+|---|---|---|
+| no placeholders, or only unknown ones | once for the whole server | never |
+| only global placeholders (`%server_online%`, `%group_online_bedwars%`, `%bungee_total%`) | once for the whole server | every `update-interval` |
+| a per-player placeholder (`%player_name%`, `%luckperms_prefix%`) | once per viewer **in range** | every `update-interval` |
+| Persian or Arabic letters | once per viewer, because each player can turn the right-to-left fix on or off | as above |
+
+Measured on this machine (`HologramScaleTest`, 200 fake players standing at the hologram):
+
+| | |
+|---|---|
+| `%group_online_bedwars% playing`, 200 viewers | **1** render per update, not 200 |
+| `Hello %player_name%`, 20 viewers near and 50 far away | **20** renders per update, none for the 50 |
+| no placeholders | 1 render, ever |
+| 50 holograms, 200 viewers | 50 renders; 97 ms for the first refresh including every spawn packet, 12 ms for a refresh with nothing changed |
+
 | | |
 |---|---|
 | Server tick | Nothing: no entity, no tick handler. The text is built on a background thread |
-| Packets | One spawn plus one metadata packet per viewer group, then only what changed |
+| Packets | One spawn plus one metadata packet per viewer group, then only what changed; a viewer whose text did not change gets nothing |
 | Viewer groups | Players who would see exactly the same thing share one render and one set of entity ids |
-| Text without placeholders | Built once for the whole server |
 
 ## Limits
 

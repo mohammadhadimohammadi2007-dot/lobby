@@ -17,15 +17,18 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Shows {@link ClientObject}s (holograms, NPCs) to the players near them.
@@ -190,7 +193,10 @@ public final class ClientObjectRenderer {
         refreshes.incrementAndGet();
         Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
         for (Tracked entry : tracked.values()) {
-            boolean updateContent = entry.contentDirty || dueForUpdate(entry);
+            // Both are asked, never short-circuited: a dirty object must still book its next update time,
+            // or it would be built again on the very next refresh.
+            boolean due = dueForUpdate(entry);
+            boolean updateContent = entry.contentDirty || due;
             entry.contentDirty = false;
             try {
                 update(entry, online, updateContent);
@@ -215,10 +221,13 @@ public final class ClientObjectRenderer {
 
         // Viewers who should no longer see this variant (out of range, lost visibility, left, or changed group).
         for (Map.Entry<Object, Variant> variant : entry.variants.entrySet()) {
-            List<Player> wanted = groups.get(variant.getKey());
+            List<Player> wantedList = groups.get(variant.getKey());
+            // A set, because a busy lobby can have hundreds of viewers in one group.
+            Set<UUID> wanted = wantedList == null ? Set.of()
+                    : wantedList.stream().map(Player::getUuid).collect(Collectors.toSet());
             List<Player> gone = new ArrayList<>();
             for (Player viewer : variant.getValue().viewers.values()) {
-                if (wanted == null || !wanted.contains(viewer)) {
+                if (!wanted.contains(viewer.getUuid())) {
                     gone.add(viewer);
                 }
             }
@@ -256,7 +265,7 @@ public final class ClientObjectRenderer {
             }
             if (!fresh && updateContent) {
                 List<Player> existing = new ArrayList<>(variant.viewers.values());
-                existing.removeAll(newViewers);
+                existing.removeAll(new HashSet<>(newViewers));
                 sendUpdates(variant, before, existing);
             }
         }

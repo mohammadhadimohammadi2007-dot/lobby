@@ -76,7 +76,8 @@ public final class Hologram implements ClientObject {
     @Override
     public Object variantKey(Player viewer) {
         boolean legacy = services.bridge().capabilities(viewer).legacy();
-        return new Variant(legacy, data.hasPlaceholders() ? viewer.getUuid() : null);
+        // Only text that really differs per player gets its own render; a player count does not.
+        return new Variant(legacy, data.textScope().perPlayer() ? viewer.getUuid() : null);
     }
 
     @Override

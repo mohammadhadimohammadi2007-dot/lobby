@@ -147,6 +147,44 @@ public final class PlaceholderService {
         return value == null ? null : value.plain();
     }
 
+    /**
+     * How much a text can differ between the players reading it, from the placeholders it contains.
+     * Unknown placeholders count as {@link PlaceholderScope#STATIC}, because they are left as written.
+     *
+     * <p>Used to decide what can be rendered once and shared with every viewer: see the display layer.
+     */
+    public PlaceholderScope scopeOf(String template) {
+        PlaceholderTemplate parsed = template(template);
+        if (!parsed.hasReferences()) {
+            return PlaceholderScope.STATIC;
+        }
+        PlaceholderScope scope = PlaceholderScope.STATIC;
+        for (PlaceholderTemplate.Piece piece : parsed.pieces()) {
+            if (piece instanceof PlaceholderTemplate.Reference reference) {
+                scope = scope.and(scopeOf(registry.find(reference.key())));
+            }
+        }
+        return scope;
+    }
+
+    /** The highest scope of several texts, for example the lines of a hologram. */
+    public PlaceholderScope scopeOf(Iterable<String> templates) {
+        PlaceholderScope scope = PlaceholderScope.STATIC;
+        for (String template : templates) {
+            scope = scope.and(scopeOf(template));
+        }
+        return scope;
+    }
+
+    private static PlaceholderScope scopeOf(@Nullable Placeholder placeholder) {
+        return switch (placeholder) {
+            case null -> PlaceholderScope.STATIC;
+            case Placeholder.Global ignored -> PlaceholderScope.GLOBAL;
+            case Placeholder.PerPlayer ignored -> PlaceholderScope.PER_PLAYER;
+            case Placeholder.Relational ignored -> PlaceholderScope.RELATIONAL;
+        };
+    }
+
     /** Drops every cached value about one player, e.g. after a rank change. */
     public void invalidate(UUID playerId) {
         playerValues.remove(playerId);

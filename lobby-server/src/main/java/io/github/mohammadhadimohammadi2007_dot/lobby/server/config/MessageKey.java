@@ -44,6 +44,7 @@ public enum MessageKey {
     HOLOGRAM_WRONG_TYPE("hologram-wrong-type"),
     HOLOGRAM_NEEDS_MATERIAL("hologram-needs-material"),
     HOLOGRAM_PROPERTIES("hologram-properties"),
+    HOLOGRAM_USE_LINE_COMMAND("hologram-use-line-command"),
     HOLOGRAM_PROPERTY_SET("hologram-property-set"),
     HOLOGRAM_PROPERTY_INVALID("hologram-property-invalid"),
     HOLOGRAM_ACTION_ADDED("hologram-action-added"),

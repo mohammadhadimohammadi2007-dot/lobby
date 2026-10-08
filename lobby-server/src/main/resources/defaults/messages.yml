@@ -53,6 +53,8 @@ hologram-no-such-line: "<prefix><red>There is no line <line>; this hologram has 
 hologram-too-many-lines: "<prefix><red>A hologram can have at most <max> lines."
 hologram-wrong-type: "<prefix><red><name> is a <type> hologram, so it has no lines."
 hologram-needs-material: "<prefix><red>A <type> hologram needs an item or block name, for example /hologram create shop <type> diamond."
+# <command> = the command to use instead
+hologram-use-line-command: "<prefix><gray>Lines have their own command here: <white><command></white> followed by the text."
 # <properties> = every property name
 hologram-properties: "<prefix><gray>Properties: <white><properties>"
 hologram-property-set: "<prefix><green><name>: <white><property></white> is now <white><value></white>."

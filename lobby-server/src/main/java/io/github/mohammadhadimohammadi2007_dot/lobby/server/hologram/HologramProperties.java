@@ -43,6 +43,25 @@ final class HologramProperties {
     private static final Map<String, BiFunction<HologramData, String, Result>> SETTERS = new LinkedHashMap<>();
     private static final Map<String, String> ALLOWED = new LinkedHashMap<>();
 
+    /**
+     * The names FancyHolograms uses for the same properties, so an admin coming from it can type what
+     * they know. See docs/holograms.md for the full mapping.
+     */
+    private static final Map<String, String> FANCY_NAMES = Map.of(
+            "visibilitydistance", "view-distance",
+            "updatetextinterval", "update-interval",
+            "textshadow", "text-shadow",
+            "seethrough", "see-through",
+            "textalignment", "alignment");
+
+    /** The line subcommands FancyHolograms puts under {@code edit}; this lobby has them on their own. */
+    private static final Map<String, String> LINE_COMMANDS = Map.of(
+            "addline", "addline",
+            "setline", "setline",
+            "removeline", "removeline",
+            "insertbefore", "insertline",
+            "insertafter", "insertafter");
+
     static {
         property("scale", "a number between " + HologramData.MIN_SCALE + " and " + HologramData.MAX_SCALE,
                 (data, value) -> {
@@ -173,13 +192,27 @@ final class HologramProperties {
 
     /** What a property accepts, for the error message. */
     static String allowed(String property) {
-        return ALLOWED.getOrDefault(property.toLowerCase(Locale.ROOT), "");
+        return ALLOWED.getOrDefault(resolve(property), "");
+    }
+
+    /**
+     * The command to use instead, when the "property" is really one of this lobby's own subcommands
+     * (FancyHolograms edits lines through {@code edit <name> addline ...}), or {@code null}.
+     */
+    static @Nullable String lineCommandFor(String property) {
+        return LINE_COMMANDS.get(property.toLowerCase(Locale.ROOT));
     }
 
     /** Changes one property, or says why it could not. {@code null} means there is no such property. */
     static @Nullable Result apply(HologramData data, String property, String value) {
-        BiFunction<HologramData, String, Result> setter = SETTERS.get(property.toLowerCase(Locale.ROOT));
+        BiFunction<HologramData, String, Result> setter = SETTERS.get(resolve(property));
         return setter == null ? null : setter.apply(data, value.strip());
+    }
+
+    /** This lobby's name for a property, accepting FancyHolograms' names as well. */
+    private static String resolve(String property) {
+        String name = property.toLowerCase(Locale.ROOT);
+        return FANCY_NAMES.getOrDefault(name, name);
     }
 
     private static void property(String name, String allowed, BiFunction<HologramData, String, Result> setter) {

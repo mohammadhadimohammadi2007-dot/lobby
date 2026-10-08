@@ -82,13 +82,15 @@ public final class HologramCommand extends Command {
         addSubcommand(near(radius));
         addSubcommand(withName("info", name, (sender, data) -> info(sender, data)));
         addSubcommand(create(name, type, material));
-        addSubcommand(withName("delete", name, (sender, data) -> delete(sender, data)));
+        addSubcommand(withName("delete", name, (sender, data) -> delete(sender, data), "remove"));
         addSubcommand(copy(name, newName));
-        addSubcommand(withName("teleport", name, this::moveHere));
-        addSubcommand(withName("goto", name, HologramCommand::goTo));
+        // The names FancyHolograms uses: "teleport" brings you to the hologram, "movehere" the hologram to you.
+        addSubcommand(withName("movehere", name, this::moveHere, "here", "position"));
+        addSubcommand(withName("teleport", name, HologramCommand::goTo, "goto", "tp"));
         addSubcommand(addLine(name, lineText));
-        addSubcommand(lineAt("setline", name, lineNumber, lineText, false));
-        addSubcommand(lineAt("insertline", name, lineNumber, lineText, true));
+        addSubcommand(lineAt("setline", name, lineNumber, lineText, Insert.REPLACE));
+        addSubcommand(lineAt("insertline", name, lineNumber, lineText, Insert.BEFORE, "insertbefore"));
+        addSubcommand(lineAt("insertafter", name, lineNumber, lineText, Insert.AFTER));
         addSubcommand(removeLine(name, lineNumber));
         addSubcommand(set(name, property, value));
         addSubcommand(actions(name, actionText));
@@ -106,15 +108,16 @@ public final class HologramCommand extends Command {
         return argument;
     }
 
-    private Command simple(String name, net.minestom.server.command.builder.CommandExecutor executor) {
-        Command command = new Command(name);
+    private Command simple(String name, net.minestom.server.command.builder.CommandExecutor executor,
+                           String... aliases) {
+        Command command = new Command(name, aliases);
         command.setDefaultExecutor(executor);
         return command;
     }
 
     /** A subcommand that only needs an existing hologram. */
-    private Command withName(String name, ArgumentWord nameArgument, OnHologram action) {
-        Command command = new Command(name);
+    private Command withName(String name, ArgumentWord nameArgument, OnHologram action, String... aliases) {
+        Command command = new Command(name, aliases);
         command.setDefaultExecutor((sender, context) -> usage(sender));
         command.addSyntax((sender, context) -> {
             HologramData data = found(sender, context.get(nameArgument));
@@ -165,7 +168,7 @@ public final class HologramCommand extends Command {
     }
 
     private Command near(ArgumentNumber<Integer> radius) {
-        Command command = new Command("near");
+        Command command = new Command("near", "nearby");
         command.setDefaultExecutor((sender, context) -> near(sender, DEFAULT_NEAR_RADIUS));
         command.addSyntax((sender, context) -> near(sender, context.get(radius)), radius);
         return command;
@@ -194,10 +197,17 @@ public final class HologramCommand extends Command {
         return command;
     }
 
+    /** What {@code setline}, {@code insertline} and {@code insertafter} do with the line number. */
+    private enum Insert {
+        REPLACE,
+        BEFORE,
+        AFTER
+    }
+
     private Command lineAt(String commandName, ArgumentWord name, ArgumentNumber<Integer> lineNumber,
                            net.minestom.server.command.builder.arguments.ArgumentStringArray lineText,
-                           boolean insert) {
-        Command command = new Command(commandName);
+                           Insert insert, String... aliases) {
+        Command command = new Command(commandName, aliases);
         command.setDefaultExecutor((sender, context) -> usage(sender));
         command.addSyntax((sender, context) -> {
             HologramData data = foundText(sender, context.get(name));
@@ -206,16 +216,16 @@ public final class HologramCommand extends Command {
             }
             int number = context.get(lineNumber);
             List<String> lines = new ArrayList<>(data.lines());
-            int limit = insert ? lines.size() + 1 : lines.size();
+            int limit = insert == Insert.REPLACE ? lines.size() : lines.size() + 1;
             if (number > limit) {
                 sender.sendMessage(text.message(MessageKey.HOLOGRAM_NO_SUCH_LINE, sender,
                         Messages.text("line", number), Messages.text("lines", lines.size())));
                 return;
             }
-            if (insert) {
-                lines.add(number - 1, line(context, lineText));
-            } else {
-                lines.set(number - 1, line(context, lineText));
+            switch (insert) {
+                case REPLACE -> lines.set(number - 1, line(context, lineText));
+                case BEFORE -> lines.add(number - 1, line(context, lineText));
+                case AFTER -> lines.add(Math.min(number, lines.size()), line(context, lineText));
             }
             data.lines(lines);
             holograms.changed(data);
@@ -261,6 +271,13 @@ public final class HologramCommand extends Command {
                 return;
             }
             String propertyName = context.get(property);
+            String lineCommand = HologramProperties.lineCommandFor(propertyName);
+            if (lineCommand != null) {
+                // FancyHolograms edits lines with "edit <name> addline ..."; here they are their own commands.
+                sender.sendMessage(text.message(MessageKey.HOLOGRAM_USE_LINE_COMMAND, sender,
+                        Messages.text("command", "/hologram " + lineCommand + " " + data.name())));
+                return;
+            }
             HologramProperties.Result result = HologramProperties.apply(data, propertyName,
                     String.join(" ", context.get(value)));
             if (result == null) {

@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderScope;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
@@ -34,7 +35,7 @@ public final class HologramData {
     /** Default space between the lines of a hologram on old clients, in blocks. */
     public static final double DEFAULT_LINE_SPACING = 0.27;
     public static final double DEFAULT_VIEW_DISTANCE = 48;
-    /** How often a hologram with placeholders is rebuilt when no interval is set. */
+    /** How often a hologram whose text can change is rebuilt when no interval is set. */
     public static final int PLACEHOLDER_UPDATE_TICKS = 20;
     /** {@code update-interval: -1}: decide from the text (placeholders or an animation need one). */
     public static final int AUTOMATIC_UPDATE_INTERVAL = -1;
@@ -55,6 +56,7 @@ public final class HologramData {
     private volatile int updateIntervalTicks = AUTOMATIC_UPDATE_INTERVAL;
     private volatile String permission = "";
     private volatile double lineSpacing = DEFAULT_LINE_SPACING;
+    private volatile PlaceholderScope textScope = PlaceholderScope.STATIC;
     private volatile List<String> actionLines = List.of();
     private volatile ActionList actions = ActionList.EMPTY;
 
@@ -194,14 +196,27 @@ public final class HologramData {
     }
 
     /**
-     * How often the content really is rebuilt: what was asked for, or once a second when the text has
-     * placeholders or frames and nothing was asked for. Text without either never needs rebuilding.
+     * How much the text can differ between the players reading it, worked out by the hologram service
+     * from the placeholders in the lines. Text that is the same for everyone is rendered once and the
+     * same packets go to every viewer.
+     */
+    public PlaceholderScope textScope() {
+        return textScope;
+    }
+
+    public void textScope(PlaceholderScope value) {
+        textScope = value;
+    }
+
+    /**
+     * How often the content really is rebuilt: what was asked for, or once a second when the text can
+     * change by itself (a placeholder or an animation). Text that cannot change is never rebuilt.
      */
     public int effectiveUpdateIntervalTicks() {
         if (updateIntervalTicks != AUTOMATIC_UPDATE_INTERVAL) {
             return updateIntervalTicks;
         }
-        return animated() || hasPlaceholders() ? PLACEHOLDER_UPDATE_TICKS : 0;
+        return animated() || textScope.changesOverTime() ? PLACEHOLDER_UPDATE_TICKS : 0;
     }
 
     /** Permission needed to see it, or {@code ""} for everyone. */
@@ -241,21 +256,6 @@ public final class HologramData {
         actions = parsed;
     }
 
-    /**
-     * True if any line contains a {@code %placeholder%}, which means the text can differ per player and
-     * has to be rebuilt now and then.
-     */
-    public boolean hasPlaceholders() {
-        for (List<String> frame : frames) {
-            for (String line : frame) {
-                if (line.indexOf('%') >= 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     /** The same hologram under another name, for {@code /hologram copy}. */
     public HologramData copy(String newName) {
         HologramData copy = new HologramData(newName, type, position, lines());
@@ -272,6 +272,7 @@ public final class HologramData {
         copy.updateIntervalTicks = updateIntervalTicks;
         copy.permission = permission;
         copy.lineSpacing = lineSpacing;
+        copy.textScope = textScope;
         copy.actionLines = actionLines;
         copy.actions = actions;
         return copy;

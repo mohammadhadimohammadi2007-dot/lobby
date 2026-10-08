@@ -6,6 +6,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.YamlDataStore;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderScope;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -79,6 +80,7 @@ public final class HologramService implements ClientObjectClicks.Handler {
 
     private synchronized void loadAll() {
         for (HologramData data : store.load().values()) {
+            classify(data);
             show(new Hologram(data, services));
         }
         LOGGER.info("Holograms: {} loaded from {}{}", holograms.size(), FILE_NAME,
@@ -128,6 +130,7 @@ public final class HologramService implements ClientObjectClicks.Handler {
             return null;
         }
         HologramData data = new HologramData(key, type, position, lines);
+        classify(data);
         show(new Hologram(data, services));
         save();
         return data;
@@ -140,6 +143,7 @@ public final class HologramService implements ClientObjectClicks.Handler {
             return null;
         }
         HologramData copy = source.copy(key);
+        classify(copy);
         show(new Hologram(copy, services));
         save();
         return copy;
@@ -158,8 +162,38 @@ public final class HologramService implements ClientObjectClicks.Handler {
 
     /** Call after changing a {@link HologramData}: saves the file and shows the change. */
     public synchronized void changed(HologramData data) {
+        classify(data);
         renderer.invalidate(data.name());
         save();
+    }
+
+    /**
+     * Works out how much this hologram's text can differ between players, which decides whether it is
+     * rendered once for everybody or once per viewer. Called whenever the lines change.
+     *
+     * <p>A line written in Persian or Arabic counts as per-player whatever its placeholders say,
+     * because each player can turn the right-to-left fix on and off for themselves
+     * ({@code /chat persian}), so their lines really are different.
+     */
+    private void classify(HologramData data) {
+        PlaceholderScope scope = PlaceholderScope.STATIC;
+        for (List<String> frame : data.frames()) {
+            scope = scope.and(services.text().placeholders().scopeOf(frame));
+            if (frame.stream().anyMatch(HologramService::needsReshaping)) {
+                scope = scope.and(PlaceholderScope.PER_PLAYER);
+            }
+        }
+        data.textScope(scope);
+    }
+
+    /** True if the line contains Arabic-script letters, which the Persian fix may reorder per player. */
+    private static boolean needsReshaping(String line) {
+        for (int i = 0; i < line.length(); i++) {
+            if (Character.UnicodeBlock.of(line.charAt(i)) == Character.UnicodeBlock.ARABIC) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Parses action lines and puts them on a hologram, keeping the lines as written. */
