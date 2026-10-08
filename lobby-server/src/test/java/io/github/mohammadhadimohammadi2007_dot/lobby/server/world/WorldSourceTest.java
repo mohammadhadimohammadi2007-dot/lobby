@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -83,6 +84,41 @@ class WorldSourceTest {
 
         assertEquals(WorldFormat.POLAR, source.format());
         assertEquals(dir.resolve("lobby.polar").toAbsolutePath().normalize(), source.path());
+    }
+
+    @Test
+    void editedFolderIsConvertedAgain() throws IOException {
+        Path world = anvilWorld("lobby");
+        Path polar = Files.createFile(dir.resolve("lobby.polar"));
+        Path region = Files.createFile(world.resolve("region").resolve("r.0.0.mca"));
+        Files.setLastModifiedTime(polar, FileTime.fromMillis(1_000_000));
+        Files.setLastModifiedTime(region, FileTime.fromMillis(2_000_000));
+
+        WorldSource source = WorldSource.detect(world, true);
+
+        assertEquals(WorldFormat.ANVIL, source.format());
+        assertEquals(polar.toAbsolutePath().normalize(), source.convertTarget());
+    }
+
+    @Test
+    void unchangedFolderKeepsConvertedFile() throws IOException {
+        Path world = anvilWorld("lobby");
+        Path region = Files.createFile(world.resolve("region").resolve("r.0.0.mca"));
+        Path polar = Files.createFile(dir.resolve("lobby.polar"));
+        Files.setLastModifiedTime(region, FileTime.fromMillis(1_000_000));
+        Files.setLastModifiedTime(polar, FileTime.fromMillis(2_000_000));
+
+        assertEquals(WorldFormat.POLAR, WorldSource.detect(world, true).format());
+    }
+
+    @Test
+    void missingFolderUsesPolarFileWithSameName() throws IOException {
+        Path polar = Files.createFile(dir.resolve("lobby.polar"));
+
+        WorldSource source = WorldSource.detect(dir.resolve("lobby"), true);
+
+        assertEquals(WorldFormat.POLAR, source.format());
+        assertEquals(polar.toAbsolutePath().normalize(), source.path());
     }
 
     @Test

@@ -30,8 +30,8 @@ or behind a proxy.
 
 ## 3. Add your map
 
-Put a `.polar` file at `worlds/lobby.polar` (the default `world.path`), or set `world.path` to a
-vanilla world folder. See [maps.md](maps.md). Restart the server.
+Copy your world folder to `worlds/lobby` (the default `world.path`), or set `world.path` to another
+world folder or a `.polar` file. See [maps.md](maps.md). Restart the server.
 
 ## 4. Give yourself permissions
 

@@ -45,11 +45,12 @@ bungeeguard-tokens: []
 
 # ---------------- World ----------------
 world:
-  # A .polar file OR an Anvil world folder (the folder that contains "region/").
-  # Build your map between Y 0 and Y 255 so old 1.8 clients can see all of it.
-  path: "worlds/lobby.polar"
-  # Convert an Anvil world to .polar on first start (faster loading, lower memory).
-  # The original folder is kept. true or false.
+  # A world folder (the one that contains "level.dat" or "region/") OR a .polar file.
+  # Just copy your world folder to worlds/lobby. Build your map between Y 0 and Y 255 so old 1.8
+  # clients can see all of it.
+  path: "worlds/lobby"
+  # Convert a world folder to a .polar file next to it (faster loading, lower memory). The folder is
+  # kept, and when you edit it the map is converted again on the next start. true or false.
   convert-anvil-to-polar: true
   # How many chunks around spawn are loaded before players can join (1-32).
   preload-radius: 6

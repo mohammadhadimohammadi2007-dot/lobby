@@ -124,7 +124,10 @@ public final class WorldLoader {
      * so the saved file already contains lighting and later starts are fast.
      */
     private static Loaded convertAnvil(InstanceContainer instance, Path folder, Path target) throws IOException {
-        LOGGER.info("Converting Anvil map {} to Polar (one time only, the original folder is kept)...", folder);
+        if (Files.isRegularFile(target)) {
+            LOGGER.info("The world folder {} changed since it was converted, so it is converted again.", folder);
+        }
+        LOGGER.info("Converting Anvil map {} to Polar (the original folder is kept)...", folder);
         PolarWorld polarWorld = AnvilPolar.anvilToPolar(WorldSource.regionParent(folder));
         // No save path: Polar only updates the world in memory and we write the file ourselves, safely.
         PolarLoader loader = new PolarLoader(polarWorld).setWorldAccess(LobbyPolarWorldAccess.INSTANCE);
@@ -155,7 +158,8 @@ public final class WorldLoader {
 
     private static Loaded flatFallback(InstanceContainer instance, Pos spawn) {
         LOGGER.warn("Generating a small flat platform at spawn so the server can still start."
-                + " Put your map at the path set in config.yml (world.path) and restart.");
+                + " Copy your world folder (the one with level.dat) to the path set in config.yml (world.path),"
+                + " by default worlds/lobby, and restart.");
         instance.setGenerator(new FlatPlatformGenerator(spawn));
         return new Loaded("flat platform", WorldFormat.FLAT_FALLBACK, List.of(), null);
     }

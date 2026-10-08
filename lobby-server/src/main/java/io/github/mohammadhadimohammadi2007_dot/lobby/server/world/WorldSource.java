@@ -1,8 +1,12 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.world;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
  * Where the lobby map comes from, worked out from the {@code world.path} option.
@@ -27,7 +31,10 @@ public record WorldSource(WorldFormat format, Path path, Path convertTarget, Str
      *   <li>{@code something.polar} file: Polar.</li>
      *   <li>Folder with {@code region/} (worlds saved before Minecraft 26.1) or with
      *       {@code dimensions/minecraft/overworld/region/} (26.1 and newer): Anvil. With conversion on, the {@code .polar} file is created next to
-     *       the folder; if that file already exists, it is loaded instead.</li>
+     *       the folder; if that file already exists and is newer than every region file, it is loaded instead
+     *       (so editing the folder triggers a new conversion).</li>
+     *   <li>A folder that does not exist, but a {@code .polar} file with the same name does: that file
+     *       (the folder was converted and then removed).</li>
      *   <li>{@code something.polar} that does not exist, but a {@code something/} Anvil folder does:
      *       that Anvil folder (so dropping a vanilla world next to the default path just works).</li>
      *   <li>Anything else: flat fallback, with {@link #problem()} explaining why.</li>
@@ -46,6 +53,9 @@ public record WorldSource(WorldFormat format, Path path, Path convertTarget, Str
                 return anvil(anvilTwin, convertAnvilToPolar);
             }
         }
+        if (!isPolarName(path) && !Files.exists(path) && Files.isRegularFile(polarFileFor(path))) {
+            return new WorldSource(WorldFormat.POLAR, polarFileFor(path), null, null);
+        }
         if (!Files.exists(path)) {
             return fallback(path, "'" + path + "' does not exist");
         }
@@ -61,11 +71,27 @@ public record WorldSource(WorldFormat format, Path path, Path convertTarget, Str
             return new WorldSource(WorldFormat.ANVIL, folder, null, null);
         }
         Path polar = polarFileFor(folder);
-        if (Files.isRegularFile(polar)) {
-            // Converted on an earlier start.
+        if (Files.isRegularFile(polar) && !changedSince(folder, polar)) {
+            // Converted on an earlier start, and the folder was not edited since.
             return new WorldSource(WorldFormat.POLAR, polar, null, null);
         }
         return new WorldSource(WorldFormat.ANVIL, folder, polar, null);
+    }
+
+    /** True if any region file of {@code anvilWorld} is newer than {@code polar}. */
+    static boolean changedSince(Path anvilWorld, Path polar) {
+        try (Stream<Path> regions = Files.list(regionParent(anvilWorld).resolve(REGION_FOLDER))) {
+            FileTime converted = Files.getLastModifiedTime(polar);
+            return regions.anyMatch(file -> {
+                try {
+                    return Files.getLastModifiedTime(file).compareTo(converted) > 0;
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        } catch (IOException | UncheckedIOException e) {
+            return false; // Cannot tell: keep using the converted file.
+        }
     }
 
     private static WorldSource fallback(Path path, String problem) {

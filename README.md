@@ -43,8 +43,8 @@ You need **Java 25**.
 3. Join `localhost` in Minecraft.
 
 On the first start the server creates `config.yml`, `integrations.yml` and `messages.yml`.
-No map yet? It generates a small platform so you can still join. Put your map at `worlds/lobby.polar`
-(or point `world.path` at a vanilla world folder) and restart.
+No map yet? It generates a small platform so you can still join. Copy your world folder to `worlds/lobby`
+(or point `world.path` at another world folder or a `.polar` file) and restart.
 
 Type `stop` in the console to shut the server down.
 
