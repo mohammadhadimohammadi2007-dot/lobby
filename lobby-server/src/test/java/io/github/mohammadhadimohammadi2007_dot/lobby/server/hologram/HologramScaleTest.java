@@ -2,6 +2,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,6 +65,11 @@ class HologramScaleTest {
         started.forEach(HologramService::shutdown);
     }
 
+    /** Players whose name contains this are treated as 1.8 clients by the test. */
+    private static final String LEGACY_MARK = "L";
+    /** Players whose name contains this get their text reshaped for right-to-left reading. */
+    private static final String RTL_MARK = "R";
+
     private HologramService service(InstanceContainer map) throws Exception {
         ConfigManager config = new ConfigManager(dir);
         config.load();
@@ -72,8 +79,12 @@ class HologramScaleTest {
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
                 config, permissions, MuteService.NONE, bridge, info(map), LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
+        // Like the chat system does for players who asked for the Persian fix.
+        text.viewerTransform((player, component) -> ComponentTransforms.reshapePersian(component),
+                player -> player.getUsername().contains(RTL_MARK));
         HologramService service = HologramService.start(dir, renderer,
-                new Hologram.Services(text, permissions, bridge, WorldScope.mainMap(map)),
+                new Hologram.Services(text, permissions,
+                        player -> player.getUsername().contains(LEGACY_MARK), WorldScope.mainMap(map)),
                 new ActionServices(config, text, permissions, bridge));
         started.add(service);
         return service;
@@ -159,18 +170,39 @@ class HologramScaleTest {
     }
 
     @Test
-    void persianTextIsBuiltPerPlayerBecauseTheFixIsAPlayerSetting(Env env) throws Exception {
+    void persianTextIsAVariantNotOneRenderPerPlayer(Env env) throws Exception {
         InstanceContainer map = (InstanceContainer) env.createFlatInstance();
         HologramService holograms = service(map);
-        join(env, map, 5);
-
-        HologramData data = holograms.create("fa", HologramType.TEXT, ORIGIN, List.of("خوش آمدید"));
+        // Four kinds of viewer: modern and 1.8, each with the Persian fix on and off.
+        joinAt(env, map, VIEWERS, ORIGIN, number -> switch (number % 4) {
+            case 0 -> "";
+            case 1 -> RTL_MARK;
+            case 2 -> LEGACY_MARK;
+            default -> LEGACY_MARK + RTL_MARK;
+        });
+        HologramData data = holograms.create("fa", HologramType.TEXT, ORIGIN,
+                List.of("%server_online% بازیکن آنلاین"));
         assertNotNull(data);
+        assertEquals(PlaceholderScope.GLOBAL, data.textScope(), "a player count is the same for everyone");
+        assertTrue(data.reshapeMatters(), "the line has Arabic-script letters");
 
-        assertEquals(PlaceholderScope.PER_PLAYER, data.textScope());
         int before = renderer.renderCount();
         renderer.refreshNow();
-        assertEquals(5, renderer.renderCount() - before);
+        int renders = renderer.renderCount() - before;
+
+        System.out.println("global Persian hologram, " + VIEWERS + " viewers in 4 groups: "
+                + renders + " render(s) per update");
+        assertEquals(4, renders, "one render per client generation and Persian setting, not per player");
+
+        // A Latin line has no second version, so the Persian setting does not split its viewers.
+        HologramData latin = holograms.create("en", HologramType.TEXT, ORIGIN, List.of("%server_online% online"));
+        assertNotNull(latin);
+        assertFalse(latin.reshapeMatters());
+        before = renderer.renderCount();
+        renderer.refreshNow();
+        System.out.println("global Latin hologram, " + VIEWERS + " viewers in 4 groups: "
+                + (renderer.renderCount() - before) + " render(s) per update");
+        assertEquals(2, renderer.renderCount() - before, "only the two client generations");
         renderer.shutdown();
     }
 
@@ -205,15 +237,63 @@ class HologramScaleTest {
         renderer.shutdown();
     }
 
+    @Test
+    void oneJoiningPlayerAndAReloadStayCheap(Env env) throws Exception {
+        InstanceContainer map = (InstanceContainer) env.createFlatInstance();
+        HologramService holograms = service(map);
+        join(env, map, VIEWERS);
+        int hologramCount = 50;
+        for (int number = 1; number <= hologramCount; number++) {
+            holograms.create("sign-" + number, HologramType.TEXT, ORIGIN.add(number % 10, 0, number / 10),
+                    List.of("<gold>Shop " + number));
+        }
+        renderer.refreshNow();
+        // A refresh with nothing new, to compare against.
+        long idleStart = System.nanoTime();
+        renderer.refreshNow();
+        long idleMillis = (System.nanoTime() - idleStart) / 1_000_000;
+
+        // One more player joins: every hologram has to be spawned for them, and for nobody else.
+        join(env, map, 1);
+        long joinStart = System.nanoTime();
+        renderer.refreshNow();
+        long joinMillis = (System.nanoTime() - joinStart) / 1_000_000;
+
+        // A reload: read the file again, despawn everything for 200 players, show it again.
+        long reloadStart = System.nanoTime();
+        holograms.reload();
+        renderer.refreshNow();
+        long reloadMillis = (System.nanoTime() - reloadStart) / 1_000_000;
+
+        System.out.println(hologramCount + " holograms, " + VIEWERS + " viewers: idle refresh "
+                + idleMillis + " ms, one player joining " + joinMillis + " ms (" + (joinMillis - idleMillis)
+                + " ms more than idle), /hologram reload " + reloadMillis + " ms");
+        assertEquals(hologramCount, holograms.count(), "the reload found every hologram again");
+        assertTrue(joinMillis - idleMillis < 50,
+                "spawning " + hologramCount + " holograms for one joining player took "
+                        + (joinMillis - idleMillis) + " ms more than an idle refresh");
+        assertTrue(reloadMillis < 2000, "a reload took " + reloadMillis + " ms");
+        renderer.shutdown();
+    }
+
     private List<TestConnection> join(Env env, Instance instance, int count) {
         return joinAt(env, instance, count, ORIGIN);
     }
 
     private List<TestConnection> joinAt(Env env, Instance instance, int count, Pos where) {
+        return joinAt(env, instance, count, where, number -> "");
+    }
+
+    /**
+     * Joins {@code count} players, with {@code suffix} deciding each one's client generation and
+     * Persian setting from its number.
+     */
+    private List<TestConnection> joinAt(Env env, Instance instance, int count, Pos where,
+                                        java.util.function.IntFunction<String> suffix) {
         List<TestConnection> connections = new ArrayList<>(count);
         for (int number = 0; number < count; number++) {
-            TestConnection connection = env.createConnection(
-                    new GameProfile(UUID.randomUUID(), "Player" + where.blockX() + "x" + number));
+            TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(),
+                    "p" + where.blockX() + "x" + number + suffix.apply(number)));
             connection.connect(instance, where);
             connections.add(connection);
         }

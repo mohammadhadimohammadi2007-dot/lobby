@@ -41,6 +41,9 @@ final class HologramParts {
     private static final double BLOCK_CENTRE = 0.5;
     /** A dropped item floats a little above the point it is spawned at. */
     private static final double ITEM_DROP_OFFSET = 0.25;
+    /** Minecraft packs the two light levels of a display entity into one number. */
+    private static final int BLOCK_LIGHT_SHIFT = 4;
+    private static final int SKY_LIGHT_SHIFT = 20;
 
     private HologramParts() {
     }
@@ -106,7 +109,24 @@ final class HologramParts {
         // Without this the client stops drawing it at 64 blocks, however far the server sends it.
         float range = (float) Math.max(1, data.viewDistance() / CLIENT_RANGE_PER_UNIT);
         metadata.put(MetadataDef.Display.VIEW_RANGE.index(), Metadata.Float(range));
+        if (data.brightnessBlock() != HologramData.LIGHT_FROM_WORLD
+                || data.brightnessSky() != HologramData.LIGHT_FROM_WORLD) {
+            metadata.put(MetadataDef.Display.BRIGHTNESS_OVERRIDE.index(), Metadata.VarInt(brightness(data)));
+        }
+        if (data.shadowRadius() > 0) {
+            metadata.put(MetadataDef.Display.SHADOW_RADIUS.index(), Metadata.Float((float) data.shadowRadius()));
+            metadata.put(MetadataDef.Display.SHADOW_STRENGTH.index(), Metadata.Float((float) data.shadowStrength()));
+        }
         return metadata;
+    }
+
+    /** The two light levels as one number; a level left at "from the world" becomes full light. */
+    private static int brightness(HologramData data) {
+        int block = data.brightnessBlock() == HologramData.LIGHT_FROM_WORLD
+                ? HologramData.MAX_LIGHT : data.brightnessBlock();
+        int sky = data.brightnessSky() == HologramData.LIGHT_FROM_WORLD
+                ? HologramData.MAX_LIGHT : data.brightnessSky();
+        return (block << BLOCK_LIGHT_SHIFT) | (sky << SKY_LIGHT_SHIFT);
     }
 
     private static byte textFlags(HologramData data) {

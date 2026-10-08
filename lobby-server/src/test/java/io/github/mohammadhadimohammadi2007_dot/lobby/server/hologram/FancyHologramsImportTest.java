@@ -46,7 +46,7 @@ class FancyHologramsImportTest {
         BridgeService bridge = new BridgeService(false);
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         HologramService service = HologramService.start(dir, new ClientObjectRenderer(),
-                new Hologram.Services(text, permissions, bridge, WorldScope.anywhere()),
+                new Hologram.Services(text, permissions, player -> bridge.capabilities(player).legacy(), WorldScope.anywhere()),
                 new ActionServices(config, text, permissions, bridge));
         started.add(service);
         return service;

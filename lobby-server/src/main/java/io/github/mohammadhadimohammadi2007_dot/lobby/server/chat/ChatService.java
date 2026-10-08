@@ -120,7 +120,7 @@ public final class ChatService {
         players.addListener(PlayerDisconnectEvent.class, event -> onQuit(event.getPlayer()));
         services.bridge().onChatRelay(relay -> chatThread.execute(() -> handleRelay(relay)));
         services.permissions().onMetaChange(services.players()::resetCooldowns);
-        services.text().viewerTransform(this::serverMessagePersian);
+        services.text().viewerTransform(this::serverMessagePersian, this::reshapesPersianFor);
     }
 
     /**
@@ -253,14 +253,19 @@ public final class ChatService {
 
     /** Fixes Persian in server texts for viewers who want it, if persian.server-messages is on. */
     private Component serverMessagePersian(Player viewer, Component message) {
-        ChatConfig config = services.chat();
-        if (!config.persian().serverMessages()) {
-            return message;
+        return reshapesPersianFor(viewer) ? ComponentTransforms.reshapePersian(message) : message;
+    }
+
+    /**
+     * True if this viewer sees server messages reshaped for right-to-left reading. The display layer
+     * asks this as well, to group the viewers who see exactly the same text.
+     */
+    private boolean reshapesPersianFor(Player viewer) {
+        if (!services.chat().persian().serverMessages()) {
+            return false;
         }
         PlayerChatSettings settings = services.settings().get(viewer.getUuid());
-        return audience.wantsPersian(viewer, settings, services.bridge().capabilities(viewer))
-                ? ComponentTransforms.reshapePersian(message)
-                : message;
+        return audience.wantsPersian(viewer, settings, services.bridge().capabilities(viewer));
     }
 
     /** Clears every player's chat. */

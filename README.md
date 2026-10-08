@@ -74,6 +74,7 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.info` | `/lobby info` |
 | `lobby.command.lobby` | `/lobby <number>` and `/lobbies` (everyone has it when LuckPerms is off) |
 | `lobby.command.hologram` | `/hologram` (create, edit and delete holograms) |
+| `lobby.hologram.see.<name>` | See a hologram whose `visibility` is `permission` and that has no permission of its own |
 | `lobby.lobbies.join-full` | Join a lobby instance that is already at `players-per-instance` |
 | `lobby.bypass.protection` | Ignore the protection settings |
 

@@ -255,8 +255,8 @@ public final class LobbyServer implements ServerInfo {
     private void startDisplays() {
         display = new ClientObjectRenderer();
         clicks = new ClientObjectClicks(display);
-        Hologram.Services hologramServices = new Hologram.Services(text, permissions, bridge,
-                WorldScope.mainMap(world.instance()));
+        Hologram.Services hologramServices = new Hologram.Services(text, permissions,
+                player -> bridge.capabilities(player).legacy(), WorldScope.mainMap(world.instance()));
         holograms = HologramService.start(configManager.dataDir(), display, hologramServices, actions);
         clicks.addHandler(holograms);
     }

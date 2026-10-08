@@ -1,6 +1,5 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObject;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.EntityPart;
@@ -16,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /**
  * One hologram, shown to the players near it with packets only.
@@ -26,12 +26,26 @@ import java.util.UUID;
  */
 public final class Hologram implements ClientObject {
 
-    /** What decides whether two viewers can share one rendered hologram. */
-    record Variant(boolean legacy, @Nullable UUID viewer) {
+    /** The permission a hologram in {@code visibility: permission} mode needs when it has no own one. */
+    public static final String SEE_PERMISSION_PREFIX = "lobby.hologram.see.";
+
+    /**
+     * What decides whether two viewers can share one rendered hologram: their client generation,
+     * whether their texts are reshaped for right-to-left reading, and, only for text that really
+     * differs per player, who they are.
+     */
+    record Variant(boolean legacy, boolean reshaped, @Nullable UUID viewer) {
     }
 
-    /** Everything a hologram needs from the rest of the lobby. */
-    public record Services(LobbyText text, PermissionService permissions, BridgeService bridge, WorldScope scope) {
+    /**
+     * Everything a hologram needs from the rest of the lobby.
+     *
+     * @param legacyClient true for a viewer whose client is older than 1.19.4 and has no display
+     *                     entities (normally {@code bridge.capabilities(player).legacy()})
+     * @param scope        which worlds the holograms belong to
+     */
+    public record Services(LobbyText text, PermissionService permissions, Predicate<Player> legacyClient,
+                           WorldScope scope) {
     }
 
     private final HologramData data;
@@ -69,15 +83,28 @@ public final class Hologram implements ClientObject {
 
     @Override
     public boolean visibleTo(Player viewer) {
+        return switch (data.visibility()) {
+            case ALL -> hasPermission(viewer);
+            // Without a permission of its own, the hologram's name decides the permission.
+            case PERMISSION -> data.permission().isEmpty()
+                    ? services.permissions().hasPermission(viewer, SEE_PERMISSION_PREFIX + data.name())
+                    : hasPermission(viewer);
+            case MANUAL -> data.manualViewers().contains(viewer.getUuid()) && hasPermission(viewer);
+        };
+    }
+
+    private boolean hasPermission(Player viewer) {
         String permission = data.permission();
         return permission.isEmpty() || services.permissions().hasPermission(viewer, permission);
     }
 
     @Override
     public Object variantKey(Player viewer) {
-        boolean legacy = services.bridge().capabilities(viewer).legacy();
+        boolean legacy = services.legacyClient().test(viewer);
+        // Persian text has two versions, not one per player: the fix is a setting with two values.
+        boolean reshaped = data.reshapeMatters() && services.text().transformsFor(viewer);
         // Only text that really differs per player gets its own render; a player count does not.
-        return new Variant(legacy, data.textScope().perPlayer() ? viewer.getUuid() : null);
+        return new Variant(legacy, reshaped, data.textScope().perPlayer() ? viewer.getUuid() : null);
     }
 
     @Override

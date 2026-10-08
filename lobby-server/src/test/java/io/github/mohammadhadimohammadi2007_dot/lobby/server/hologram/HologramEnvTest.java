@@ -93,7 +93,7 @@ class HologramEnvTest {
         ClientObjectRenderer renderer = new ClientObjectRenderer();
         ClientObjectClicks clicks = new ClientObjectClicks(renderer);
         HologramService holograms = HologramService.start(dir, renderer,
-                new Hologram.Services(text, permissions, bridge, WorldScope.mainMap(map)), actions);
+                new Hologram.Services(text, permissions, player -> bridge.capabilities(player).legacy(), WorldScope.mainMap(map)), actions);
         clicks.addHandler(holograms);
         started.add(holograms);
         EventNode<PlayerEvent> node = EventNode.type("hologram-test", EventFilter.PLAYER);
@@ -192,6 +192,57 @@ class HologramEnvTest {
         // Operators have every permission; Steve is not one.
         assertEquals(1, displays(staffSpawns).size());
         assertEquals(List.of(), displays(playerSpawns));
+        setup.renderer().shutdown();
+    }
+
+    @Test
+    void manualVisibilityShowsItToNobodyUntilAPlayerIsNamed(Env env) throws Exception {
+        InstanceContainer map = (InstanceContainer) env.createFlatInstance();
+        Setup setup = start(env, map);
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player steve = connection.connect(map, ORIGIN);
+        HologramData data = setup.holograms().create("secret", HologramType.TEXT, ORIGIN, List.of("hidden"));
+        assertNotNull(data);
+        data.visibility(HologramVisibility.MANUAL);
+        setup.holograms().changed(data);
+        var spawns = connection.trackIncoming(SpawnEntityPacket.class);
+
+        setup.renderer().refreshNow();
+        assertEquals(List.of(), displays(spawns), "manual means nobody sees it yet");
+
+        data.manualViewers().add(steve.getUuid());
+        var afterShowing = connection.trackIncoming(SpawnEntityPacket.class);
+        setup.renderer().refreshNow();
+        assertEquals(1, displays(afterShowing).size());
+
+        var destroys = connection.trackIncoming(DestroyEntitiesPacket.class);
+        data.manualViewers().remove(steve.getUuid());
+        setup.renderer().refreshNow();
+        assertEquals(1, destroys.collect().size(), "taking it away despawns it again");
+        setup.renderer().shutdown();
+    }
+
+    @Test
+    void permissionVisibilityUsesTheHologramsOwnPermissionNode(Env env) throws Exception {
+        InstanceContainer map = (InstanceContainer) env.createFlatInstance();
+        Setup setup = start(env, map);
+        TestConnection staffConnection = env.createConnection(new GameProfile(UUID.randomUUID(), "Admin"));
+        TestConnection playerConnection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        staffConnection.connect(map, ORIGIN);
+        playerConnection.connect(map, ORIGIN);
+        HologramData data = setup.holograms().create("vip-only", HologramType.TEXT, ORIGIN, List.of("vip"));
+        assertNotNull(data);
+        // No permission of its own, so the node is lobby.hologram.see.<name>, which operators have.
+        data.visibility(HologramVisibility.PERMISSION);
+        setup.holograms().changed(data);
+        var staffSpawns = staffConnection.trackIncoming(SpawnEntityPacket.class);
+        var playerSpawns = playerConnection.trackIncoming(SpawnEntityPacket.class);
+
+        setup.renderer().refreshNow();
+
+        assertEquals(1, displays(staffSpawns).size());
+        assertEquals(List.of(), displays(playerSpawns));
+        assertEquals("lobby.hologram.see.vip-only", Hologram.SEE_PERMISSION_PREFIX + data.name());
         setup.renderer().shutdown();
     }
 

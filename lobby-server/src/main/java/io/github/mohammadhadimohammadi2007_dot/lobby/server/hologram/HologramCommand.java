@@ -6,6 +6,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.CommandContext;
@@ -95,6 +96,8 @@ public final class HologramCommand extends Command {
         addSubcommand(set(name, property, value));
         addSubcommand(actions(name, actionText));
         addSubcommand(simple("import", (sender, context) -> importFile(sender)));
+        addSubcommand(manual("show", true, name));
+        addSubcommand(manual("hide", false, name));
     }
 
     /** A name argument that suggests the holograms that exist. */
@@ -343,6 +346,46 @@ public final class HologramCommand extends Command {
                                 : String.join(" | ", data.actionLines()))));
             }
         }, list, name);
+        return command;
+    }
+
+    /** {@code /hologram show|hide <name> <player>} for holograms in manual visibility mode. */
+    private Command manual(String commandName, boolean show, ArgumentWord name) {
+        Command command = new Command(commandName);
+        command.setDefaultExecutor((sender, context) -> usage(sender));
+        ArgumentWord target = ArgumentType.Word("player");
+        target.setSuggestionCallback((sender, context, suggestion) -> {
+            for (Player online : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+                suggestion.addEntry(new SuggestionEntry(online.getUsername()));
+            }
+        });
+        command.addSyntax((sender, context) -> {
+            HologramData data = found(sender, context.get(name));
+            if (data == null) {
+                return;
+            }
+            if (data.visibility() != HologramVisibility.MANUAL) {
+                sender.sendMessage(text.message(MessageKey.HOLOGRAM_NOT_MANUAL, sender,
+                        Messages.text("name", data.name()),
+                        Messages.text("visibility", data.visibility().configName())));
+                return;
+            }
+            String playerName = context.get(target);
+            Player player = MinecraftServer.getConnectionManager().findOnlinePlayer(playerName);
+            if (player == null) {
+                sender.sendMessage(text.message(MessageKey.PLAYER_NOT_FOUND, sender,
+                        Messages.text("name", playerName)));
+                return;
+            }
+            if (show) {
+                data.manualViewers().add(player.getUuid());
+            } else {
+                data.manualViewers().remove(player.getUuid());
+            }
+            sender.sendMessage(text.message(show ? MessageKey.HOLOGRAM_SHOWN_TO : MessageKey.HOLOGRAM_HIDDEN_FROM,
+                    sender, Messages.text("name", data.name()),
+                    Messages.text("player", player.getUsername())));
+        }, target, name);
         return command;
     }
 

@@ -39,6 +39,7 @@ Permission: `lobby.command.hologram` (give it to staff only). Aliases: `/hologra
 | `/hologram set <name> <property> <value>` | Changes one property (below) |
 | `/hologram action add <name> <action>` | Adds an action for clicks |
 | `/hologram action list\|clear <name>` | Shows or removes the click actions |
+| `/hologram show\|hide <name> <player>` | Shows or hides a hologram in `manual` visibility mode |
 | `/hologram import` | Imports a FancyHolograms file (below) |
 
 Line numbers start at 1. Names may use letters, digits, `-` and `_`, and are not case-sensitive.
@@ -60,9 +61,20 @@ lobby's name is different, FancyHolograms' name works as an alias:
 | `edit <name> textshadow`, `seethrough`, `textalignment` | `text-shadow`, `see-through`, `alignment` | the FancyHolograms spellings also work |
 | `edit <name> position` / `movehere` | `movehere <name>` | `position` and `here` also work |
 
-Not here (yet): `rotate`, `rotatepitch`, `translate`, `center`, `brightness`, `shadowradius`,
-`shadowstrength`, `linkwithnpc`/`unlinkwithnpc`, and FancyHolograms' `visibility` modes. This lobby
-hides a hologram with `set <name> permission <node>` instead, and NPCs get their own name holograms.
+| `edit <name> rotate`, `rotatepitch` | `set <name> rotate`, `rotate-pitch` | the FancyHolograms spellings also work |
+| `edit <name> brightness block 7` | `set <name> brightness block 7` | same words |
+| `edit <name> shadowradius`, `shadowstrength` | `set <name> shadow-radius`, `shadow-strength` | the FancyHolograms spellings also work |
+| `edit <name> visibility <mode>` | `set <name> visibility <mode>` | `all`, `permission` and `manual`, as there |
+
+Two things are deliberately different, because they cannot mean the same here:
+
+- **`translate` and `center`** move a hologram by a part of a block relative to its own position.
+  Nothing stops this from being added, but it would only duplicate `movehere` and a coordinate: this
+  lobby has no block-centred grid to snap to, since holograms are placed where you stand, with
+  decimals. Use `movehere` or edit `position` in the file.
+- **`linkwithnpc`** attaches a hologram to a FancyNpcs NPC. The NPCs of this lobby carry their own
+  name holograms, which follow them and are rendered with the same rules as any other hologram, so
+  there is nothing to link.
 
 ## Text
 
@@ -95,6 +107,23 @@ Lines are [MiniMessage](https://docs.advntr.dev/minimessage/format) and may use 
 | `line-spacing` | 0.05 - 2 blocks | Space between lines **on old clients** |
 | `item` / `block` | an item or block name | What an item or block hologram shows |
 | `type` | `text`, `item`, `block` | What kind it is |
+| `rotate` | 0 - 360 degrees | Turns it, if `billboard` is `fixed` or `horizontal` |
+| `rotate-pitch` | -90 - 90 degrees | Tips it, if `billboard` is `fixed` or `vertical` |
+| `brightness` | `block <0-15>`, `sky <0-15>`, `default` | Lights it with a fixed light level instead of the light where it stands |
+| `shadow-radius` | blocks, 0 for none | A round shadow on the ground under it |
+| `shadow-strength` | 0 - 1 | How dark that shadow is |
+| `visibility` | `all`, `permission`, `manual` | Who sees it (below) |
+
+### Visibility
+
+| Mode | Who sees it |
+|---|---|
+| `all` (the default) | everyone, unless `permission` is set as well |
+| `permission` | players with the hologram's `permission`, or with `lobby.hologram.see.<name>` when it has none |
+| `manual` | nobody, until `/hologram show <name> <player>`. The list is not saved, so it starts empty after a restart (as in FancyHolograms) |
+
+Rotation, brightness and the shadow are drawn by the client's display entity, so clients older than
+1.19.4 simply do not show them: a 1.8 player sees the same armor-stand text, upright and lit normally.
 
 ## Clicks
 
@@ -189,7 +218,7 @@ Every hologram is **classified** when it is loaded or edited, from the placehold
 | no placeholders, or only unknown ones | once for the whole server | never |
 | only global placeholders (`%server_online%`, `%group_online_bedwars%`, `%bungee_total%`) | once for the whole server | every `update-interval` |
 | a per-player placeholder (`%player_name%`, `%luckperms_prefix%`) | once per viewer **in range** | every `update-interval` |
-| Persian or Arabic letters | once per viewer, because each player can turn the right-to-left fix on or off | as above |
+| Persian or Arabic letters | twice per client generation: with the right-to-left fix and without, because that fix is a setting with two values | as above |
 
 Measured on this machine (`HologramScaleTest`, 200 fake players standing at the hologram):
 
@@ -198,7 +227,25 @@ Measured on this machine (`HologramScaleTest`, 200 fake players standing at the 
 | `%group_online_bedwars% playing`, 200 viewers | **1** render per update, not 200 |
 | `Hello %player_name%`, 20 viewers near and 50 far away | **20** renders per update, none for the 50 |
 | no placeholders | 1 render, ever |
+| `%server_online% بازیکن آنلاین`, 200 viewers in four groups (1.8 and modern, Persian fix on and off) | **4** renders per update |
+| the same line in Latin letters, same 200 viewers | **2** renders (only the two client generations) |
 | 50 holograms, 200 viewers | 50 renders; 97 ms for the first refresh including every spawn packet, 12 ms for a refresh with nothing changed |
+
+### Which thread
+
+Every part of this runs on one background thread named `lobby-display`: working out who can see what,
+building the text, and sending the packets. The tick thread only counts ticks for it (one `+=` every
+five ticks), so a hologram can never make MSPT worse, however many there are. A test asserts that the
+text is only ever built on that thread.
+
+| What | Measured | Thread |
+|---|---|---|
+| One player joining, 50 holograms, 200 players online | 11 ms more than an idle refresh (about 0.2 ms per hologram, for 100 packets) | `lobby-display` |
+| `/lobby reload` with 50 holograms and 200 players | 65 ms (reads the file, despawns and shows everything again) | the reload's own thread and `lobby-display` |
+| A refresh with nothing changed | 5 - 12 ms | `lobby-display` |
+
+Those numbers come from the test harness, which serializes every packet into a list per fake player;
+a real server writes them to a socket instead, so they are an upper bound.
 
 | | |
 |---|---|

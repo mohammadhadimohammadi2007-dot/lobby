@@ -57,6 +57,17 @@ public final class HologramCodec implements DataCodec<HologramData> {
         data.updateIntervalTicks(node.node("update-interval").getInt(HologramData.AUTOMATIC_UPDATE_INTERVAL));
         data.permission(node.node("permission").getString(""));
         data.lineSpacing(node.node("line-spacing").getDouble(HologramData.DEFAULT_LINE_SPACING));
+        data.brightness(node.node("brightness-block").getInt(HologramData.LIGHT_FROM_WORLD),
+                node.node("brightness-sky").getInt(HologramData.LIGHT_FROM_WORLD));
+        data.shadowRadius(node.node("shadow-radius").getDouble(0));
+        data.shadowStrength(node.node("shadow-strength").getDouble(1));
+        HologramVisibility visibility = HologramVisibility.fromConfigName(
+                node.node("visibility").getString(HologramVisibility.ALL.configName()));
+        if (visibility == null) {
+            warn(name, "visibility", node.node("visibility").getString(""), HologramVisibility.configNames());
+        } else {
+            data.visibility(visibility);
+        }
         readActions(node, data, name);
         return data;
     }
@@ -68,6 +79,10 @@ public final class HologramCodec implements DataCodec<HologramData> {
         position.node("x").set(data.position().x());
         position.node("y").set(data.position().y());
         position.node("z").set(data.position().z());
+        if (data.position().yaw() != 0 || data.position().pitch() != 0) {
+            position.node("yaw").set(data.position().yaw());
+            position.node("pitch").set(data.position().pitch());
+        }
         if (data.type() == HologramType.TEXT) {
             node.node("lines").setList(String.class, data.lines());
             if (data.animated()) {
@@ -93,6 +108,11 @@ public final class HologramCodec implements DataCodec<HologramData> {
         node.node("update-interval").set(data.updateIntervalTicks());
         node.node("permission").set(data.permission());
         node.node("line-spacing").set(data.lineSpacing());
+        node.node("brightness-block").set(data.brightnessBlock());
+        node.node("brightness-sky").set(data.brightnessSky());
+        node.node("shadow-radius").set(data.shadowRadius());
+        node.node("shadow-strength").set(data.shadowStrength());
+        node.node("visibility").set(data.visibility().configName());
         if (!data.actionLines().isEmpty()) {
             node.node("click-cooldown").set(data.actions().cooldownMillis());
             node.node("actions").setList(String.class, data.actionLines());
@@ -103,7 +123,8 @@ public final class HologramCodec implements DataCodec<HologramData> {
         if (node.virtual()) {
             throw new DataException("'position' is missing (it needs x, y and z)");
         }
-        return new Pos(number(node, "x"), number(node, "y"), number(node, "z"));
+        return new Pos(number(node, "x"), number(node, "y"), number(node, "z"),
+                (float) node.node("yaw").getDouble(0), (float) node.node("pitch").getDouble(0));
     }
 
     private static double number(ConfigurationNode position, String key) throws DataException {

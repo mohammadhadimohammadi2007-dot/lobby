@@ -39,6 +39,7 @@ final class HologramProperties {
     private static final int HEX = 16;
     private static final int OPAQUE = 0xFF000000;
     private static final String HEX_FORMAT = "#%08X";
+    private static final double MAX_PITCH = 90;
 
     private static final Map<String, BiFunction<HologramData, String, Result>> SETTERS = new LinkedHashMap<>();
     private static final Map<String, String> ALLOWED = new LinkedHashMap<>();
@@ -52,7 +53,10 @@ final class HologramProperties {
             "updatetextinterval", "update-interval",
             "textshadow", "text-shadow",
             "seethrough", "see-through",
-            "textalignment", "alignment");
+            "textalignment", "alignment",
+            "rotatepitch", "rotate-pitch",
+            "shadowradius", "shadow-radius",
+            "shadowstrength", "shadow-strength");
 
     /** The line subcommands FancyHolograms puts under {@code edit}; this lobby has them on their own. */
     private static final Map<String, String> LINE_COMMANDS = Map.of(
@@ -165,6 +169,67 @@ final class HologramProperties {
             }
             data.block(block);
             return Result.ok(block.key().value());
+        });
+        property("rotate", "degrees, 0 to 360 (only seen when billboard is fixed or horizontal)",
+                (data, value) -> {
+                    Double number = decimal(value);
+                    if (number == null) {
+                        return Result.error("not a number");
+                    }
+                    data.position(data.position().withYaw(number.floatValue()));
+                    return Result.ok(data.position().yaw());
+                });
+        property("rotate-pitch", "degrees, -90 to 90 (only seen when billboard is fixed or vertical)",
+                (data, value) -> {
+                    Double number = decimal(value);
+                    if (number == null) {
+                        return Result.error("not a number");
+                    }
+                    data.position(data.position().withPitch((float) Math.clamp(number, -MAX_PITCH, MAX_PITCH)));
+                    return Result.ok(data.position().pitch());
+                });
+        property("brightness", "\"block <0-15>\", \"sky <0-15>\" or \"default\"", (data, value) -> {
+            String[] parts = value.strip().split("\\s+");
+            if (parts[0].equalsIgnoreCase("default")) {
+                data.brightness(HologramData.LIGHT_FROM_WORLD, HologramData.LIGHT_FROM_WORLD);
+                return Result.ok("default");
+            }
+            Integer level = parts.length == 2 ? integer(parts[1]) : null;
+            if (level == null || level < 0 || level > HologramData.MAX_LIGHT) {
+                return Result.error("needs a light level from 0 to " + HologramData.MAX_LIGHT);
+            }
+            if (parts[0].equalsIgnoreCase("block")) {
+                data.brightness(level, data.brightnessSky());
+            } else if (parts[0].equalsIgnoreCase("sky")) {
+                data.brightness(data.brightnessBlock(), level);
+            } else {
+                return Result.error("the first word must be block, sky or default");
+            }
+            return Result.ok("block " + data.brightnessBlock() + ", sky " + data.brightnessSky());
+        });
+        property("shadow-radius", "blocks, 0 for no shadow", (data, value) -> {
+            Double number = decimal(value);
+            if (number == null) {
+                return Result.error("not a number");
+            }
+            data.shadowRadius(number);
+            return Result.ok(data.shadowRadius());
+        });
+        property("shadow-strength", "0 to 1", (data, value) -> {
+            Double number = decimal(value);
+            if (number == null) {
+                return Result.error("not a number");
+            }
+            data.shadowStrength(number);
+            return Result.ok(data.shadowStrength());
+        });
+        property("visibility", String.join(", ", sorted(HologramVisibility.configNames())), (data, value) -> {
+            HologramVisibility visibility = HologramVisibility.fromConfigName(value);
+            if (visibility == null) {
+                return Result.error("unknown visibility");
+            }
+            data.visibility(visibility);
+            return Result.ok(visibility.configName());
         });
         property("type", String.join(", ", sorted(HologramType.configNames())), (data, value) -> {
             HologramType type = HologramType.fromConfigName(value);

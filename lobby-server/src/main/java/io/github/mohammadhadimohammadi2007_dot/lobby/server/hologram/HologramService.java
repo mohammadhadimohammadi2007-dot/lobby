@@ -171,19 +171,18 @@ public final class HologramService implements ClientObjectClicks.Handler {
      * Works out how much this hologram's text can differ between players, which decides whether it is
      * rendered once for everybody or once per viewer. Called whenever the lines change.
      *
-     * <p>A line written in Persian or Arabic counts as per-player whatever its placeholders say,
-     * because each player can turn the right-to-left fix on and off for themselves
-     * ({@code /chat persian}), so their lines really are different.
+     * <p>Persian and Arabic text is not per-player: the right-to-left fix is a setting with two values,
+     * so the hologram has one version with it and one without, each rendered once.
      */
     private void classify(HologramData data) {
         PlaceholderScope scope = PlaceholderScope.STATIC;
+        boolean reshapeMatters = false;
         for (List<String> frame : data.frames()) {
             scope = scope.and(services.text().placeholders().scopeOf(frame));
-            if (frame.stream().anyMatch(HologramService::needsReshaping)) {
-                scope = scope.and(PlaceholderScope.PER_PLAYER);
-            }
+            reshapeMatters = reshapeMatters || frame.stream().anyMatch(HologramService::needsReshaping);
         }
         data.textScope(scope);
+        data.reshapeMatters(reshapeMatters);
     }
 
     /** True if the line contains Arabic-script letters, which the Persian fix may reorder per player. */

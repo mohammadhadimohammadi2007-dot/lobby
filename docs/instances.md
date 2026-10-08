@@ -80,6 +80,18 @@ reach the whole network. With one instance, `instance-only` changes nothing.
 `%lobby_id%` (which lobby a player is in), `%lobby_count%`, `%lobby_online%` and
 `%lobby_online_<number>%`. See [placeholders](placeholders.md).
 
+## What moving players costs
+
+Changing instance has to happen on the tick thread, because the client is sent the whole world again.
+That costs a few milliseconds per player, so moving a whole lobby at once would stall the server: 200
+players at once took **300 ms** in a measurement, which players feel as a freeze.
+
+The lobby therefore spreads the moves: every tick it moves waiting players until 5 ms of that tick are
+used, and always at least one, so a single player clicking the selector still moves within one tick.
+Measured with 200 players switching at the same time (`LobbySwitchScaleTest`): 55 ticks, about 2.7
+seconds until the last player arrived, a median tick of 10 ms, which is no more than the same test
+measures for an idle tick with those 200 players.
+
 ## Things to know
 
 - Old clients are fine. Moving between instances makes the client load the world again, so players see

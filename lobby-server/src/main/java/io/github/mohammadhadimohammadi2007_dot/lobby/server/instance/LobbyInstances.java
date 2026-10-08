@@ -9,19 +9,21 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyTex
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldRules;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The lobby instances of this server.
@@ -37,11 +39,24 @@ import java.util.List;
 public final class LobbyInstances implements LobbyInstanceInfo, LobbySwitcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LobbyInstances.class);
+    /**
+     * How much of a tick may be spent moving players to another lobby. Changing instance has to happen
+     * on the tick thread and costs a few milliseconds per player, because the client is sent the whole
+     * world again: moving a full lobby of 200 players at once stalled the server for 300 ms. With a
+     * budget the rate follows the machine instead of a guessed number, and a tick keeps most of its
+     * 50 ms for everything else. One player is always moved, so a single switch never waits.
+     */
+    private static final long MOVE_BUDGET_NANOS = 5_000_000L;
+
+    /** One player waiting to be moved. */
+    private record PendingMove(Player player, Instance target, int number, Pos spawn) {
+    }
 
     private final List<Instance> instances;
     private final ConfigManager config;
     private final LobbyText text;
     private final PermissionService permissions;
+    private final Queue<PendingMove> pendingMoves = new ConcurrentLinkedQueue<>();
 
     private LobbyInstances(List<Instance> instances, ConfigManager config, LobbyText text,
                            PermissionService permissions) {
@@ -69,6 +84,7 @@ public final class LobbyInstances implements LobbyInstanceInfo, LobbySwitcher {
         }
         LobbyInstances lobbies = new LobbyInstances(created, config, text, permissions);
         lobbies.applyWorldRules(settings.world());
+        lobbies.startMoving();
         if (wanted > 1) {
             LOGGER.info("Lobbies: {} instances of the same map, new players join the {} one ({} players each)",
                     wanted, settings.lobbies().join().configName(),
@@ -162,14 +178,39 @@ public final class LobbyInstances implements LobbyInstanceInfo, LobbySwitcher {
             return;
         }
         Pos spawn = SpawnListener.spawnPosition(config.current().config());
-        Async.onTickThread(() -> {
-            if (!player.isOnline()) {
+        // Queued instead of moved right away: see MOVES_PER_TICK.
+        pendingMoves.add(new PendingMove(player, target, number, spawn));
+    }
+
+    /** Moves a few waiting players every tick, so a full lobby never stalls one. */
+    private void startMoving() {
+        MinecraftServer.getSchedulerManager().buildTask(this::moveSome)
+                .repeat(TaskSchedule.tick(1))
+                .schedule();
+    }
+
+    /** Runs on the tick thread: moves waiting players until {@link #MOVE_BUDGET_NANOS} is used up. */
+    private void moveSome() {
+        long deadline = System.nanoTime() + MOVE_BUDGET_NANOS;
+        do {
+            PendingMove move = pendingMoves.poll();
+            if (move == null) {
                 return;
             }
-            player.setRespawnPoint(spawn);
-            player.setInstance(target, spawn).thenRun(() -> player.sendMessage(
-                    text.message(MessageKey.LOBBY_SWITCHED, player, Messages.text("number", number))));
-        });
+            Player player = move.player();
+            // Left, or already there because they asked twice: that costs nothing, so it is not counted.
+            if (!player.isOnline() || player.getInstance() == move.target()) {
+                continue;
+            }
+            player.setRespawnPoint(move.spawn());
+            player.setInstance(move.target(), move.spawn()).thenRun(() -> player.sendMessage(
+                    text.message(MessageKey.LOBBY_SWITCHED, player, Messages.text("number", move.number()))));
+        } while (System.nanoTime() < deadline);
+    }
+
+    /** How many players are still waiting to be moved. For tests and metrics. */
+    public int pendingMoveCount() {
+        return pendingMoves.size();
     }
 
     /** Applies time of day and weather to every instance. Called at startup and after a reload. */

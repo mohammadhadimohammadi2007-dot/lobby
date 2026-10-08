@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * One hologram as stored in {@code data/holograms.yml}.
@@ -35,6 +38,11 @@ public final class HologramData {
     /** Default space between the lines of a hologram on old clients, in blocks. */
     public static final double DEFAULT_LINE_SPACING = 0.27;
     public static final double DEFAULT_VIEW_DISTANCE = 48;
+    /** Brightest and darkest light level a hologram can be lit with. */
+    public static final int MAX_LIGHT = 15;
+    /** {@code brightness: -1}: lit by the block it stands in, like any other entity. */
+    public static final int LIGHT_FROM_WORLD = -1;
+    public static final double MAX_SHADOW_RADIUS = 64;
     /** How often a hologram whose text can change is rebuilt when no interval is set. */
     public static final int PLACEHOLDER_UPDATE_TICKS = 20;
     /** {@code update-interval: -1}: decide from the text (placeholders or an animation need one). */
@@ -56,7 +64,14 @@ public final class HologramData {
     private volatile int updateIntervalTicks = AUTOMATIC_UPDATE_INTERVAL;
     private volatile String permission = "";
     private volatile double lineSpacing = DEFAULT_LINE_SPACING;
+    private volatile int brightnessBlock = LIGHT_FROM_WORLD;
+    private volatile int brightnessSky = LIGHT_FROM_WORLD;
+    private volatile double shadowRadius;
+    private volatile double shadowStrength = 1;
+    private volatile HologramVisibility visibility = HologramVisibility.ALL;
+    private final Set<UUID> manualViewers = ConcurrentHashMap.newKeySet();
     private volatile PlaceholderScope textScope = PlaceholderScope.STATIC;
+    private volatile boolean reshapeMatters;
     private volatile List<String> actionLines = List.of();
     private volatile ActionList actions = ActionList.EMPTY;
 
@@ -209,6 +224,19 @@ public final class HologramData {
     }
 
     /**
+     * True if the lines contain Arabic-script letters, so the right-to-left fix changes them. The
+     * viewers who want that fix then see a different text from those who do not, and each version is
+     * rendered once, not once per player.
+     */
+    public boolean reshapeMatters() {
+        return reshapeMatters;
+    }
+
+    public void reshapeMatters(boolean value) {
+        reshapeMatters = value;
+    }
+
+    /**
      * How often the content really is rebuilt: what was asked for, or once a second when the text can
      * change by itself (a placeholder or an animation). Text that cannot change is never rebuilt.
      */
@@ -235,6 +263,64 @@ public final class HologramData {
 
     public void lineSpacing(double value) {
         lineSpacing = clamp(value, MIN_LINE_SPACING, MAX_LINE_SPACING);
+    }
+
+    /** How bright the hologram is lit by block light, or {@link #LIGHT_FROM_WORLD}. */
+    public int brightnessBlock() {
+        return brightnessBlock;
+    }
+
+    /** How bright the hologram is lit by sky light, or {@link #LIGHT_FROM_WORLD}. */
+    public int brightnessSky() {
+        return brightnessSky;
+    }
+
+    /**
+     * Sets the light the hologram is drawn with. Either value may be {@link #LIGHT_FROM_WORLD} to let
+     * the client light it like any other entity. Old clients always do that.
+     */
+    public void brightness(int block, int sky) {
+        brightnessBlock = light(block);
+        brightnessSky = light(sky);
+    }
+
+    private static int light(int value) {
+        return value < 0 ? LIGHT_FROM_WORLD : Math.min(value, MAX_LIGHT);
+    }
+
+    /** Radius of the shadow under the hologram; 0 (the default) means no shadow. */
+    public double shadowRadius() {
+        return shadowRadius;
+    }
+
+    public void shadowRadius(double value) {
+        shadowRadius = Math.clamp(value, 0, MAX_SHADOW_RADIUS);
+    }
+
+    /** How dark the shadow is, 0 to 1. */
+    public double shadowStrength() {
+        return shadowStrength;
+    }
+
+    public void shadowStrength(double value) {
+        shadowStrength = Math.clamp(value, 0, 1);
+    }
+
+    /** Who the hologram is shown to. */
+    public HologramVisibility visibility() {
+        return visibility;
+    }
+
+    public void visibility(HologramVisibility value) {
+        visibility = value;
+    }
+
+    /**
+     * The players who were shown this hologram with {@code /hologram show}, used by
+     * {@link HologramVisibility#MANUAL}. Not saved: it starts empty after a restart.
+     */
+    public Set<UUID> manualViewers() {
+        return manualViewers;
     }
 
     /** What a click runs. */
@@ -273,6 +359,12 @@ public final class HologramData {
         copy.permission = permission;
         copy.lineSpacing = lineSpacing;
         copy.textScope = textScope;
+        copy.reshapeMatters = reshapeMatters;
+        copy.brightnessBlock = brightnessBlock;
+        copy.brightnessSky = brightnessSky;
+        copy.shadowRadius = shadowRadius;
+        copy.shadowStrength = shadowStrength;
+        copy.visibility = visibility;
         copy.actionLines = actionLines;
         copy.actions = actions;
         return copy;

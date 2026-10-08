@@ -10,6 +10,7 @@ import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 /**
  * Renders texts from messages.yml and config files with {@code %placeholders%} filled in.
@@ -20,6 +21,7 @@ public final class LobbyText {
     private final ConfigManager config;
     private final PlaceholderService placeholders;
     private volatile BiFunction<Player, Component, Component> viewerTransform = (player, component) -> component;
+    private volatile Predicate<Player> viewerTransformApplies = player -> false;
 
     public LobbyText(ConfigManager config, PlaceholderService placeholders) {
         this.config = config;
@@ -29,9 +31,23 @@ public final class LobbyText {
     /**
      * Changes every text after rendering for one player, for example fixing Persian for players who want it
      * (set by the chat system when persian.server-messages is on).
+     *
+     * @param transform what to do with a rendered text for one viewer
+     * @param applies   true for the viewers it really changes something for. The display layer groups
+     *                  viewers by this answer, so a hologram is rendered once per group instead of once
+     *                  per player
      */
-    public void viewerTransform(BiFunction<Player, Component, Component> transform) {
+    public void viewerTransform(BiFunction<Player, Component, Component> transform, Predicate<Player> applies) {
         viewerTransform = transform;
+        viewerTransformApplies = applies;
+    }
+
+    /**
+     * True if rendered texts are changed for this viewer. Two viewers with the same answer get exactly
+     * the same text, so they can share one render.
+     */
+    public boolean transformsFor(Player viewer) {
+        return viewerTransformApplies.test(viewer);
     }
 
     /** The placeholder engine. */

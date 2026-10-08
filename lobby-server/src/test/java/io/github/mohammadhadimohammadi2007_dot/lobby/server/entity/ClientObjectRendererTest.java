@@ -7,6 +7,9 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.MetadataDef;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.EventFilter;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
@@ -19,9 +22,12 @@ import net.minestom.testing.EnvTest;
 import net.minestom.testing.TestConnection;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -46,6 +52,7 @@ class ClientObjectRendererTest {
         private final AtomicReference<String> text;
         private final boolean perPlayer;
         private final AtomicInteger renders = new AtomicInteger();
+        private final Set<String> renderThreads = ConcurrentHashMap.newKeySet();
         private volatile double distance = 32;
         private volatile WorldScope scope = WorldScope.anywhere();
 
@@ -82,6 +89,7 @@ class ClientObjectRendererTest {
         @Override
         public List<EntityPart> render(Object key, Player viewer) {
             renders.incrementAndGet();
+            renderThreads.add(Thread.currentThread().getName());
             String shown = perPlayer ? text.get() + " " + viewer.getUsername() : text.get();
             return List.of(new EntityPart(EntityType.TEXT_DISPLAY, ORIGIN,
                     Map.of(MetadataDef.TextDisplay.TEXT.index(), Metadata.Component(Component.text(shown)))));
@@ -133,6 +141,27 @@ class ClientObjectRendererTest {
         renderer.refreshNow();
         assertEquals(1, hologram.renders.get());
         assertEquals(List.of(), quiet.collect());
+        renderer.shutdown();
+    }
+
+    @Test
+    void nothingIsBuiltOnTheTickThread(Env env) {
+        ClientObjectRenderer renderer = new ClientObjectRenderer(1);
+        EventNode<PlayerEvent> node = EventNode.type("display-thread-test", EventFilter.PLAYER);
+        env.process().eventHandler().addChild(node);
+        renderer.register(node);
+        Instance instance = env.createFlatInstance();
+        join(env, instance, "Ann");
+        TextObject hologram = new TextObject("Welcome", true);
+        renderer.put(hologram);
+        String tickThread = Thread.currentThread().getName();
+
+        // Both ways of refreshing: the scheduled one and the one tests use.
+        renderer.refreshNow();
+        env.tickWhile(() -> hologram.renders.get() < 2, Duration.ofSeconds(5));
+
+        assertEquals(Set.of("lobby-display"), hologram.renderThreads,
+                "holograms are built on their own thread, never on the tick thread (" + tickThread + ")");
         renderer.shutdown();
     }
 

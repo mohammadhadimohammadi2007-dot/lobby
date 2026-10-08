@@ -53,6 +53,10 @@ hologram-no-such-line: "<prefix><red>There is no line <line>; this hologram has 
 hologram-too-many-lines: "<prefix><red>A hologram can have at most <max> lines."
 hologram-wrong-type: "<prefix><red><name> is a <type> hologram, so it has no lines."
 hologram-needs-material: "<prefix><red>A <type> hologram needs an item or block name, for example /hologram create shop <type> diamond."
+# <player> = the player a manual hologram is shown to or hidden from
+hologram-shown-to: "<prefix><green><name> is now shown to <white><player></white>."
+hologram-hidden-from: "<prefix><green><name> is now hidden from <white><player></white>."
+hologram-not-manual: "<prefix><red><name> is in visibility mode <visibility>. Use /hologram set <name> visibility manual first."
 # <command> = the command to use instead
 hologram-use-line-command: "<prefix><gray>Lines have their own command here: <white><command></white> followed by the text."
 # <properties> = every property name
