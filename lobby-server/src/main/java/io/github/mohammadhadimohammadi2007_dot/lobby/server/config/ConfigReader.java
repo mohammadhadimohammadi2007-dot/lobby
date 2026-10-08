@@ -3,8 +3,10 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -232,6 +234,36 @@ public final class ConfigReader {
             return invalid(path, node.raw(), "a list like [\"a\", \"b\"]", fallback);
         }
         return listOf(node);
+    }
+
+    /**
+     * A list of whole entries, which may be text or sections (used for action lists, where
+     * {@code random:} holds a list of its own). An empty or missing option gives an empty list.
+     */
+    public List<Object> entryList(String path) {
+        ConfigurationNode node = user.node(split(path));
+        if (node.virtual() || node.raw() == null) {
+            node = defaults.node(split(path));
+            if (node.virtual()) {
+                return List.of();
+            }
+        }
+        if (!node.isList()) {
+            return invalid(path, node.raw(), "a list of actions", List.of());
+        }
+        List<Object> values = new ArrayList<>();
+        for (ConfigurationNode child : node.childrenList()) {
+            Object raw = child.raw();
+            if (child.isMap()) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                child.childrenMap().forEach((key, value) -> map.put(String.valueOf(key),
+                        value.isList() ? listOf(value) : value.raw()));
+                values.add(map);
+            } else if (raw != null && !String.valueOf(raw).isBlank()) {
+                values.add(String.valueOf(raw).trim());
+            }
+        }
+        return List.copyOf(values);
     }
 
     /** The user's value, or the bundled one, or {@code null}; never warns about missing options. */
