@@ -39,9 +39,11 @@ public final class TextNormalizer {
     private static final Map<Character, Character> LEET_DIGITS = Map.of(
             '0', 'o', '1', 'i', '3', 'e', '4', 'a', '5', 's', '7', 't', '8', 'b', '9', 'g');
 
-    /** Symbols used as letters. Only applied when a letter follows, so "noob!" stays "noob". */
-    private static final Map<Character, Character> LEET_SYMBOLS = Map.of(
-            '@', 'a', '$', 's', '!', 'i', '|', 'i', '+', 't', '€', 'e');
+    /** Symbols that are almost never punctuation: used as letters whenever they touch a letter ("a$$", "@ss"). */
+    private static final Map<Character, Character> LEET_LETTER_SYMBOLS = Map.of('@', 'a', '$', 's', '€', 'e');
+
+    /** Symbols that are often punctuation: only used as letters when a letter follows ("sh!t" but not "noob!"). */
+    private static final Map<Character, Character> LEET_PUNCTUATION = Map.of('!', 'i', '|', 'i', '+', 't');
 
     private static final char TATWEEL = 'ـ';
 
@@ -64,7 +66,7 @@ public final class TextNormalizer {
      * Full normalization for the word filter: Unicode compatibility forms, lower case, Persian spelling,
      * no invisible characters or diacritics, ASCII digits, look-alike letters, leetspeak, and repeated
      * letters collapsed to one ({@code fuuuck} becomes {@code fuck}) with the repeat counts kept in
-     * {@link Normalized#repeats()}. Word lists are normalized the same way.
+     * {@link Normalized#repeats()}, and runs of spaces collapsed to one. Word lists are normalized the same way.
      */
     public static Normalized forFilter(String input) {
         Buffer basic = basic(input);
@@ -96,7 +98,7 @@ public final class TextNormalizer {
                 if (shouldDrop(c)) {
                     continue;
                 }
-                c = Character.toLowerCase(c);
+                c = Character.isWhitespace(c) ? ' ' : Character.toLowerCase(c);
                 c = PERSIAN.getOrDefault(c, c);
                 c = HOMOGLYPHS.getOrDefault(c, c);
                 if (Character.isDigit(c)) {
@@ -130,22 +132,37 @@ public final class TextNormalizer {
             if (digit != null && (Character.isLetter(prev) || Character.isLetter(next))
                     && !Character.isDigit(prev) && !Character.isDigit(next)) {
                 c = digit;
-            } else {
-                Character symbol = LEET_SYMBOLS.get(c);
-                if (symbol != null && Character.isLetter(next)) {
-                    c = symbol;
-                }
+            } else if (LEET_LETTER_SYMBOLS.containsKey(c)
+                    && (Character.isLetter(next) || Character.isLetter(prev) || LEET_LETTER_SYMBOLS.containsKey(prev))
+                    && touchesLetter(in, i)) {
+                c = LEET_LETTER_SYMBOLS.get(c);
+            } else if (LEET_PUNCTUATION.containsKey(c) && Character.isLetter(next)) {
+                c = LEET_PUNCTUATION.get(c);
             }
             out.add(c, in.starts[i], in.ends[i]);
         }
         return out;
     }
 
+    /** True if the run of letter-like symbols around {@code index} is attached to a letter. */
+    private static boolean touchesLetter(Buffer in, int index) {
+        int left = index;
+        while (left > 0 && LEET_LETTER_SYMBOLS.containsKey(in.chars[left - 1])) {
+            left--;
+        }
+        int right = index;
+        while (right + 1 < in.size && LEET_LETTER_SYMBOLS.containsKey(in.chars[right + 1])) {
+            right++;
+        }
+        return (left > 0 && Character.isLetter(in.chars[left - 1]))
+                || (right + 1 < in.size && Character.isLetter(in.chars[right + 1]));
+    }
+
     private static Buffer collapseRepeats(Buffer in) {
         Buffer out = new Buffer(in.size);
         for (int i = 0; i < in.size; i++) {
             char c = in.chars[i];
-            if (out.size > 0 && out.chars[out.size - 1] == c && Character.isLetter(c)) {
+            if (out.size > 0 && out.chars[out.size - 1] == c && (Character.isLetter(c) || c == ' ')) {
                 out.ends[out.size - 1] = in.ends[i];
                 out.repeats[out.size - 1]++;
                 continue;

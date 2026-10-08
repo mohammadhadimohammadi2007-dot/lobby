@@ -1,0 +1,11 @@
+# Censored words: the message is sent, but these words are replaced with *****.
+# Same format as blocked.txt. Any file whose name starts with "censored" is used.
+
+damn*
+crap*
+piss*
+bastard*
+dick
+cock*
+wtf
+stfu

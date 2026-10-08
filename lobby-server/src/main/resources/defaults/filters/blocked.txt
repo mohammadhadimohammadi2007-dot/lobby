@@ -1,0 +1,25 @@
+# Blocked words: a message containing one of these is not sent.
+# One entry per line. Lines starting with # are comments.
+#   word     matches the whole word only ("ass" does not match "class")
+#   word*    matches words starting with it ("fuck*" matches "fucking")
+#   *word    matches words ending with it
+#   *word*   matches anywhere, even inside other words (use with care, add exceptions to allowed.txt)
+# Spelling tricks are caught automatically: capitals, repeated letters (fuuuck), leetspeak (sh!t, @ss),
+# look-alike letters, invisible characters and spaced or dotted letters (f u c k, f.u.c.k).
+# Any file in this folder whose name starts with "blocked" is used. Reload with /lobby reload.
+
+fuck*
+motherfuck*
+cunt*
+nigg*
+fagg*
+faggot*
+retard*
+whore*
+slut*
+bitch*
+shit*
+asshole*
+dickhead*
+kys
+kill yourself

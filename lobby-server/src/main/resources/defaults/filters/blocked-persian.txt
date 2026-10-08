@@ -1,0 +1,15 @@
+# Persian and Finglish blocked words. This list is empty on purpose: add the words your server needs.
+#
+# How to add words:
+#   - Write Persian words normally, one per line. Arabic and Persian spellings (ي/ی, ك/ک), diacritics,
+#     tatweel (ـ) and invisible characters (half-space) are handled automatically, so one spelling is enough.
+#   - Finglish (Persian in Latin letters) works the same as English: write it once in lower case.
+#     Repeated letters and leetspeak are caught automatically.
+#   - Use word* to also catch longer forms, e.g. a verb with all its endings.
+#   - Put false positives in allowed.txt.
+#
+# Examples of the format (not real entries):
+#   kalame
+#   kalame*
+#   کلمه
+#   کلمه*

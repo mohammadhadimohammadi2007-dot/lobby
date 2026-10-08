@@ -1,0 +1,16 @@
+# Allowed words: exceptions that are never blocked or censored, even if an entry above matches inside them.
+# Whole words only. Any file whose name starts with "allowed" is used.
+
+class
+pass
+bass
+glass
+grass
+assassin
+assessment
+scunthorpe
+cockpit
+peacock
+hancock
+dickens
+shitake
