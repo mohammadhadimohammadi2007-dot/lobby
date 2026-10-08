@@ -1,12 +1,14 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.entity;
 
 import net.kyori.adventure.text.Component;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.MetadataDef;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
@@ -45,6 +47,7 @@ class ClientObjectRendererTest {
         private final boolean perPlayer;
         private final AtomicInteger renders = new AtomicInteger();
         private volatile double distance = 32;
+        private volatile WorldScope scope = WorldScope.anywhere();
 
         TextObject(String text, boolean perPlayer) {
             this.text = new AtomicReference<>(text);
@@ -59,6 +62,11 @@ class ClientObjectRendererTest {
         @Override
         public Pos position() {
             return ORIGIN;
+        }
+
+        @Override
+        public WorldScope scope() {
+            return scope;
         }
 
         @Override
@@ -125,6 +133,43 @@ class ClientObjectRendererTest {
         renderer.refreshNow();
         assertEquals(1, hologram.renders.get());
         assertEquals(List.of(), quiet.collect());
+        renderer.shutdown();
+    }
+
+    @Test
+    void anotherWorldDoesNotShowTheObject(Env env) {
+        ClientObjectRenderer renderer = new ClientObjectRenderer();
+        InstanceContainer map = (InstanceContainer) env.createFlatInstance();
+        Instance secondLobby = MinecraftServer.getInstanceManager().createSharedInstance(map);
+        InstanceContainer otherWorld = (InstanceContainer) env.createFlatInstance();
+        TestConnection inLobby = env.createConnection(new GameProfile(UUID.randomUUID(), "Ann"));
+        TestConnection inSecondLobby = env.createConnection(new GameProfile(UUID.randomUUID(), "Bob"));
+        TestConnection elsewhere = env.createConnection(new GameProfile(UUID.randomUUID(), "Cid"));
+        inLobby.connect(map, ORIGIN);
+        inSecondLobby.connect(secondLobby, ORIGIN);
+        // Same coordinates, different world: the parkour map of phase 4 must not show lobby holograms.
+        elsewhere.connect(otherWorld, ORIGIN);
+        TextObject hologram = new TextObject("Welcome", false);
+        hologram.scope = WorldScope.mainMap(map);
+        renderer.put(hologram);
+        var lobbySpawns = inLobby.trackIncoming(SpawnEntityPacket.class);
+        var secondLobbySpawns = inSecondLobby.trackIncoming(SpawnEntityPacket.class);
+        var elsewhereSpawns = elsewhere.trackIncoming(SpawnEntityPacket.class);
+
+        renderer.refreshNow();
+
+        assertEquals(1, hologramSpawns(lobbySpawns).size());
+        assertEquals(1, hologramSpawns(secondLobbySpawns).size(), "every lobby instance of the map shows it");
+        assertEquals(List.of(), hologramSpawns(elsewhereSpawns), "another world does not");
+
+        // Only one render, although the viewers are in two different instances of the map.
+        assertEquals(1, hologram.renders.get());
+
+        // Scoped to one lobby instead, the other lobby loses it again.
+        var despawn = inSecondLobby.trackIncoming(DestroyEntitiesPacket.class);
+        hologram.scope = WorldScope.only(map);
+        renderer.refreshNow();
+        assertEquals(1, despawn.collect().size());
         renderer.shutdown();
     }
 

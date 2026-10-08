@@ -17,6 +17,12 @@ public interface ClientObject {
     /** Where it is. Viewers further away than {@link #viewDistance()} do not get it. */
     Pos position();
 
+    /**
+     * Which worlds it belongs to. Checked before the distance, because the same coordinates exist in
+     * every world: see {@link WorldScope}.
+     */
+    WorldScope scope();
+
     /** How far away it is still shown, in blocks. */
     double viewDistance();
 

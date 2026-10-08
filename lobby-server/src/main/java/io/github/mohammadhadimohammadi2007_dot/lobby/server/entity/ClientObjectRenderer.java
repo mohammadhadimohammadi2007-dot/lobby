@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Shows {@link ClientObject}s (holograms, NPCs) to the players near them.
  *
- * <p>Everything here is packets, so one object automatically exists in every lobby instance and costs no
- * tick time. Viewers who would see exactly the same thing share one set of entity ids, so a hologram
+ * <p>Everything here is packets, so one object automatically exists in every lobby instance of its
+ * {@link WorldScope} and costs no tick time. Viewers who would see exactly the same thing share one set of entity ids, so a hologram
  * without player placeholders is built once however many players read it. Viewers who walk out of range
  * get a destroy packet and a fresh spawn when they come back.
  *
@@ -274,8 +274,11 @@ public final class ClientObjectRenderer {
     private Map<Object, List<Player>> groupViewers(ClientObject object, Collection<Player> online) {
         double maxDistanceSquared = object.viewDistance() * object.viewDistance();
         Map<Object, List<Player>> groups = new LinkedHashMap<>();
+        WorldScope scope = object.scope();
         for (Player player : online) {
-            if (player.getPosition().distanceSquared(object.position()) > maxDistanceSquared
+            // The world first: the same coordinates exist in every world, the distance alone proves nothing.
+            if (!scope.includes(player.getInstance())
+                    || player.getPosition().distanceSquared(object.position()) > maxDistanceSquared
                     || !object.visibleTo(player)) {
                 continue;
             }
