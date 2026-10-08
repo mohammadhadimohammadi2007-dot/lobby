@@ -57,9 +57,15 @@ public record ChatConfig(
     public record Persian(boolean defaultOn, boolean serverMessages, boolean trustRtlClients) {
     }
 
-    /** One chat channel. {@code permission}/{@code sendPermission} are empty when not needed. */
+    /**
+     * One chat channel. {@code permission}/{@code sendPermission} are empty when not needed.
+     *
+     * @param network      true to share it with the other lobby servers through the bridge
+     * @param instanceOnly true if only players in the sender's own lobby instance see it
+     *                     (see {@code lobbies} in config.yml; with one instance it changes nothing)
+     */
     public record Channel(String name, String prefix, String permission, String sendPermission, boolean network,
-                          String format) {
+                          boolean instanceOnly, String format) {
     }
 
     /** One chat format. {@code legacy} is empty when it should be made from {@code format}. */
@@ -215,6 +221,7 @@ public record ChatConfig(
                     reader.string(path + ".permission", "").strip(),
                     reader.string(path + ".send-permission", "").strip(),
                     reader.bool(path + ".network", false),
+                    reader.bool(path + ".instance-only", false),
                     reader.string(path + ".format", "<format>")));
         }
         return channels;

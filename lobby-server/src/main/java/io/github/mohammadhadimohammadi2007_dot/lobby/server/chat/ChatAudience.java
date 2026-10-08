@@ -35,6 +35,11 @@ public final class ChatAudience {
         if (viewer.getUuid().equals(message.senderId())) {
             return true;
         }
+        // An instance-only channel stays inside the sender's own lobby instance.
+        if (channel.instanceOnly() && message.sender() != null
+                && message.sender().getInstance() != viewer.getInstance()) {
+            return false;
+        }
         PlayerChatSettings settings = services.settings().get(viewer.getUuid());
         ChatConfig config = services.chat();
         boolean staffChannel = channel.name().equals("staff");

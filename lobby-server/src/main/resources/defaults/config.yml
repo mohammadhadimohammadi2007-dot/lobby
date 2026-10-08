@@ -61,6 +61,23 @@ world:
   # Players who fall below this Y are sent back to spawn.
   void-y: 0
 
+# ---------------- Lobby instances ----------------
+# One server can run several copies ("instances") of the same map. Players in different instances do
+# not see each other, which keeps a busy lobby from feeling crowded. The map is loaded once and shared,
+# so extra instances cost almost no memory. Holograms, NPCs, portals and jump pads appear in all of them.
+lobbies:
+  # How many instances to create: a number from 1 to 50, or "auto".
+  #   1      - one lobby, exactly like a normal server (the default)
+  #   auto   - one instance per "players-per-instance" of server.max-players
+  instances: 1
+  # How many players one instance should hold. Used for "auto", for choosing where a joining player
+  # goes, and for /lobby <number> (players with "lobby.lobbies.join-full" may still join a full one).
+  players-per-instance: 50
+  # Which instance a joining player is put in:
+  #   least-players - the emptiest one, so the load is spread (the default)
+  #   fill-first    - the first one that still has room, so lobby 1 fills up before lobby 2 is used
+  join: least-players
+
 # Where players appear when they join or use /spawn. Set it in game with /lobby setspawn.
 spawn:
   x: 0.5

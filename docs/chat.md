@@ -96,6 +96,7 @@ goes to global, `#hello` to staff.
 | `permission` | Needed to see and use the channel. `""` = everyone |
 | `send-permission` | Also needed to write in it. `""` = nothing extra |
 | `network` | `true`: shared with every lobby through the bridge. Without the bridge it stays on this lobby |
+| `instance-only` | `true`: only players in the sender's own lobby instance see it. The `local` channel uses this; it only matters with several [lobby instances](instances.md) |
 | `format` | How messages look. `<format>` is replaced by the rank format; `<message>`, `<name>` also work |
 
 `default-channel` is where players start. Their last choice is saved.

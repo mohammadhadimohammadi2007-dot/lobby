@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
@@ -29,7 +30,8 @@ public final class BuiltinPlaceholders {
             PermissionService permissions,
             MuteService mutes,
             BridgeService bridge,
-            ServerInfo serverInfo
+            ServerInfo serverInfo,
+            LobbyInstanceInfo lobbies
     ) {
     }
 
@@ -40,7 +42,8 @@ public final class BuiltinPlaceholders {
         registry.register("server", new ServerNamespace(sources.config(), sources.serverInfo(), sources.bridge().networkState()));
         registry.register("bungee", new BungeeNamespace(sources.bridge().networkState()));
         registry.register("group", new GroupNamespace(sources.bridge().networkState()));
-        registry.register("lobby", new LobbyNamespace(sources.config(), sources.bridge().networkState()));
+        registry.register("lobby", new LobbyNamespace(sources.config(), sources.bridge().networkState(),
+                sources.lobbies()));
         registry.register("litebans", new LiteBansNamespace(sources.mutes(), sources.config()));
     }
 

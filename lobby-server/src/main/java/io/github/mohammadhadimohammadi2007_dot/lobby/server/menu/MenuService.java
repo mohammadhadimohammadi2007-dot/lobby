@@ -19,9 +19,11 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -30,6 +32,9 @@ import java.util.function.Supplier;
  * <p>Menus are read-only: every click is cancelled before anything moves, so players cannot take items out,
  * drop them, shift-click them into their inventory or swap them with the cursor. Only the slot's actions
  * run. Items are rebuilt while the menu is open, so a server list shows live player counts.
+ *
+ * <p>Besides the menus in the file, the lobby itself can add menus whose contents are only known while
+ * running (the lobby selector) with {@link #addBuiltIn}.
  */
 public final class MenuService implements MenuHandler {
 
@@ -41,6 +46,7 @@ public final class MenuService implements MenuHandler {
     private final ActionServices actions;
     private final BridgeService bridge;
     private final Map<UUID, OpenMenu> open = new ConcurrentHashMap<>();
+    private final Map<String, Function<Player, MenuDefinition>> builtIn = new ConcurrentHashMap<>();
     private long ticks;
 
     public MenuService(Supplier<MenuConfig> config, LobbyText text, ActionServices actions, BridgeService bridge) {
@@ -60,9 +66,18 @@ public final class MenuService implements MenuHandler {
                 .schedule();
     }
 
+    /**
+     * Adds a menu the lobby builds itself, for example the lobby selector, whose items depend on the
+     * server's state and on who opens it. A menu with the same name in menus.yml wins, so server owners
+     * can always replace it.
+     */
+    public void addBuiltIn(String name, Function<Player, MenuDefinition> builder) {
+        builtIn.put(name.toLowerCase(Locale.ROOT), builder);
+    }
+
     @Override
     public void open(Player player, String name) {
-        MenuDefinition definition = config.get().menu(name);
+        MenuDefinition definition = definition(player, name);
         if (definition == null) {
             LOGGER.warn("Tried to open the menu '{}', which is not in menus.yml", name);
             return;
@@ -72,6 +87,16 @@ public final class MenuService implements MenuHandler {
         fill(player, menu);
         open.put(player.getUuid(), menu);
         player.openInventory(inventory);
+    }
+
+    /** The menu from menus.yml, or a built-in one, or {@code null} if there is no such menu. */
+    private @Nullable MenuDefinition definition(Player player, String name) {
+        MenuDefinition fromFile = config.get().menu(name);
+        if (fromFile != null) {
+            return fromFile;
+        }
+        Function<Player, MenuDefinition> builder = builtIn.get(name.toLowerCase(Locale.ROOT));
+        return builder == null ? null : builder.apply(player);
     }
 
     @Override

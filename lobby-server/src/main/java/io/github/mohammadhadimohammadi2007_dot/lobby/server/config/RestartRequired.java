@@ -32,6 +32,12 @@ public final class RestartRequired {
         check(changed, "world.convert-anvil-to-polar", a.world().convertAnvilToPolar(), b.world().convertAnvilToPolar());
         check(changed, "world.preload-radius", a.world().preloadRadius(), b.world().preloadRadius());
         check(changed, "world.view-distance", a.world().viewDistance(), b.world().viewDistance());
+        // The instances themselves are created once; which one a joining player gets is read live.
+        check(changed, "lobbies.instances", a.lobbies().instances(), b.lobbies().instances());
+        if (a.lobbies().auto()) {
+            check(changed, "lobbies.players-per-instance",
+                    a.lobbies().instanceCount(a.server().maxPlayers()), b.lobbies().instanceCount(b.server().maxPlayers()));
+        }
         // integrations.yml is read once at startup.
         check(changed, "integrations.yml", before.integrations(), after.integrations());
         // Chat storage (tables, log files) is opened once at startup; everything else in chat.yml reloads.

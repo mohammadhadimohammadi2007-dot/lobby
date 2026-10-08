@@ -17,7 +17,19 @@ players-only: "<prefix><red>Only players can use this command."
 spawn-teleported: "<prefix><gray>Welcome back to spawn, <white>%player_name%</white>."
 
 # /lobby
-lobby-usage: "<prefix><gray>Usage: <white>/lobby reload</white>, <white>/lobby setspawn</white> or <white>/lobby info"
+lobby-usage: "<prefix><gray>Usage: <white>/lobby <number></white>, <white>/lobby reload</white>, <white>/lobby setspawn</white> or <white>/lobby info"
+# Moving between the lobby instances of this server (see "lobbies" in config.yml).
+# <number> = the lobby number, <count> = how many lobbies this server has
+lobby-switched: "<prefix><gray>You are now in lobby <white><number></white>."
+lobby-already-here: "<prefix><gray>You are already in lobby <white><number></white>."
+lobby-unknown: "<prefix><red>There is no lobby <number>. This server has <count>."
+lobby-full: "<prefix><red>Lobby <number> is full."
+# The lobby selector menu. Only the texts; the items are built by the server.
+lobby-selector-title: "<dark_gray>Lobbies"
+lobby-selector-name: "<yellow><bold>Lobby <number>"
+lobby-selector-players: "<gray><players> player(s)"
+lobby-selector-current: "<green>You are here"
+lobby-selector-click: "<yellow>Click to join"
 reload-done: "<prefix><green>Configuration reloaded."
 # <options> = list of changed options that only apply after a restart
 reload-restart-needed: "<prefix><yellow>These changes need a full restart: <white><options>"

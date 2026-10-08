@@ -68,10 +68,21 @@ These are cached per player and refreshed as soon as LuckPerms reports a change.
 | `%bungee_total%` | Players on the whole network (same name as PlaceholderAPI's Bungee expansion) |
 | `%bungee_<server>%` | Players on one backend server, e.g. `%bungee_bw-1%` |
 | `%group_online_<group>%` | Players on all servers of a bridge group, e.g. `%group_online_bedwars%` |
-| `%lobby_id%` | This lobby's name (`server.name`) |
-| `%lobby_count%` | Number of lobby servers (size of the `lobbies` bridge group, or 1) |
+| `%lobby_servers%` | Number of lobby servers on the network (size of the `lobbies` bridge group, or 1) |
 
 Without the bridge, all counts are `0`.
+
+### Lobby instances ([guide](instances.md))
+
+These work without the bridge: they are about the lobbies of **this** server.
+
+| Placeholder | Value |
+|---|---|
+| `%lobby_id%` | Which lobby instance the player is in (`1` on a normal server) |
+| `%lobby_count%` | How many lobby instances this server has |
+| `%lobby_online%` | Players in the player's own lobby instance |
+| `%lobby_online_<number>%` | Players in that lobby instance, e.g. `%lobby_online_2%` |
+| `%lobby_name%` | This server's name (`server.name`) |
 
 ### Mutes (`litebans_`, needs the [LiteBans integration](integrations/litebans.md))
 

@@ -4,6 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
@@ -65,7 +66,7 @@ final class ChatTestServer {
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
-                config, permissions, MuteService.NONE, bridge, info(instance)));
+                config, permissions, MuteService.NONE, bridge, info(instance), LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
         ChatSystem chat = ChatSystem.start(new ChatSystem.Dependencies(config, text, permissions, MuteService.NONE,
                 bridge, null, null));
@@ -82,8 +83,13 @@ final class ChatTestServer {
 
     /** Joins a player who has already moved, so the new-player check lets them chat. */
     Joined join(String name) {
+        return join(name, instance);
+    }
+
+    /** Like {@link #join(String)} but in another lobby instance, for the instance-only channel. */
+    Joined join(String name, Instance target) {
         TestConnection connection = env.createConnection(new GameProfile(UUID.nameUUIDFromBytes(name.getBytes()), name));
-        Player player = connection.connect(instance, SPAWN);
+        Player player = connection.connect(target, SPAWN);
         services().players().moved(player.getUuid());
         return new Joined(player, connection.trackIncoming(SystemChatPacket.class));
     }

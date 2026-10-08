@@ -13,6 +13,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placehol
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstances;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.protection.ProtectionListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
@@ -28,6 +30,7 @@ import net.minestom.server.event.item.ItemDropEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockFace;
@@ -75,14 +78,16 @@ class LobbyBasicsEnvTest {
         PermissionService permissions = new OperatorPermissionService(config);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
-                config, permissions, MuteService.NONE, new BridgeService(false), fakeInfo(instance)));
+                config, permissions, MuteService.NONE, new BridgeService(false), fakeInfo(instance),
+                LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
         env.process().command().register(new SpawnCommand(config, text, permissions));
-        env.process().command().register(new LobbyCommand(config, text, permissions, fakeInfo(instance)));
+        env.process().command().register(new LobbyCommand(config, text, permissions, fakeInfo(instance),
+                LobbyInstances.create((InstanceContainer) instance, config, text, permissions)));
         new ProtectionListener(config, permissions).register(env.process().eventHandler());
         EventNode<PlayerEvent> players = EventNode.type("test", EventFilter.PLAYER);
         env.process().eventHandler().addChild(players);
-        new SpawnListener(config, instance).register(players);
+        new SpawnListener(config, () -> instance).register(players);
         return permissions;
     }
 

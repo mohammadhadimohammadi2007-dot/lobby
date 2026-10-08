@@ -25,10 +25,11 @@ network, and it also runs completely on its own for testing or small servers.
 | Connection | Standalone (online or offline mode), Velocity modern forwarding, BungeeCord legacy forwarding (+ BungeeGuard) |
 | World | Loads `.polar` files and Anvil worlds (old and 26.1+ layouts), converts Anvil to Polar once, preloads everything, computes lighting if missing, never crashes on a missing map (flat platform fallback) |
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
-| Commands | `/spawn`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
+| Commands | `/spawn`, `/lobby <number>`, `/lobbies`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
 | Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
+| Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
 ## Quick start (standalone, about a minute)
@@ -52,7 +53,7 @@ Type `stop` in the console to shut the server down.
 
 | File | What it controls | Reload |
 |---|---|---|
-| `config.yml` | Port, MOTD, max players, connection mode, world, spawn, protections, operators | `/lobby reload` (it tells you if something needs a restart) |
+| `config.yml` | Port, MOTD, max players, connection mode, world, lobby instances, spawn, protections, operators | `/lobby reload` (it tells you if something needs a restart) |
 | `integrations.yml` | Database, LuckPerms, LiteBans, SkinsRestorer, bridge | Restart |
 | `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/lobby reload` |
 | `filters/` | Blocked, censored and allowed word lists | `/lobby reload` |
@@ -69,6 +70,8 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.reload` | `/lobby reload` |
 | `lobby.command.setspawn` | `/lobby setspawn` |
 | `lobby.command.info` | `/lobby info` |
+| `lobby.command.lobby` | `/lobby <number>` and `/lobbies` (everyone has it when LuckPerms is off) |
+| `lobby.lobbies.join-full` | Join a lobby instance that is already at `players-per-instance` |
 | `lobby.bypass.protection` | Ignore the protection settings |
 
 Chat permissions are listed in the [chat guide](docs/chat.md#permissions).
@@ -81,6 +84,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [Velocity setup](docs/velocity.md) (recommended for networks)
 - [BungeeCord / Waterfall setup](docs/bungeecord.md)
 - [Maps: Polar, Anvil and conversion](docs/maps.md)
+- [Several lobbies on one server](docs/instances.md)
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)

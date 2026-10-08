@@ -12,15 +12,21 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.instance.Instance;
 
+import java.util.function.Supplier;
+
 /** Puts joining players at spawn in adventure mode and catches players who fall into the void. */
 public final class SpawnListener {
 
     private final ConfigManager configManager;
-    private final Instance lobbyInstance;
+    private final Supplier<Instance> joinInstance;
 
-    public SpawnListener(ConfigManager configManager, Instance lobbyInstance) {
+    /**
+     * @param joinInstance which lobby instance a joining player spawns in, asked once per player
+     *                     (see {@code LobbyInstances#forJoin()})
+     */
+    public SpawnListener(ConfigManager configManager, Supplier<Instance> joinInstance) {
         this.configManager = configManager;
-        this.lobbyInstance = lobbyInstance;
+        this.joinInstance = joinInstance;
     }
 
     /** The spawn point from config.yml as a position. */
@@ -32,7 +38,7 @@ public final class SpawnListener {
     /** Registers the listeners on {@code node}. */
     public void register(EventNode<PlayerEvent> node) {
         node.addListener(AsyncPlayerConfigurationEvent.class, event -> {
-            event.setSpawningInstance(lobbyInstance);
+            event.setSpawningInstance(joinInstance.get());
             event.getPlayer().setRespawnPoint(spawnPosition(configManager.current().config()));
         });
         node.addListener(PlayerSpawnEvent.class, event -> {

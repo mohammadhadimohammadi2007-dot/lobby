@@ -39,6 +39,8 @@ persian:
 #   permission:      needed to see and use the channel ("" = everyone)
 #   send-permission: also needed to write in it ("" = nothing extra)
 #   network:         true = shared with every lobby through the bridge (stays on this lobby without it)
+#   instance-only:   true = only players in the sender's own lobby instance see it. Only matters when
+#                    "lobbies.instances" in config.yml is more than 1; the default "local" channel uses it
 #   format:          how messages look; <format> is replaced by the rank format below
 channels:
   local:
@@ -47,6 +49,7 @@ channels:
     permission: ""
     send-permission: ""
     network: false
+    instance-only: true
     format: "<format>"
   global:
     enabled: true

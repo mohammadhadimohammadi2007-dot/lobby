@@ -6,6 +6,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbiesCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
@@ -17,6 +18,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.Connectio
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.PlayerLimitListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ServerListListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstances;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbySelectorMenu;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.LiteBansService;
@@ -40,7 +43,6 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.TickStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldLoader;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldRules;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -74,6 +76,7 @@ public final class LobbyServer implements ServerInfo {
     private PermissionService permissions;
     private MuteService muteService = MuteService.NONE;
     private LobbyWorld world;
+    private LobbyInstances lobbies;
     private DatabasePool database;
     private LiteBansService liteBans;
     private SkinsRestorerReader skinsRestorer;
@@ -100,9 +103,10 @@ public final class LobbyServer implements ServerInfo {
         LOGGER.info("Minecraft version {} (protocol {})", MinecraftServer.VERSION_NAME, MinecraftServer.PROTOCOL_VERSION);
 
         world = WorldLoader.load(config.world(), SpawnListener.spawnPosition(config));
-        WorldRules.apply(world.instance(), config.world());
 
         startIntegrations(snapshot);
+        // The instances need the permission service (to let staff into a full lobby) and messages.
+        lobbies = LobbyInstances.create(world.instance(), configManager, text, permissions);
         startPlaceholders();
         startActions(snapshot);
         startChat(snapshot);
@@ -210,7 +214,7 @@ public final class LobbyServer implements ServerInfo {
     /** Registers the built-in placeholders and keeps their caches fresh. */
     private void startPlaceholders() {
         BuiltinPlaceholders.registerAll(placeholders.registry(),
-                new BuiltinPlaceholders.Sources(configManager, permissions, muteService, bridge, this));
+                new BuiltinPlaceholders.Sources(configManager, permissions, muteService, bridge, this, lobbies));
         // Rank changes (LuckPerms) drop the player's cached prefix, suffix and permissions.
         permissions.onMetaChange(placeholders::invalidate);
     }
@@ -229,7 +233,9 @@ public final class LobbyServer implements ServerInfo {
             actions.connector(new BungeeConnector(text));
         }
         menus = new MenuService(() -> configManager.current().menus(), text, actions, bridge);
+        menus.addBuiltIn(LobbySelectorMenu.NAME, new LobbySelectorMenu(configManager, lobbies)::build);
         actions.menus(menus);
+        actions.lobbies(lobbies);
     }
 
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
@@ -252,7 +258,7 @@ public final class LobbyServer implements ServerInfo {
         EventNode<PlayerEvent> playerEvents = EventNode.type("lobby-players", EventFilter.PLAYER);
         global.addChild(playerEvents);
 
-        new SpawnListener(configManager, world.instance()).register(playerEvents);
+        new SpawnListener(configManager, lobbies::forJoin).register(playerEvents);
         bridge.register(playerEvents);
         placeholders.register(playerEvents);
         chat.register(playerEvents, MinecraftServer.getCommandManager());
@@ -266,7 +272,8 @@ public final class LobbyServer implements ServerInfo {
     private void registerCommands() {
         var commands = MinecraftServer.getCommandManager();
         commands.register(new SpawnCommand(configManager, text, permissions));
-        commands.register(new LobbyCommand(configManager, text, permissions, this));
+        commands.register(new LobbyCommand(configManager, text, permissions, this, lobbies));
+        commands.register(new LobbiesCommand(text, permissions, menus));
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
@@ -275,7 +282,7 @@ public final class LobbyServer implements ServerInfo {
         placeholders.invalidateAll();
         chat.reload(reloaded);
         Async.onTickThread(() -> {
-            WorldRules.apply(world.instance(), reloaded.config().world());
+            lobbies.applyWorldRules(reloaded.config().world());
             // The operators list may have changed, which changes which commands players can see.
             for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
                 player.refreshCommands();
@@ -286,6 +293,7 @@ public final class LobbyServer implements ServerInfo {
     private void printSummary(LobbyConfig config, long startMillis) {
         LOGGER.info("Mode: {}", AuthFactory.describe(config.connection()));
         LOGGER.info("Map: {} ({}, {} chunks)", world.name(), world.format().name().toLowerCase(), world.chunkCount());
+        LOGGER.info("Lobbies: {} instance(s) of that map", lobbies.count());
         LOGGER.info("Permissions: {}", permissions.name());
         LOGGER.info("Bridge: {}", bridge.status());
         LOGGER.info("Chat: {}", chat.describe());
@@ -370,6 +378,11 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public String bridgeStatus() {
         return bridge.status();
+    }
+
+    /** The lobby instances of this server. */
+    public LobbyInstances lobbies() {
+        return lobbies;
     }
 
     /** The chat system (pipeline, settings, filter). */

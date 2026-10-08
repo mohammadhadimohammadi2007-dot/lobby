@@ -12,6 +12,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermi
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldFormat;
@@ -66,7 +67,7 @@ class MenuEnvTest {
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
-                config, permissions, MuteService.NONE, bridge, info(instance)));
+                config, permissions, MuteService.NONE, bridge, info(instance), LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
         ActionServices actions = new ActionServices(config, text, permissions, bridge);
         MenuService menus = new MenuService(() -> config.current().menus(), text, actions, bridge);

@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
@@ -82,7 +83,8 @@ class BuiltinPlaceholdersEnvTest {
         BridgeService bridge = new BridgeService(false);
         PlaceholderService service = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(service.registry(),
-                new BuiltinPlaceholders.Sources(config, ranks, MuteService.NONE, bridge, info()));
+                new BuiltinPlaceholders.Sources(config, ranks, MuteService.NONE, bridge, info(),
+                        LobbyInstanceInfo.SINGLE));
         ranks.onMetaChange(service::invalidate);
 
         Instance instance = env.createFlatInstance();
@@ -91,7 +93,9 @@ class BuiltinPlaceholdersEnvTest {
         assertEquals("Steve default yes no", plain(service.render(
                 "%player_name% %luckperms_primary_group_name% %luckperms_has_permission_lobby.vip% %luckperms_has_permission_x%", steve)));
         assertEquals(MinecraftServer.VERSION_NAME, plain(service.render("%player_client_version%", steve)));
-        assertEquals("lobby 1 lobby 200", plain(service.render("%server_name% %server_online% %lobby_id% %server_max_players%", steve)));
+        // %lobby_id% is which lobby instance the player is in, %lobby_name% this server's name.
+        assertEquals("lobby 1 1 lobby 200", plain(service.render(
+                "%server_name% %server_online% %lobby_id% %lobby_name% %server_max_players%", steve)));
         assertEquals("0 0 0", plain(service.render("%bungee_total% %bungee_bw-1% %group_online_bedwars%", steve)));
         assertEquals("no", plain(service.render("%litebans_muted%", steve)));
 
@@ -131,9 +135,11 @@ class BuiltinPlaceholdersEnvTest {
                 Map.of("bedwars", List.of("bw-1", "bw-2"), "lobbies", List.of("lobby", "lobby-2"))));
         PlaceholderService service = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(service.registry(),
-                new BuiltinPlaceholders.Sources(config, new FakeRanks(), MuteService.NONE, bridge, info()));
+                new BuiltinPlaceholders.Sources(config, new FakeRanks(), MuteService.NONE, bridge, info(),
+                        LobbyInstanceInfo.SINGLE));
 
-        assertEquals("30 12 20 2", plain(service.render("%bungee_total% %bungee_bw-1% %group_online_bedwars% %lobby_count%", null)));
+        assertEquals("30 12 20 2", plain(service.render(
+                "%bungee_total% %bungee_bw-1% %group_online_bedwars% %lobby_servers%", null)));
     }
 
     private static ServerInfo info() {

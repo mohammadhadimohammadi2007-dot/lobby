@@ -3,9 +3,11 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.command;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigException;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.YamlSectionEditor;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstances;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
@@ -15,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.Command;
+import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import org.slf4j.Logger;
@@ -28,8 +31,9 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 /**
- * {@code /lobby reload | setspawn | info}. Each sub command has its own permission
- * ({@code lobby.command.reload}, {@code lobby.command.setspawn}, {@code lobby.command.info}).
+ * {@code /lobby <number> | reload | setspawn | info}. Each sub command has its own permission
+ * ({@code lobby.command.lobby}, {@code lobby.command.reload}, {@code lobby.command.setspawn},
+ * {@code lobby.command.info}).
  */
 public final class LobbyCommand extends Command {
 
@@ -39,13 +43,19 @@ public final class LobbyCommand extends Command {
     private final ConfigManager configManager;
     private final LobbyText text;
 
-    public LobbyCommand(ConfigManager configManager, LobbyText text, PermissionService permissions, ServerInfo serverInfo) {
+    public LobbyCommand(ConfigManager configManager, LobbyText text, PermissionService permissions,
+                        ServerInfo serverInfo, LobbyInstances lobbies) {
         super("lobby");
         this.configManager = configManager;
         this.text = text;
-        setCondition(CommandSupport.requireAny(text, permissions,
+        setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_LOBBY,
                 Permissions.COMMAND_RELOAD, Permissions.COMMAND_SETSPAWN, Permissions.COMMAND_INFO));
         setDefaultExecutor((sender, context) -> sender.sendMessage(text.message(MessageKey.LOBBY_USAGE, sender)));
+
+        // /lobby <number> moves the player to another lobby instance of this server.
+        var number = ArgumentType.Integer("number").min(1).max(LobbyConfig.MAX_INSTANCES);
+        addConditionalSyntax(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_LOBBY),
+                (sender, context) -> switchLobby(sender, lobbies, context.get(number)), number);
 
         Command reload = new Command("reload");
         reload.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_RELOAD));
@@ -61,6 +71,14 @@ public final class LobbyCommand extends Command {
         info.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_INFO));
         info.setDefaultExecutor((sender, context) -> sender.sendMessage(infoMessage(sender, serverInfo)));
         addSubcommand(info);
+    }
+
+    private void switchLobby(CommandSender sender, LobbyInstances lobbies, int wanted) {
+        if (sender instanceof Player player) {
+            lobbies.switchTo(player, wanted);
+        } else {
+            sender.sendMessage(text.message(MessageKey.PLAYERS_ONLY, sender));
+        }
     }
 
     /** Reloads on a background thread (it reads files) and reports back. */
