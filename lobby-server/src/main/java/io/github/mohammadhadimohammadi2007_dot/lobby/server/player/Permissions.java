@@ -16,7 +16,8 @@ public final class Permissions {
      * Permissions every player has when LuckPerms is disabled. With LuckPerms, give these to your
      * default group instead.
      */
-    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN);
+    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN,
+            "lobby.command.chat", "lobby.command.ch", "lobby.command.ignore", "lobby.command.msg");
 
     private Permissions() {
     }

@@ -31,6 +31,7 @@ public enum MessageKey {
     CHAT_BLOCKED("chat-blocked"),
     CHAT_WARNING("chat-warning"),
     CHAT_LINK_WARNING("chat-link-warning"),
+    CHAT_AUTO_MUTE_REASON("chat-auto-mute-reason"),
     CHAT_AUTO_MUTED("chat-auto-muted"),
     CHAT_DISABLED_FOR_YOU("chat-disabled-for-you"),
     CHAT_STAFF_NOTIFY("chat-staff-notify"),

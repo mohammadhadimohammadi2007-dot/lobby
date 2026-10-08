@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
@@ -18,6 +19,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.LiteBansService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.luckperms.LuckPermsIntegration;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.signedvelocity.SignedVelocityReceiver;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
@@ -71,6 +73,7 @@ public final class LobbyServer implements ServerInfo {
     private LiteBansService liteBans;
     private SkinsRestorerReader skinsRestorer;
     private BridgeService bridge;
+    private ChatSystem chat;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -94,6 +97,7 @@ public final class LobbyServer implements ServerInfo {
 
         startIntegrations(snapshot);
         startPlaceholders();
+        startChat(snapshot);
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
@@ -203,6 +207,21 @@ public final class LobbyServer implements ServerInfo {
         permissions.onMetaChange(placeholders::invalidate);
     }
 
+    /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
+    private void startChat(ConfigSnapshot snapshot) {
+        SignedVelocityReceiver signedVelocity = null;
+        if (snapshot.integrations().signedVelocity().enabled()) {
+            if (snapshot.config().connection().mode() == ConnectionMode.VELOCITY) {
+                signedVelocity = new SignedVelocityReceiver();
+                integrations.add(IntegrationStatus.active("SignedVelocity", "chat and command verdicts from the proxy"));
+            } else {
+                integrations.add(IntegrationStatus.failed("SignedVelocity", "only works with mode: velocity"));
+            }
+        }
+        chat = ChatSystem.start(new ChatSystem.Dependencies(configManager, text, permissions, muteService, bridge,
+                database, signedVelocity));
+    }
+
     private void registerListeners() {
         EventNode<Event> global = MinecraftServer.getGlobalEventHandler();
         EventNode<PlayerEvent> playerEvents = EventNode.type("lobby-players", EventFilter.PLAYER);
@@ -211,6 +230,7 @@ public final class LobbyServer implements ServerInfo {
         new SpawnListener(configManager, world.instance()).register(playerEvents);
         bridge.register(playerEvents);
         placeholders.register(playerEvents);
+        chat.register(playerEvents, MinecraftServer.getCommandManager());
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager, text).register();
@@ -227,6 +247,7 @@ public final class LobbyServer implements ServerInfo {
     private void applyReload(ConfigSnapshot reloaded) {
         // Config values used by placeholders (operators, server name...) may have changed.
         placeholders.invalidateAll();
+        chat.reload(reloaded);
         Async.onTickThread(() -> {
             WorldRules.apply(world.instance(), reloaded.config().world());
             // The operators list may have changed, which changes which commands players can see.
@@ -241,6 +262,7 @@ public final class LobbyServer implements ServerInfo {
         LOGGER.info("Map: {} ({}, {} chunks)", world.name(), world.format().name().toLowerCase(), world.chunkCount());
         LOGGER.info("Permissions: {}", permissions.name());
         LOGGER.info("Bridge: {}", bridge.status());
+        LOGGER.info("Chat: {}", chat.describe());
         for (IntegrationStatus status : integrations) {
             if (status.state() == IntegrationStatus.State.FAILED) {
                 LOGGER.error("{}", status.describe());
@@ -261,6 +283,7 @@ public final class LobbyServer implements ServerInfo {
     /** Runs once when the server stops (the 'stop' command, Ctrl+C or a kill signal). */
     private void shutdown() {
         LOGGER.info("Shutting down...");
+        chat.shutdown();
         permissions.shutdown();
         if (liteBans != null) {
             liteBans.shutdown();
@@ -321,6 +344,11 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public String bridgeStatus() {
         return bridge.status();
+    }
+
+    /** The chat system (pipeline, settings, filter). */
+    public ChatSystem chat() {
+        return chat;
     }
 
     /** Client versions and network player counts from the proxy bridge. */

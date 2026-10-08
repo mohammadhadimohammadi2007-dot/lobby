@@ -14,6 +14,9 @@ public final class ProtocolVersions {
     /** Minecraft 1.8 to 1.8.9, the oldest client supported through ViaRewind. */
     public static final int V1_8 = 47;
 
+    /** Minecraft 1.16, the first version with RGB colors in chat. */
+    public static final int V1_16 = 735;
+
     /**
      * Minecraft 1.19.4. Clients older than this lack newer display features
      * (for example text display entities), so the lobby treats them as "legacy".

@@ -11,13 +11,15 @@ import java.util.regex.Pattern;
  * @param liteBans      LiteBans settings
  * @param skinsRestorer SkinsRestorer settings
  * @param bridge        proxy bridge settings
+ * @param signedVelocity SignedVelocity sync settings
  */
 public record IntegrationsConfig(
         Database database,
         LuckPerms luckPerms,
         LiteBans liteBans,
         SkinsRestorer skinsRestorer,
-        Bridge bridge
+        Bridge bridge,
+        SignedVelocity signedVelocity
 ) {
 
     private static final int MAX_PORT = 65535;
@@ -49,6 +51,10 @@ public record IntegrationsConfig(
 
     /** {@code bridge:} section. */
     public record Bridge(boolean enabled) {
+    }
+
+    /** {@code signedvelocity:} section. */
+    public record SignedVelocity(boolean enabled) {
     }
 
     /** True if any enabled integration needs the shared database pool. */
@@ -83,7 +89,8 @@ public record IntegrationsConfig(
                 reader.bool("skinsrestorer.enabled"),
                 prefix(reader, "skinsrestorer.table-prefix"));
         Bridge bridge = new Bridge(reader.bool("bridge.enabled"));
-        return new IntegrationsConfig(database, luckPerms, liteBans, skinsRestorer, bridge);
+        SignedVelocity signedVelocity = new SignedVelocity(reader.bool("signedvelocity.enabled"));
+        return new IntegrationsConfig(database, luckPerms, liteBans, skinsRestorer, bridge, signedVelocity);
     }
 
     private static String prefix(ConfigReader reader, String path) throws ConfigException {

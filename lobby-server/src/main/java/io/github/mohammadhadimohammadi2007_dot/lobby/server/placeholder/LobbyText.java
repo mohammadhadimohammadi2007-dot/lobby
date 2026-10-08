@@ -9,6 +9,8 @@ import net.minestom.server.command.CommandSender;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BiFunction;
+
 /**
  * Renders texts from messages.yml and config files with {@code %placeholders%} filled in.
  * Use this for everything players see.
@@ -17,10 +19,19 @@ public final class LobbyText {
 
     private final ConfigManager config;
     private final PlaceholderService placeholders;
+    private volatile BiFunction<Player, Component, Component> viewerTransform = (player, component) -> component;
 
     public LobbyText(ConfigManager config, PlaceholderService placeholders) {
         this.config = config;
         this.placeholders = placeholders;
+    }
+
+    /**
+     * Changes every text after rendering for one player, for example fixing Persian for players who want it
+     * (set by the chat system when persian.server-messages is on).
+     */
+    public void viewerTransform(BiFunction<Player, Component, Component> transform) {
+        viewerTransform = transform;
     }
 
     /** The placeholder engine. */
@@ -39,7 +50,8 @@ public final class LobbyText {
         var messages = config.current().messages();
         Component prefix = placeholders.render(messages.template(MessageKey.PREFIX), player);
         TagResolver all = TagResolver.resolver(Placeholder.component("prefix", prefix), TagResolver.resolver(resolvers));
-        return placeholders.render(messages.template(key), player, all);
+        Component rendered = placeholders.render(messages.template(key), player, all);
+        return player == null ? rendered : viewerTransform.apply(player, rendered);
     }
 
     /** A message that is not about a player (for example a kick before the player has joined). */
@@ -54,6 +66,7 @@ public final class LobbyText {
 
     /** Any trusted MiniMessage text (for example the MOTD) with placeholders about {@code player}. */
     public Component render(String template, @Nullable Player player, TagResolver... resolvers) {
-        return placeholders.render(template, player, resolvers);
+        Component rendered = placeholders.render(template, player, resolvers);
+        return player == null ? rendered : viewerTransform.apply(player, rendered);
     }
 }

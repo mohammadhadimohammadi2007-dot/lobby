@@ -66,6 +66,8 @@ chat-locked: "<red>The chat is locked right now."
 chat-blocked: "<red>Your message was not sent: it breaks the chat rules."
 chat-warning: "<yellow>Please keep the chat friendly. Repeated rule breaking leads to a mute."
 chat-link-warning: "<yellow>Advertising other servers or websites is not allowed."
+# Reason shown with chat-muted for automatic mutes on this lobby (when there is no bridge).
+chat-auto-mute-reason: "breaking the chat rules repeatedly"
 # <minutes>
 chat-auto-muted: "<red>You were muted for <minutes> minutes for breaking the chat rules repeatedly."
 chat-disabled-for-you: "<gray>You have hidden the chat. Type <white>/chat toggle</white> to show it again."

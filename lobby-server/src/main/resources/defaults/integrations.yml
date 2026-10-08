@@ -56,6 +56,13 @@ skinsrestorer:
   # Table prefix. Must match "tablePrefix" in your SkinsRestorer config.
   table-prefix: "sr_"
 
+# ---------------- SignedVelocity ----------------
+# Install SignedVelocity on your Velocity proxy and turn this on, so chat messages and commands that
+# proxy plugins cancel or change (for example LiteBans mutes on Velocity) are cancelled or changed here too.
+# Only works when mode is "velocity". https://modrinth.com/plugin/signedvelocity
+signedvelocity:
+  enabled: false
+
 # ---------------- Bridge ----------------
 # Receives information from the lobby-bridge plugin on your Velocity proxy
 # (real client versions, player counts of other servers).
