@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Checks the generated 1.8 lists.
  *
  * <p>The item list is rebuilt here from {@code 1-8-source.json}, which holds the slice of upstream data
- * the generator used: the item ids and metadata values Minecraft 1.8 had (from minecraft-data) and the
- * modern name each of them maps to (from ViaVersion's mapping files). If someone edits the resource by
- * hand, or the generator changes what it writes, this test fails. That matters because a hand-written
+ * the generator used: the item ids and metadata values Minecraft 1.8 had and the modern name each of
+ * them maps to, both from PrismarineJS/minecraft-data. If someone edits the resource by hand, or the
+ * generator changes what it writes, this test fails. That matters because a hand-written
  * list silently contained a dozen items that 1.8 never had.
  */
 class LegacyItemsTest {
@@ -55,8 +55,8 @@ class LegacyItemsTest {
             JsonArray pair = entry.getAsJsonArray();
             int id = pair.get(0).getAsInt();
             int metadata = pair.get(1).getAsInt();
-            // 1.12 and older packed an item's id and metadata into one number.
-            var mapped = names.get(String.valueOf(id * 16 + metadata));
+            // 1.12 and older named an item by its id plus a metadata value.
+            var mapped = names.get(id + ":" + metadata);
             assertNotNull(mapped, "no mapping for " + id + ":" + metadata);
             String name = mapped.getAsString();
             if (renames.has(name)) {

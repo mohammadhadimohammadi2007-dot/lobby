@@ -141,3 +141,6 @@ docs/                   Setup guides
 ## License
 
 [MIT](LICENSE). Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Third-party work this project uses, and the licenses it is under, are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

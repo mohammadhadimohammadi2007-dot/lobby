@@ -5,9 +5,9 @@
 # Used only to warn server owners: anything NOT in this list still works, but players on 1.8 reach the
 # lobby through ViaRewind, which has to show them a replacement, so it may look wrong to them.
 #
-# Sources: PrismarineJS/minecraft-data (pc/1.8 and pc/26.1) and ViaVersion/Mappings.
+# Source: PrismarineJS/minecraft-data (pc/1.8, pc/common/legacy.json and pc/26.1), MIT licensed.
 #
-# 552 entries.
+# 554 entries.
 
 acacia_door
 acacia_fence
@@ -339,6 +339,7 @@ melon_seeds
 melon_slice
 milk_bucket
 minecart
+mooshroom_spawn_egg
 mossy_cobblestone
 mossy_cobblestone_wall
 mossy_stone_bricks
@@ -543,6 +544,7 @@ white_tulip
 white_wool
 witch_spawn_egg
 wither_skeleton_skull
+wither_spawn_egg
 wolf_spawn_egg
 wooden_axe
 wooden_hoe

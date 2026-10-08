@@ -6,7 +6,8 @@ import java.util.TreeMap;
 /**
  * Minecraft protocol version numbers the lobby cares about, and their release names.
  *
- * <p>Names follow ViaVersion's naming (for example {@code 1.8.x} for protocol 47). Full list:
+ * <p>One name per protocol version, covering every release that shares it (for example {@code 1.8.x}
+ * for protocol 47). Full list:
  * <a href="https://minecraft.wiki/w/Protocol_version">minecraft.wiki/w/Protocol_version</a>.
  */
 public final class ProtocolVersions {
@@ -32,7 +33,7 @@ public final class ProtocolVersions {
     /** Minecraft 1.20.5, the first version that understands the transfer packet. */
     public static final int V1_20_5 = 766;
 
-    /** Release protocol versions from 1.8 on, copied from ViaVersion 5.12's ProtocolVersion list. */
+    /** Release protocol versions from 1.8 on, from PrismarineJS/minecraft-data's protocolVersions. */
     private static final TreeMap<Integer, String> NAMES = new TreeMap<>(Map.ofEntries(
             Map.entry(47, "1.8.x"),
             Map.entry(107, "1.9"), Map.entry(108, "1.9.1"), Map.entry(109, "1.9.2"), Map.entry(110, "1.9.3-1.9.4"),

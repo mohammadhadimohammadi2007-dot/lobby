@@ -5,7 +5,7 @@
 # Used only to warn server owners: anything NOT in this list still works, but players on 1.8 reach the
 # lobby through ViaRewind, which has to show them a replacement, so it may look wrong to them.
 #
-# Sources: PrismarineJS/minecraft-data (pc/1.8 and pc/26.1) and ViaVersion/Mappings.
+# Source: PrismarineJS/minecraft-data (pc/1.8, pc/common/legacy.json and pc/26.1), MIT licensed.
 #
 # 57 entries.
 

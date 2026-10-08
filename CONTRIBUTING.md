@@ -14,6 +14,13 @@ and developers. Please keep that in mind in every change.
 - **Optional things stay optional**: every integration sits behind a small interface with a
   "disabled" implementation, and the server must start with all of them turned off.
 - Small, focused classes with javadoc on public types. No magic numbers: use named constants.
+- **MIT-compatible sources only**: never copy code or data into this repository from a project under
+  GPL, LGPL or another copyleft license, however small the snippet. If the only source of something is
+  copyleft, open an issue first. Add anything new to
+  [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- **Never hand-write reference data**: lists such as "which items exist in Minecraft 1.8" are generated
+  from an upstream source by a script in `tools/`, and the test rebuilds the result from a committed
+  slice of that source.
 
 ## Development setup
 
