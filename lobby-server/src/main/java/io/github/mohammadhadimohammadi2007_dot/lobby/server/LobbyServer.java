@@ -13,6 +13,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Hologram;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.AuthFactory;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.PlayerLimitListener;
@@ -84,6 +90,9 @@ public final class LobbyServer implements ServerInfo {
     private ChatSystem chat;
     private ActionServices actions;
     private MenuService menus;
+    private ClientObjectRenderer display;
+    private ClientObjectClicks clicks;
+    private HologramService holograms;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -110,6 +119,7 @@ public final class LobbyServer implements ServerInfo {
         startPlaceholders();
         startActions(snapshot);
         startChat(snapshot);
+        startDisplays();
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
@@ -238,6 +248,19 @@ public final class LobbyServer implements ServerInfo {
         actions.lobbies(lobbies);
     }
 
+    /**
+     * The display layer: holograms (and later NPCs) shown with packets only, and the clicks on them.
+     * Everything here belongs to the lobby map, so it appears in every lobby instance of it.
+     */
+    private void startDisplays() {
+        display = new ClientObjectRenderer();
+        clicks = new ClientObjectClicks(display);
+        Hologram.Services hologramServices = new Hologram.Services(text, permissions, bridge,
+                WorldScope.mainMap(world.instance()));
+        holograms = HologramService.start(configManager.dataDir(), display, hologramServices, actions);
+        clicks.addHandler(holograms);
+    }
+
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
     private void startChat(ConfigSnapshot snapshot) {
         SignedVelocityReceiver signedVelocity = null;
@@ -263,6 +286,8 @@ public final class LobbyServer implements ServerInfo {
         placeholders.register(playerEvents);
         chat.register(playerEvents, MinecraftServer.getCommandManager());
         menus.register(playerEvents);
+        display.register(playerEvents);
+        clicks.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager, text).register();
@@ -274,6 +299,7 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new SpawnCommand(configManager, text, permissions));
         commands.register(new LobbyCommand(configManager, text, permissions, this, lobbies));
         commands.register(new LobbiesCommand(text, permissions, menus));
+        commands.register(new HologramCommand(holograms, text, permissions, configManager.dataDir()));
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
@@ -281,6 +307,9 @@ public final class LobbyServer implements ServerInfo {
         // Config values used by placeholders (operators, server name...) may have changed.
         placeholders.invalidateAll();
         chat.reload(reloaded);
+        holograms.reload();
+        // Messages and placeholders may have changed, so every hologram is built again.
+        display.invalidateAll();
         Async.onTickThread(() -> {
             lobbies.applyWorldRules(reloaded.config().world());
             // The operators list may have changed, which changes which commands players can see.
@@ -318,6 +347,8 @@ public final class LobbyServer implements ServerInfo {
     private void shutdown() {
         LOGGER.info("Shutting down...");
         chat.shutdown();
+        holograms.shutdown();
+        display.shutdown();
         permissions.shutdown();
         if (liteBans != null) {
             liteBans.shutdown();
@@ -393,6 +424,11 @@ public final class LobbyServer implements ServerInfo {
     /** Shared actions for NPCs, holograms, menus, hotbar items and portals. */
     public ActionServices actions() {
         return actions;
+    }
+
+    /** The holograms of this server. */
+    public HologramService holograms() {
+        return holograms;
     }
 
     /** The menus from menus.yml. */

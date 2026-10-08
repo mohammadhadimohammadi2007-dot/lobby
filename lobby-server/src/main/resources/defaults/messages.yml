@@ -30,6 +30,41 @@ lobby-selector-name: "<yellow><bold>Lobby <number>"
 lobby-selector-players: "<gray><players> player(s)"
 lobby-selector-current: "<green>You are here"
 lobby-selector-click: "<yellow>Click to join"
+
+# ---------------- Holograms (/hologram, see docs/holograms.md) ----------------
+hologram-usage: "<prefix><gray>Usage: <white>/hologram list | near | create <name> | delete <name> | info <name> | addline <name> <text> | set <name> <property> <value> | action add <name> <action> | teleport <name> | goto <name> | copy <name> <new> | import"
+# <name> = the hologram's name, <type> = text, item or block
+hologram-created: "<prefix><green>Created the <type> hologram <white><name></white> where you are standing."
+hologram-exists: "<prefix><red>There is already a hologram called <name>."
+hologram-deleted: "<prefix><green>Deleted the hologram <white><name></white>."
+hologram-unknown: "<prefix><red>There is no hologram called <name>."
+hologram-invalid-name: "<prefix><red>'<name>' cannot be a hologram name. Use letters, digits, - and _ (at most 32)."
+# <count> = how many, <names> = their names
+hologram-list: "<prefix><gray>Holograms (<white><count></white>): <names>"
+hologram-list-empty: "<prefix><gray>No holograms here. Create one with /hologram create <name>."
+hologram-info: "<prefix><gray>Hologram <white><name></white> (<type>) at <x>, <y>, <z><newline><gray>Lines: <white><lines></white>, frames: <white><frames></white>, scale: <white><scale></white>, billboard: <white><billboard></white>, alignment: <white><alignment></white><newline><gray>Shown within <white><view-distance></white> blocks, rebuilt every <white><update-interval></white> ticks, visible to <white><permission></white><newline><gray>Click: <white><actions>"
+hologram-moved: "<prefix><green>Moved <white><name></white> to where you are standing."
+hologram-copied: "<prefix><green>Copied <white><name></white> to <white><new-name></white>."
+# <line> = the line number
+hologram-line-added: "<prefix><green>Added line <white><line></white> to <white><name></white>."
+hologram-line-set: "<prefix><green>Changed line <white><line></white> of <white><name></white>."
+hologram-line-removed: "<prefix><green>Removed line <white><line></white> of <white><name></white>."
+hologram-no-such-line: "<prefix><red>There is no line <line>; this hologram has <lines>."
+hologram-too-many-lines: "<prefix><red>A hologram can have at most <max> lines."
+hologram-wrong-type: "<prefix><red><name> is a <type> hologram, so it has no lines."
+hologram-needs-material: "<prefix><red>A <type> hologram needs an item or block name, for example /hologram create shop <type> diamond."
+# <properties> = every property name
+hologram-properties: "<prefix><gray>Properties: <white><properties>"
+hologram-property-set: "<prefix><green><name>: <white><property></white> is now <white><value></white>."
+hologram-property-invalid: "<prefix><red><property>: <error>. Allowed: <allowed>."
+# <action> = one action line, <actions> = all of them, <types> = the action types that exist
+hologram-action-added: "<prefix><green>Added the action <white><action></white> to <white><name></white>."
+hologram-actions-cleared: "<prefix><green><name> does nothing when clicked any more."
+hologram-action-list: "<prefix><gray><name> runs on click: <white><actions>"
+hologram-action-invalid: "<prefix><red>That action cannot be read: <error>. Types: <types>."
+hologram-imported: "<prefix><green>Imported <white><count></white> hologram(s) from <white><file></white>."
+hologram-import-skipped: "<prefix><yellow>Not imported: <entry>"
+hologram-import-nothing: "<prefix><yellow>Nothing to import. Put FancyHolograms' holograms.yml in <white><file></white> and try again."
 reload-done: "<prefix><green>Configuration reloaded."
 # <options> = list of changed options that only apply after a restart
 reload-restart-needed: "<prefix><yellow>These changes need a full restart: <white><options>"

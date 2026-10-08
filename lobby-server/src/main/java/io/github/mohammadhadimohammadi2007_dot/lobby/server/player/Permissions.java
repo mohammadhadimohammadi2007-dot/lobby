@@ -11,6 +11,8 @@ public final class Permissions {
     public static final String COMMAND_INFO = "lobby.command.info";
     /** Use {@code /lobby <number>} and the lobby selector to move between the lobbies of this server. */
     public static final String COMMAND_LOBBY = "lobby.command.lobby";
+    /** Create, edit and delete holograms with {@code /hologram}. */
+    public static final String COMMAND_HOLOGRAM = "lobby.command.hologram";
     /** Join a lobby instance that already holds {@code lobbies.players-per-instance} players. */
     public static final String LOBBY_JOIN_FULL = "lobby.lobbies.join-full";
     /** Ignore the protection settings in config.yml (break and place blocks, drop items...). */
