@@ -172,6 +172,107 @@ public sealed interface BridgeMessage {
     }
 
     /**
+     * Lobby to proxy: please send this player to another server. The lobby cannot move players itself,
+     * only the proxy can. The proxy answers with a {@link ConnectResult} so the lobby can tell the player
+     * what happened.
+     *
+     * @param requestId short id, echoed in the result
+     * @param playerId  the player to move
+     * @param target    a server name, or a group name if {@code group} is true
+     * @param group     true to let the proxy pick the best server of the group
+     */
+    record ConnectRequest(String requestId, UUID playerId, String target, boolean group) implements BridgeMessage {
+        public static final int TYPE_ID = 7;
+
+        public ConnectRequest {
+            Objects.requireNonNull(playerId, "playerId");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
+     * Proxy to lobby: the answer to a {@link ConnectRequest}.
+     *
+     * @param requestId the id from the request
+     * @param playerId  the player the request was about
+     * @param outcome   what happened
+     * @param server    the server that was chosen, or empty if none was
+     */
+    record ConnectResult(String requestId, UUID playerId, Outcome outcome, String server) implements BridgeMessage {
+        public static final int TYPE_ID = 8;
+
+        /** What came of a connect request. */
+        public enum Outcome {
+            /** The player is on their way. */
+            CONNECTED(0),
+            /** Every server was full (and the player may not join full servers). */
+            FULL(1),
+            /** The server, or every server of the group, did not answer the proxy's last ping. */
+            OFFLINE(2),
+            /** No server or group with that name exists on the proxy. */
+            UNKNOWN(3),
+            /** The proxy or another plugin refused the move, or the player left meanwhile. */
+            REFUSED(4);
+
+            private final int id;
+
+            Outcome(int id) {
+                this.id = id;
+            }
+
+            /** The number written on the wire. */
+            public int id() {
+                return id;
+            }
+
+            /** The outcome with this wire id, or {@link #REFUSED} for a number this build does not know. */
+            public static Outcome fromId(int id) {
+                for (Outcome outcome : values()) {
+                    if (outcome.id == id) {
+                        return outcome;
+                    }
+                }
+                return REFUSED;
+            }
+        }
+
+        public ConnectResult {
+            Objects.requireNonNull(playerId, "playerId");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
+     * Proxy to lobby: this player's skin changed (for example SkinsRestorer ran {@code /skin} on the
+     * proxy). The lobby shows the new skin right away, without the player reconnecting.
+     *
+     * @param playerId  the player whose skin changed
+     * @param value     the base64 texture value from Mojang's session server
+     * @param signature Mojang's signature for {@code value}, or empty if it is unsigned
+     */
+    record SkinUpdate(UUID playerId, String value, String signature) implements BridgeMessage {
+        public static final int TYPE_ID = 9;
+
+        public SkinUpdate {
+            Objects.requireNonNull(playerId, "playerId");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
      * A message type this build does not know, from a newer proxy or lobby. Readers ignore it, so
      * mixing versions does not break anything.
      *

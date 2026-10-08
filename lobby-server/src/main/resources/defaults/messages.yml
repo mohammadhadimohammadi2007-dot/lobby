@@ -136,6 +136,14 @@ quit-message: "<dark_gray>[<red>-</red>]</dark_gray> <gray>%player_name%"
 # ---------------- Actions (NPCs, holograms, menus, hotbar items, portals) ----------------
 # A "connect" action when the lobby cannot send players to other servers (standalone, no bridge).
 connect-not-available: "<prefix><red>Switching servers is not available right now."
+# The server, or every server of the group, is full. <server>
+connect-full: "<prefix><red><white><server></white> is full right now. Try again in a moment."
+# The server did not answer the proxy. <server>
+connect-offline: "<prefix><red><white><server></white> is offline right now."
+# The proxy has no server or group with that name (a mistake in the config). <server>
+connect-unknown: "<prefix><red><white><server></white> does not exist. Please tell an admin."
+# Anything else that stopped the move. <server>
+connect-failed: "<prefix><red>Could not send you to <white><server></white>. Please try again."
 # Shown while the proxy moves the player. <server>
 connecting: "<prefix><gray>Sending you to <white><server></white>..."
 # A "transfer" action for a client older than 1.20.5, which cannot be transferred. <host>

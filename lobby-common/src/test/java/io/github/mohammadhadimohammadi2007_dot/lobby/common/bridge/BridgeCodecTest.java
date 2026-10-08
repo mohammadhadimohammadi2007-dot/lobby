@@ -112,6 +112,50 @@ class BridgeCodecTest {
     }
 
     @Test
+    void connectRequestAndResultRoundTrip() throws BridgeFormatException {
+        UUID player = UUID.randomUUID();
+        BridgeMessage.ConnectRequest request = new BridgeMessage.ConnectRequest("abc123", player, "bedwars", true);
+        assertEquals(request, BridgeCodec.decode(BridgeCodec.encode(request)));
+
+        for (BridgeMessage.ConnectResult.Outcome outcome : BridgeMessage.ConnectResult.Outcome.values()) {
+            BridgeMessage.ConnectResult result = new BridgeMessage.ConnectResult("abc123", player, outcome, "bw-2");
+            assertEquals(result, BridgeCodec.decode(BridgeCodec.encode(result)));
+        }
+    }
+
+    @Test
+    void unknownOutcomeNumberBecomesRefused() throws BridgeFormatException {
+        UUID player = UUID.randomUUID();
+        byte[] data = BridgeCodec.encode(new BridgeMessage.ConnectResult("abc123", player,
+                BridgeMessage.ConnectResult.Outcome.CONNECTED, ""));
+        // The outcome byte sits after the version, type, request id (2 + 6) and the UUID (16 bytes).
+        data[2 + 6 + 2 + 16] = 99;
+
+        BridgeMessage.ConnectResult decoded = (BridgeMessage.ConnectResult) BridgeCodec.decode(data);
+        assertEquals(BridgeMessage.ConnectResult.Outcome.REFUSED, decoded.outcome());
+    }
+
+    @Test
+    void skinUpdateRoundTripWithLongTextures() throws BridgeFormatException {
+        BridgeMessage.SkinUpdate update = new BridgeMessage.SkinUpdate(UUID.randomUUID(),
+                "e".repeat(1000), "s".repeat(700));
+        assertEquals(update, BridgeCodec.decode(BridgeCodec.encode(update)));
+
+        BridgeMessage.SkinUpdate unsigned = new BridgeMessage.SkinUpdate(UUID.randomUUID(), "value", "");
+        assertEquals(unsigned, BridgeCodec.decode(BridgeCodec.encode(unsigned)));
+    }
+
+    @Test
+    void newMessageTypesKeepTheProtocolVersion() {
+        // Readers reject another version, so adding types must not change it.
+        assertEquals(1, BridgeProtocol.VERSION);
+        byte[] encoded = BridgeCodec.encode(new BridgeMessage.SkinUpdate(
+                new UUID(1, 2), "v", ""));
+        assertEquals(1, encoded[0]);
+        assertEquals(9, encoded[1]);
+    }
+
+    @Test
     void oldMessageLayoutsAreUnchanged() {
         // Version 1 readers from Phase 1 must still understand snapshots: same bytes as before.
         byte[] encoded = BridgeCodec.encode(new BridgeMessage.NetworkSnapshot(5, Map.of("a", 5), Map.of()));

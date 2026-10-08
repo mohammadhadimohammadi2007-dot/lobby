@@ -22,12 +22,17 @@ import java.util.Set;
  * @param statusIntervalSeconds how often servers are pinged
  * @param allowedCommands       first words of console commands lobbies may request, lower case
  * @param groups                group name to server names, in file order (always has {@code lobbies})
+ * @param strategies            group name to how its server is picked; groups not listed use least-players
+ * @param joinFullPermission    permission that lets a player join a server that is already full
  */
 record BridgeConfig(Set<String> lobbyServers, int updateIntervalSeconds, int statusIntervalSeconds,
-                    Set<String> allowedCommands, Map<String, List<String>> groups) {
+                    Set<String> allowedCommands, Map<String, List<String>> groups,
+                    Map<String, ServerPicker.Strategy> strategies, String joinFullPermission) {
 
     /** Group that lists every lobby; added automatically. */
     static final String LOBBIES_GROUP = "lobbies";
+    /** Used when config.toml sets no permission. */
+    static final String DEFAULT_JOIN_FULL_PERMISSION = "lobby.bridge.join-full";
 
     private static final String FILE_NAME = "config.toml";
     private static final int DEFAULT_UPDATE_INTERVAL = 2;
@@ -78,7 +83,32 @@ record BridgeConfig(Set<String> lobbyServers, int updateIntervalSeconds, int sta
             }
         }
         groups.putIfAbsent(LOBBIES_GROUP, List.copyOf(lobbies));
-        return new BridgeConfig(Set.copyOf(lobbies), update, status, Set.copyOf(allowed), groups);
+
+        Map<String, ServerPicker.Strategy> strategies = new LinkedHashMap<>();
+        Toml strategyTable = toml.getTable("group-strategies");
+        if (strategyTable != null) {
+            for (Map.Entry<String, Object> entry : strategyTable.entrySet()) {
+                ServerPicker.Strategy strategy = ServerPicker.Strategy.fromName(String.valueOf(entry.getValue()));
+                if (strategy == null) {
+                    logger.warn("config.toml: group-strategies '{}' must be \"least-players\" or \"fill-first\","
+                            + " got '{}'. Using {}.", entry.getKey(), entry.getValue(),
+                            ServerPicker.Strategy.DEFAULT.configName());
+                } else if (!groups.containsKey(entry.getKey())) {
+                    logger.warn("config.toml: group-strategies names '{}', which is not a group. Ignored.",
+                            entry.getKey());
+                } else {
+                    strategies.put(entry.getKey(), strategy);
+                }
+            }
+        }
+        String joinFull = toml.getString("join-full-permission", DEFAULT_JOIN_FULL_PERMISSION).trim();
+        return new BridgeConfig(Set.copyOf(lobbies), update, status, Set.copyOf(allowed), groups,
+                Map.copyOf(strategies), joinFull);
+    }
+
+    /** How {@code group} picks its server. */
+    ServerPicker.Strategy strategyOf(String group) {
+        return strategies.getOrDefault(group, ServerPicker.Strategy.DEFAULT);
     }
 
     private static int interval(Toml toml, Logger logger, String key, int fallback, int min, int max) {

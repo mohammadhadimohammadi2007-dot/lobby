@@ -2,6 +2,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.bridge.velocity;
 
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -17,13 +18,16 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeCodec;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeFormatException;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
+import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage.ConnectResult.Outcome;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeProtocol;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -33,13 +37,15 @@ import java.util.concurrent.TimeUnit;
  *   <li>tells lobbies each player's real client version and, every few seconds, player counts and
  *       server status (online/offline) of every server;</li>
  *   <li>relays global and staff chat from one lobby to the others;</li>
- *   <li>runs allowlisted console commands requested by lobbies (chat auto-mute).</li>
+ *   <li>runs allowlisted console commands requested by lobbies (chat auto-mute);</li>
+ *   <li>sends players to other servers, or to the best server of a group, when a lobby asks;</li>
+ *   <li>tells lobbies when a player's skin changed on the proxy (SkinsRestorer's /skin).</li>
  * </ul>
  */
 @Plugin(
         id = "lobby-bridge",
         name = "Lobby Bridge",
-        version = "0.2.0",
+        version = "0.3.0",
         description = "Connects Minestom lobby servers to the network: client versions, player counts, chat relay.",
         url = "https://github.com/mohammadhadimohammadi2007-dot/lobby",
         authors = {"mohammadhadimohammadi2007-dot"},
@@ -49,11 +55,14 @@ public final class LobbyBridgePlugin {
 
     private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(BridgeProtocol.CHANNEL);
     private static final long PING_TIMEOUT_SECONDS = 3;
+    /** How often player skins are compared with what the lobbies were last told. */
+    private static final long SKIN_CHECK_SECONDS = 2;
 
     private final ProxyServer proxy;
     private final Logger logger;
     private final Path dataDir;
     private final Map<String, BridgeMessage.ServerStatus.Status> statuses = new ConcurrentHashMap<>();
+    private final Map<UUID, SkinsRestorerHook.Skin> skins = new ConcurrentHashMap<>();
     private BridgeConfig config;
     private CommandGate commandGate;
     private boolean viaVersion;
@@ -90,6 +99,11 @@ public final class LobbyBridgePlugin {
         proxy.getScheduler().buildTask(this, this::pingServers)
                 .repeat(config.statusIntervalSeconds(), TimeUnit.SECONDS)
                 .schedule();
+        proxy.getScheduler().buildTask(this, this::checkSkins)
+                .repeat(SKIN_CHECK_SECONDS, TimeUnit.SECONDS)
+                .schedule();
+        proxy.getEventManager().register(this, DisconnectEvent.class,
+                disconnect -> skins.remove(disconnect.getPlayer().getUniqueId()));
 
         logger.info("Lobby bridge ready: lobbies {}, {} group(s), counts every {}s, status every {}s,"
                         + " client versions from {}, allowed commands {}.",
@@ -104,6 +118,11 @@ public final class LobbyBridgePlugin {
                 .filter(connection -> isLobby(connection.getServerInfo().getName()))
                 .ifPresent(connection -> {
                     send(connection, new BridgeMessage.ClientVersion(player.getUniqueId(), clientProtocol(player)));
+                    // Remember the skin they arrive with, so only later changes are reported.
+                    SkinsRestorerHook.Skin skin = SkinsRestorerHook.of(player);
+                    if (skin != null) {
+                        skins.put(player.getUniqueId(), skin);
+                    }
                     send(connection, snapshot());
                     send(connection, new BridgeMessage.ServerStatus(statuses));
                 });
@@ -137,6 +156,7 @@ public final class LobbyBridgePlugin {
         switch (message) {
             case BridgeMessage.ChatRelay chat -> relayChat(origin, chat);
             case BridgeMessage.CommandRequest request -> runCommand(connection, origin, request);
+            case BridgeMessage.ConnectRequest request -> connectPlayer(connection, origin, request);
             default -> logger.debug("Ignored bridge message type {} from '{}'", message.typeId(), origin);
         }
     }
@@ -177,6 +197,85 @@ public final class LobbyBridgePlugin {
                     }
                     send(connection, new BridgeMessage.CommandResult(request.requestId(), ok, detail));
                 });
+    }
+
+    /**
+     * Sends a player to another server because their lobby asked. Only the lobby a player is really on
+     * may move them, so one lobby cannot pull players off another server.
+     */
+    private void connectPlayer(ServerConnection connection, String origin, BridgeMessage.ConnectRequest request) {
+        Player player = proxy.getPlayer(request.playerId()).orElse(null);
+        if (player == null || player.getCurrentServer()
+                .filter(current -> current.getServerInfo().getName().equals(origin)).isEmpty()) {
+            logger.warn("Lobby {} asked to move a player who is not on it. Ignored.", origin);
+            send(connection, result(request, Outcome.REFUSED, ""));
+            return;
+        }
+        String target;
+        if (request.group()) {
+            List<String> servers = config.groups().get(request.target());
+            if (servers == null) {
+                logger.warn("Lobby {} asked for the group {}, which is not in config.toml.", origin, request.target());
+                send(connection, result(request, Outcome.UNKNOWN, ""));
+                return;
+            }
+            boolean allowFull = !config.joinFullPermission().isEmpty()
+                    && player.hasPermission(config.joinFullPermission());
+            ServerPicker.Choice choice = ServerPicker.pick(servers, serverStates(),
+                    config.strategyOf(request.target()), allowFull);
+            if (choice.server() == null) {
+                send(connection, result(request, choice.outcome(), ""));
+                return;
+            }
+            target = choice.server();
+        } else {
+            target = request.target();
+        }
+        RegisteredServer server = proxy.getServer(target).orElse(null);
+        if (server == null) {
+            logger.warn("Lobby {} asked for the server {}, which is not in velocity.toml.", origin, target);
+            send(connection, result(request, Outcome.UNKNOWN, ""));
+            return;
+        }
+        String chosen = target;
+        player.createConnectionRequest(server).connect().whenComplete((outcome, error) -> {
+            boolean ok = error == null && outcome.isSuccessful();
+            if (!ok) {
+                logger.warn("Could not send {} to {}: {}", player.getUsername(), chosen,
+                        error != null ? error.getMessage() : outcome.getStatus());
+            }
+            send(connection, result(request, ok ? Outcome.CONNECTED : Outcome.REFUSED, chosen));
+        });
+    }
+
+    private static BridgeMessage.ConnectResult result(BridgeMessage.ConnectRequest request, Outcome outcome,
+                                                      String server) {
+        return new BridgeMessage.ConnectResult(request.requestId(), request.playerId(), outcome, server);
+    }
+
+    /** What every server looks like right now, for {@link ServerPicker}. */
+    private Map<String, ServerPicker.ServerState> serverStates() {
+        Map<String, ServerPicker.ServerState> states = new LinkedHashMap<>();
+        for (RegisteredServer server : proxy.getAllServers()) {
+            String name = server.getServerInfo().getName();
+            BridgeMessage.ServerStatus.Status status = statuses.get(name);
+            // Not pinged yet: count it as reachable, so a freshly started proxy still works.
+            boolean reachable = status == null || status.online();
+            int max = status == null ? 0 : status.maxPlayers();
+            states.put(name, new ServerPicker.ServerState(name, server.getPlayersConnected().size(), max, reachable));
+        }
+        return states;
+    }
+
+    /** Tells the lobbies about skins that changed on the proxy, for example through /skin. */
+    private void checkSkins() {
+        for (Player player : proxy.getAllPlayers()) {
+            player.getCurrentServer()
+                    .filter(connection -> isLobby(connection.getServerInfo().getName()))
+                    .ifPresent(connection -> SkinsRestorerHook.checkForChange(player, skins,
+                            (changed, skin) -> send(connection, new BridgeMessage.SkinUpdate(
+                                    changed.getUniqueId(), skin.value(), skin.signature()))));
+        }
     }
 
     /** Sends counts and status to every lobby that has players (messages travel through a player). */

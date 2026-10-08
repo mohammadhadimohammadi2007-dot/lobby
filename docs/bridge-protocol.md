@@ -4,7 +4,7 @@ The Velocity plugin (`lobby-bridge.jar`) and the lobby servers talk over the plu
 **`lobby:bridge`**. You only need this page if you want to write your own bridge (for example for another
 proxy). The reference implementation is `BridgeCodec` in the `lobby-common` module.
 
-Protocol version **1**, message types 1 to 6.
+Protocol version **1**, message types 1 to 9.
 
 ## Directions
 
@@ -16,6 +16,9 @@ Protocol version **1**, message types 1 to 6.
 | 4 | ChatRelay | lobby → proxy → every other lobby |
 | 5 | CommandRequest | lobby → proxy |
 | 6 | CommandResult | proxy → lobby |
+| 7 | ConnectRequest | lobby → proxy |
+| 8 | ConnectResult | proxy → lobby |
+| 9 | SkinUpdate | proxy → lobby |
 
 Plugin messages travel through a player's connection. Messages from the lobby to the proxy are sent
 through any player on that lobby; a lobby with nobody online can neither send nor receive (harmless:
@@ -31,6 +34,9 @@ A player could try to send a fake `lobby:bridge` message, so:
 - for a chat relay it overwrites the origin with the real server name;
 - a `CommandRequest` only runs if the command's first word is in `allowed-commands`, the command has no
   line breaks or other control characters and is at most 256 characters; every command that runs is logged;
+- a `ConnectRequest` is only carried out for a player who is really on the lobby that asked, so one lobby
+  cannot pull players off another server, and a player may only join a full server with the permission in
+  `join-full-permission`;
 - the lobby ignores the channel completely in `standalone` mode (there is no proxy to trust);
 - the decoder rejects messages that are too large or malformed.
 
@@ -135,6 +141,64 @@ violations. See [Security](#security) for when the proxy accepts it.
 | requestId | string | from the request                       |
 | accepted  | bool   | true if the command ran successfully   |
 | detail    | text   | why it was refused or failed, or empty |
+
+## Type 7 – ConnectRequest
+
+The lobby asks the proxy to send a player somewhere else; only the proxy can move players. See
+[Security](#security) for when the proxy carries it out.
+
+| Field     | Type   | Notes                                                      |
+|-----------|--------|------------------------------------------------------------|
+| requestId | string | echoed in the result                                       |
+| playerId  | uuid   | the player to move                                         |
+| target    | string | a server name, or a group name when `group` is true        |
+| group     | bool   | true to let the proxy pick the best server of that group    |
+
+How the proxy picks a server of a group is set per group in `config.toml` under `[group-strategies]`:
+`least-players` (the emptiest, the default) or `fill-first` (the first in the group's list that has room).
+Servers that did not answer the last ping are skipped, and full ones too unless the player has the
+permission in `join-full-permission`.
+
+## Type 8 – ConnectResult
+
+| Field     | Type   | Notes                                             |
+|-----------|--------|---------------------------------------------------|
+| requestId | string | from the request                                  |
+| playerId  | uuid   | the player the request was about                  |
+| outcome   | u8     | see below                                         |
+| server    | string | the server that was chosen, or empty              |
+
+| Outcome | Value | Meaning                                                                |
+|---------|-------|------------------------------------------------------------------------|
+| CONNECTED | 0 | The player is on their way.                                             |
+| FULL | 1 | Every server was full (and the player may not join full ones).               |
+| OFFLINE | 2 | The server, or every server of the group, did not answer the last ping.   |
+| UNKNOWN | 3 | No server or group with that name exists on the proxy.                    |
+| REFUSED | 4 | The proxy or another plugin refused, or the player had left.               |
+
+A value this build does not know is read as `REFUSED`, so a newer proxy can add outcomes.
+
+## Type 9 – SkinUpdate
+
+The proxy tells the lobby that a player's skin changed, for example after SkinsRestorer's `/skin`. The
+lobby applies it right away, without the player reconnecting. The proxy compares each player's game
+profile every two seconds, so this works with any plugin that changes the profile, not only SkinsRestorer.
+
+| Field     | Type | Notes                                                     |
+|-----------|------|-----------------------------------------------------------|
+| playerId  | uuid | the player whose skin changed                             |
+| value     | text | the base64 texture value from Mojang's session server      |
+| signature | text | Mojang's signature for `value`, or empty if unsigned       |
+
+## Without the bridge
+
+Server switching still works in some cases:
+
+| Mode | How a `connect` action works |
+|---|---|
+| Velocity with the bridge | `ConnectRequest`, with groups, status and full checks |
+| BungeeCord or Waterfall | the proxy's own `BungeeCord` plugin message channel; `connect_group` is not possible, because BungeeCord tells the lobby nothing about its servers |
+| Standalone | not possible; the player is told so. A `transfer` action can send modern clients straight to another address instead |
 
 ## Compatibility
 

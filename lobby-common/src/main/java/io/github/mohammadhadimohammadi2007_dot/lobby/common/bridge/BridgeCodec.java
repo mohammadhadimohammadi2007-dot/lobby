@@ -94,6 +94,23 @@ public final class BridgeCodec {
                     out.writeBoolean(msg.accepted());
                     writeText(out, msg.detail());
                 }
+                case BridgeMessage.ConnectRequest msg -> {
+                    writeString(out, msg.requestId());
+                    writeUuid(out, msg.playerId());
+                    writeString(out, msg.target());
+                    out.writeBoolean(msg.group());
+                }
+                case BridgeMessage.ConnectResult msg -> {
+                    writeString(out, msg.requestId());
+                    writeUuid(out, msg.playerId());
+                    out.writeByte(msg.outcome().id());
+                    writeString(out, msg.server());
+                }
+                case BridgeMessage.SkinUpdate msg -> {
+                    writeUuid(out, msg.playerId());
+                    writeText(out, msg.value());
+                    writeText(out, msg.signature());
+                }
                 case BridgeMessage.Unknown msg ->
                         throw new IllegalArgumentException("Cannot encode unknown message type " + msg.unknownTypeId());
             }
@@ -133,6 +150,12 @@ public final class BridgeCodec {
                         new BridgeMessage.CommandRequest(readString(in), readText(in), readString(in));
                 case BridgeMessage.CommandResult.TYPE_ID ->
                         new BridgeMessage.CommandResult(readString(in), in.readBoolean(), readText(in));
+                case BridgeMessage.ConnectRequest.TYPE_ID -> new BridgeMessage.ConnectRequest(readString(in),
+                        readUuid(in), readString(in), in.readBoolean());
+                case BridgeMessage.ConnectResult.TYPE_ID -> new BridgeMessage.ConnectResult(readString(in),
+                        readUuid(in), BridgeMessage.ConnectResult.Outcome.fromId(in.readUnsignedByte()), readString(in));
+                case BridgeMessage.SkinUpdate.TYPE_ID ->
+                        new BridgeMessage.SkinUpdate(readUuid(in), readText(in), readText(in));
                 default -> new BridgeMessage.Unknown(typeId);
             };
             if (!(message instanceof BridgeMessage.Unknown) && in.available() > 0) {

@@ -18,9 +18,22 @@ status-interval = 10
 # Every command that runs is written to the proxy log. Use [] to allow nothing.
 allowed-commands = ["mute", "tempmute", "warn"]
 
+# Permission that lets a player join a server that is already full (staff). Empty = nobody may.
+join-full-permission = "lobby.bridge.join-full"
+
 # Server groups the lobby can show, for example in a server selector.
 # Each line is: group-name = ["server", "server", ...] using names from velocity.toml.
 # A group called "lobbies" with your lobby-servers is added automatically if you do not define it.
 [groups]
 # bedwars = ["bw-1", "bw-2"]
 # skywars = ["sw-1"]
+
+# How each group picks a server when a player clicks it in a selector ("connect_group").
+# Servers that are offline are skipped, and full ones too unless the player has the permission above.
+#   least-players = send them to the emptiest server. Good for lobbies and hub-like servers.
+#   fill-first    = send them to the first server in the group's list that has room, so games fill up
+#                   one at a time. Good for minigames.
+# Groups that are not listed here use least-players.
+[group-strategies]
+# bedwars = "fill-first"
+# skywars = "least-players"

@@ -78,7 +78,11 @@ public enum MessageKey {
     QUIT_MESSAGE("quit-message"),
     CONNECT_NOT_AVAILABLE("connect-not-available"),
     CONNECTING("connecting"),
-    TRANSFER_NOT_SUPPORTED("transfer-not-supported");
+    TRANSFER_NOT_SUPPORTED("transfer-not-supported"),
+    CONNECT_FULL("connect-full"),
+    CONNECT_OFFLINE("connect-offline"),
+    CONNECT_UNKNOWN("connect-unknown"),
+    CONNECT_FAILED("connect-failed");
 
     private final String path;
 

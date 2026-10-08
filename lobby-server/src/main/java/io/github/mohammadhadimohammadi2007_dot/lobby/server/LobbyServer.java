@@ -1,6 +1,9 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
@@ -20,9 +23,11 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.luckperms.LuckPermsIntegration;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.signedvelocity.SignedVelocityReceiver;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.LiveSkinUpdater;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
@@ -74,6 +79,8 @@ public final class LobbyServer implements ServerInfo {
     private SkinsRestorerReader skinsRestorer;
     private BridgeService bridge;
     private ChatSystem chat;
+    private ActionServices actions;
+    private MenuService menus;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -97,6 +104,7 @@ public final class LobbyServer implements ServerInfo {
 
         startIntegrations(snapshot);
         startPlaceholders();
+        startActions(snapshot);
         startChat(snapshot);
         registerListeners();
         registerCommands();
@@ -207,6 +215,23 @@ public final class LobbyServer implements ServerInfo {
         permissions.onMetaChange(placeholders::invalidate);
     }
 
+    /**
+     * The action system and the menus, which the lobby's own features and later phases plug into.
+     * Server switching goes through the bridge behind Velocity, the BungeeCord channel behind
+     * BungeeCord, and is simply not available in standalone mode.
+     */
+    private void startActions(ConfigSnapshot snapshot) {
+        actions = new ActionServices(configManager, text, permissions, bridge);
+        if (bridge.enabled()) {
+            actions.connector(new BridgeConnector(bridge, text));
+            LiveSkinUpdater.register(bridge);
+        } else if (snapshot.config().connection().mode() == ConnectionMode.BUNGEECORD) {
+            actions.connector(new BungeeConnector(text));
+        }
+        menus = new MenuService(() -> configManager.current().menus(), text, actions, bridge);
+        actions.menus(menus);
+    }
+
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
     private void startChat(ConfigSnapshot snapshot) {
         SignedVelocityReceiver signedVelocity = null;
@@ -231,6 +256,7 @@ public final class LobbyServer implements ServerInfo {
         bridge.register(playerEvents);
         placeholders.register(playerEvents);
         chat.register(playerEvents, MinecraftServer.getCommandManager());
+        menus.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager, text).register();
@@ -349,6 +375,16 @@ public final class LobbyServer implements ServerInfo {
     /** The chat system (pipeline, settings, filter). */
     public ChatSystem chat() {
         return chat;
+    }
+
+    /** Shared actions for NPCs, holograms, menus, hotbar items and portals. */
+    public ActionServices actions() {
+        return actions;
+    }
+
+    /** The menus from menus.yml. */
+    public MenuService menus() {
+        return menus;
     }
 
     /** Client versions and network player counts from the proxy bridge. */
