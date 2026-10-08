@@ -16,6 +16,13 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
+import net.minestom.server.network.packet.server.play.SystemChatPacket;
+import net.minestom.server.utils.PacketSendingUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Sends the message to everyone who should see it, each in their version, pings mentioned players,
@@ -45,19 +52,27 @@ public final class DeliverStage implements ChatStage {
     public Result process(ChatMessage message, ChatConfig config) {
         RenderedMessage rendered = message.rendered();
         Sound sound = sound(config.mentions().sound());
+        Map<VariantKey, List<Player>> groups = new HashMap<>();
+        List<Player> pinged = new ArrayList<>();
         for (Player viewer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
             if (!audience.canSee(viewer, message)) {
                 continue;
             }
             VariantKey key = audience.variant(viewer, message);
-            viewer.sendMessage(rendered.variant(key));
+            groups.computeIfAbsent(key, ignored -> new ArrayList<>()).add(viewer);
             rendered.addRecipient();
-            boolean pinged = key.mentioned() != null
+            boolean mentioned = key.mentioned() != null
                     || (message.mentionEveryone() && !viewer.getUuid().equals(message.senderId())
                     && services.settings().get(viewer.getUuid()).mentions());
-            if (pinged && message.notifyMentions()) {
-                ping(viewer, message, sound);
+            if (mentioned && message.notifyMentions()) {
+                pinged.add(viewer);
             }
+        }
+        // One packet per version, encoded once and shared by everyone who gets that version.
+        groups.forEach((key, viewers) ->
+                PacketSendingUtils.sendGroupedPacket(viewers, new SystemChatPacket(rendered.variant(key), false)));
+        for (Player viewer : pinged) {
+            ping(viewer, message, sound);
         }
         services.history().add(message, config.historySize());
         if (message.channel().network() && !message.relayed() && message.sender() != null) {

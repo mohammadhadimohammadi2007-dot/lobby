@@ -217,7 +217,7 @@ public final class ChatService {
     }
 
     private void onJoin(Player player) {
-        services.players().joined(player.getUuid());
+        services.players().joined(player.getUuid(), player.getUsername());
         services.settings().load(player.getUuid());
         ChatConfig config = services.chat();
         if (config.joinMessage()) {

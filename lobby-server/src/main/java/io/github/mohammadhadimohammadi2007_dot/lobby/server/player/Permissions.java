@@ -17,7 +17,7 @@ public final class Permissions {
      * default group instead.
      */
     public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN,
-            "lobby.command.chat", "lobby.command.ch", "lobby.command.ignore", "lobby.command.msg");
+            "lobby.command.chat", "lobby.command.ch", "lobby.command.ignore", "lobby.command.msg", "lobby.chat.emoji");
 
     private Permissions() {
     }

@@ -7,17 +7,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatPlayerTrack
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.MentionFinder;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.pipeline.ChatStage;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 /**
@@ -87,12 +82,8 @@ public final class FormatStage implements ChatStage {
     }
 
     private void findMentions(ChatMessage message, ChatConfig config, @Nullable Player sender) {
-        Map<String, Map.Entry<UUID, String>> online = new HashMap<>();
-        for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
-            online.put(player.getUsername().toLowerCase(Locale.ROOT),
-                    new AbstractMap.SimpleImmutableEntry<>(player.getUuid(), player.getUsername()));
-        }
-        MentionFinder.Result found = MentionFinder.find(message.text(), online, message.senderId());
+        MentionFinder.Result found = MentionFinder.find(message.text(), services.players().onlineByName(),
+                message.senderId());
         message.mentionedNames().putAll(found.mentioned());
         message.mentionEveryone(found.everyone() && sender != null
                 && services.has(sender, ChatPermissions.MENTION_EVERYONE));

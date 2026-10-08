@@ -2,9 +2,12 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.spam.TokenBucket;
 
+import java.util.AbstractMap;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,10 +90,26 @@ public final class ChatPlayerTracker {
     }
 
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
+    /** Online players by lower-case name, for mentions; kept up to date instead of rebuilt per message. */
+    private final Map<String, Map.Entry<UUID, String>> byName = new ConcurrentHashMap<>();
+    private final Map<UUID, String> nameKeys = new ConcurrentHashMap<>();
 
     /** Starts tracking a player who joined. */
     public void joined(UUID player) {
         states.put(player, new State(System.nanoTime()));
+    }
+
+    /** Starts tracking a player who joined, and makes their name mentionable. */
+    public void joined(UUID player, String name) {
+        joined(player);
+        String key = name.toLowerCase(Locale.ROOT);
+        byName.put(key, new AbstractMap.SimpleImmutableEntry<>(player, name));
+        nameKeys.put(player, key);
+    }
+
+    /** Online players: lower-case name to (id, name). */
+    public Map<String, Map.Entry<UUID, String>> onlineByName() {
+        return Collections.unmodifiableMap(byName);
     }
 
     /** Remembers that a player moved (for new-player protection). */
@@ -104,6 +123,10 @@ public final class ChatPlayerTracker {
     /** Stops tracking a player who left. */
     public void left(UUID player) {
         states.remove(player);
+        String key = nameKeys.remove(player);
+        if (key != null) {
+            byName.computeIfPresent(key, (name, entry) -> entry.getKey().equals(player) ? null : entry);
+        }
     }
 
     /** The player's state; created on the fly for players the tracker missed (for example in tests). */
