@@ -13,6 +13,9 @@ import net.minestom.server.entity.Player;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * Permissions and rank meta from LuckPerms. Reads LuckPerms' in-memory cache only, so every call
@@ -21,17 +24,31 @@ import java.util.Map;
 final class LuckPermsPermissionService implements PermissionService {
 
     private final LuckPerms luckPerms;
+    private final List<Consumer<UUID>> changeListeners = new CopyOnWriteArrayList<>();
 
     LuckPermsPermissionService(LuckPerms luckPerms) {
         this.luckPerms = luckPerms;
-        // When ranks change (on this server or, through messaging, anywhere on the network),
-        // refresh the player's command list so tab completion matches their new permissions.
+        // Fired when a user's cached data is rebuilt: after a rank change on this server or, through
+        // messaging, anywhere on the network.
         luckPerms.getEventBus().subscribe(UserDataRecalculateEvent.class, event -> {
-            Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(event.getUser().getUniqueId());
+            UUID playerId = event.getUser().getUniqueId();
+            changeListeners.forEach(listener -> listener.accept(playerId));
+            // Refresh the command list so tab completion matches the new permissions.
+            Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(playerId);
             if (player != null) {
                 MinecraftServer.getSchedulerManager().scheduleNextTick(player::refreshCommands);
             }
         });
+    }
+
+    @Override
+    public void onMetaChange(Consumer<UUID> listener) {
+        changeListeners.add(listener);
+    }
+
+    /** The LuckPerms API, for tests and later phases. */
+    LuckPerms api() {
+        return luckPerms;
     }
 
     @Override

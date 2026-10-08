@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The LuckPerms Minestom port is built from the submodule in third_party/luckperms.
+          submodules: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

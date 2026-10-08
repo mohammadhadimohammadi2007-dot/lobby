@@ -17,7 +17,8 @@ and developers. Please keep that in mind in every change.
 
 ## Development setup
 
-You need JDK 25 and Git.
+You need JDK 25 and Git. Clone with `--recursive` (or run `git submodule update --init`): the LuckPerms
+Minestom port in `third_party/luckperms` is built from source together with the lobby.
 
 ```bash
 ./gradlew build                  # compile, test, build both jars
@@ -26,12 +27,14 @@ You need JDK 25 and Git.
 
 ### Database tests
 
-`DatabaseReadersIT` runs the LiteBans and SkinsRestorer queries against a real MariaDB. It is skipped
+`DatabaseReadersIT` (LiteBans, SkinsRestorer) and `LuckPermsLiveIT` (LuckPerms with SQL messaging) run
+against a real MariaDB. They are skipped
 unless you set `LOBBY_TEST_DB_PORT` (and optionally `LOBBY_TEST_DB_HOST`, `LOBBY_TEST_DB_NAME`,
-`LOBBY_TEST_DB_USER`, `LOBBY_TEST_DB_PASSWORD`). It creates and drops its own `lobbytest_` tables.
+`LOBBY_TEST_DB_USER`, `LOBBY_TEST_DB_PASSWORD`). They create and drop their own `lobbytest_` tables and
+`lobby_luckperms_it` database. Never point them at a production database.
 
 ```bash
-LOBBY_TEST_DB_PORT=3306 LOBBY_TEST_DB_PASSWORD=secret ./gradlew :lobby-server:test
+LOBBY_TEST_DB_PORT=3306 LOBBY_TEST_DB_PASSWORD=secret ./gradlew test
 ```
 
 ## Commits and pull requests

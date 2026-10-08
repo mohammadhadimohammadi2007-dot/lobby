@@ -1,0 +1,4 @@
+[submodule "third_party/luckperms"]
+	path = third_party/luckperms
+	url = https://github.com/mohammadhadimohammadi2007-dot/LuckPerms.git
+	branch = feat/minestom

@@ -172,8 +172,8 @@ public final class LobbyServer implements ServerInfo {
         }
         Optional<LuckPermsIntegration> luckPerms = LuckPermsIntegration.find();
         if (luckPerms.isEmpty()) {
-            integrations.add(IntegrationStatus.failed(LUCKPERMS, "this build does not include LuckPerms support"
-                    + " (see docs/integrations/luckperms.md). Using the operators list instead"));
+            integrations.add(IntegrationStatus.failed(LUCKPERMS, "LuckPerms support is missing from this jar"
+                    + " (was it built without the lobby-luckperms module?). Using the operators list instead"));
             return operators;
         }
         try {

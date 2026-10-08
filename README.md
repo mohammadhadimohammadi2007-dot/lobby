@@ -25,7 +25,7 @@ network, and it also runs completely on its own for testing or small servers.
 | World | Loads `.polar` files and Anvil worlds (old and 26.1+ layouts), converts Anvil to Polar once, preloads everything, computes lighting if missing, never crashes on a missing map (flat platform fallback) |
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
 | Commands | `/spawn`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
-| Integrations (optional) | MariaDB pool, LiteBans (bans + mutes, read only), SkinsRestorer (read only), LuckPerms (see [known issues](#known-issues)), offline-mode skins from Mojang |
+| Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
 | Bridge | Velocity plugin that tells the lobby each player's real client version and live player counts per server |
 
 ## Quick start (standalone, about a minute)
@@ -92,9 +92,8 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 
 ## Known issues
 
-- **LuckPerms is not usable yet.** The only Minestom port of LuckPerms cannot be downloaded right now and
-  does not run on the Minestom version this project uses. Until that is fixed, use the `operators:` list.
-  Details and the exact fixes needed: [docs/integrations/luckperms.md](docs/integrations/luckperms.md).
+- LuckPerms comes from a community Minestom port, built from a fork in `third_party/luckperms` that
+  adds support for this Minestom version ([details](docs/integrations/luckperms.md)).
 - Polar 1.16.0 was built for an older Minestom; the lobby includes a small compatibility fix
   (`LobbyPolarWorldAccess`) that is covered by tests.
 
@@ -103,7 +102,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 Requirements: **JDK 25** and Git. The Gradle wrapper downloads everything else.
 
 ```bash
-git clone https://github.com/mohammadhadimohammadi2007-dot/lobby.git
+git clone --recursive https://github.com/mohammadhadimohammadi2007-dot/lobby.git
 cd lobby
 ./gradlew build
 ```
@@ -125,7 +124,8 @@ Project layout:
 lobby-server/           Minestom server
 lobby-bridge-velocity/  Velocity plugin
 lobby-common/           Shared code (bridge message format)
-lobby-luckperms/        Optional LuckPerms support (built with -PwithLuckPerms)
+lobby-luckperms/        LuckPerms support (off until enabled in integrations.yml)
+third_party/luckperms/  LuckPerms Minestom port (git submodule, built from source)
 docs/                   Setup guides
 ```
 

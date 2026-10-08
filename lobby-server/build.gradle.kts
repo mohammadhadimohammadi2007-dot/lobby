@@ -15,10 +15,8 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.mariadb)
     implementation(libs.gson)
-    // Included only when building with -PwithLuckPerms (see settings.gradle.kts).
-    if (findProject(":lobby-luckperms") != null) {
-        runtimeOnly(project(":lobby-luckperms"))
-    }
+    // LuckPerms support, found at runtime through ServiceLoader (see LuckPermsIntegration).
+    runtimeOnly(project(":lobby-luckperms"))
     // Polar's class files reference fastutil types; Minestom only ships it at runtime.
     compileOnly(libs.fastutil)
     testCompileOnly(libs.fastutil)

@@ -1,8 +1,5 @@
 # LuckPerms
 
-> **Status: not usable yet.** Read [Current problems](#current-problems) before enabling it.
-> Until they are solved, the lobby uses the `operators:` list in `config.yml`.
-
 LuckPerms gives the lobby the same ranks, permissions, prefixes and suffixes as the rest of your
 network. The lobby runs its own LuckPerms instance against your network's MariaDB, so it reads the
 same `luckperms_` tables as LuckPerms on your proxy and Paper servers.
@@ -15,63 +12,63 @@ luckperms:
   messaging-service: "sql"
 ```
 
-- All LuckPerms settings come from `integrations.yml`; no separate LuckPerms config file is needed.
-- `messaging-service` must match the other LuckPerms configs on your network. Use `sql` so rank
-  changes made anywhere apply to the lobby within seconds, even when no player is on it.
+- All LuckPerms settings come from `integrations.yml` and the shared `database:` block. No separate
+  LuckPerms config file is needed. LuckPerms keeps its own small connection pool.
+- `table-prefix` must match `table-prefix` in your other LuckPerms configs.
+- `messaging-service` must match the other LuckPerms configs on your network. With `sql`, a rank change
+  made anywhere (for example `/lp user Steve parent add vip` on the proxy) reaches the lobby within a
+  couple of seconds, even when no player is on the lobby.
+- `server-name` is this server's name for server-specific permissions (`/lp ... server=lobby`).
 - Give your default group `lobby.command.spawn` so players can use `/spawn`.
+- The **primary group** (used to pick chat formats) is LuckPerms' stored primary group, as on your other
+  servers: `/lp user Steve parent set vip` changes it, `parent add` does not.
 
-If LuckPerms is enabled but cannot start, the console shows why, LuckPerms is marked `FAILED`,
-and the lobby falls back to the `operators:` list.
+If LuckPerms is enabled but cannot start (for example the database is unreachable), the console shows
+why, LuckPerms is marked `FAILED`, and the lobby falls back to the `operators:` list in `config.yml`.
+
+## What the lobby uses
+
+| Data | Used for |
+|---|---|
+| Permissions | Every permission check (`lobby.command.*`, `lobby.bypass.*`, chat permissions...) |
+| Prefix / suffix / primary group | Chat formats, tab list and scoreboard (Phase 2+) |
+| Meta (`/lp group vip meta set key value`) | Placeholders like `%luckperms_meta_key%` |
+
+When LuckPerms rebuilds a player's data (`UserDataRecalculateEvent`), the lobby refreshes that player's
+command list and drops cached rank values, so changes show up right away.
 
 ## How it is built
 
 LuckPerms has no official Minestom version. The lobby uses the community port at
-[LooFifteen/LuckPerms](https://github.com/LooFifteen/LuckPerms/tree/feat/minestom) (branch `feat/minestom`,
-artifact `dev.lu15:luckperms-minestom:5.5-SNAPSHOT`).
+[LooFifteen/LuckPerms](https://github.com/LooFifteen/LuckPerms/tree/feat/minestom), through the fork
+[mohammadhadimohammadi2007-dot/LuckPerms](https://github.com/mohammadhadimohammadi2007-dot/LuckPerms/tree/feat/minestom)
+(branch `feat/minestom`), which adds support for Minestom `2026.10.05-26.2` and Adventure 5.
 
-Because that port is not on Maven Central, LuckPerms support lives in the optional `lobby-luckperms`
-module and is only included when building with:
-
-```bash
-./gradlew build -PwithLuckPerms
-```
-
-The normal build does not need the port at all.
-
-## Current problems
-
-These were found while building this project (October 2026). They have to be fixed in the port, not here.
-
-1. **The port cannot be downloaded.** Its only repository, `repo.hypera.dev`, answers with HTTP 525
-   (a broken HTTPS setup on the server).
-
-2. **It targets an older Minestom.** It was written for Minestom `2025.12.20c-1.21.11`.
-   Against Minestom `2026.10.05-26.2` it compiles with one change in `minestom/build.gradle`
-   (Minestom no longer exposes SLF4J):
-   ```groovy
-   compileOnly "org.slf4j:slf4j-api:2.0.20"
-   ```
-
-3. **It fails at runtime with Adventure 5.** Minestom 26.2 ships Adventure 5, which removed APIs that
-   LuckPerms' `common` module still uses:
-   - `net.kyori.adventure.translation.TranslationRegistry` → replace with `TranslationStore.messageFormat(key)`
-     (in `common/.../locale/TranslationManager.java`).
-   - `net.kyori.adventure.util.UTF8ResourceBundleControl` → Java's `ResourceBundle` already reads UTF-8
-     `.properties` files since Java 9, so the plain `ResourceBundle.getBundle(name, locale)` works.
-   - `TranslatableComponent.Builder.args(...)` → renamed to `arguments(...)`
-     (100+ uses in `common/.../locale/Message.java`).
-
-   After these, more Adventure 5 differences may appear; compiling `common` against
-   `net.kyori:adventure-api:5.2.0` lists them all.
-
-## Building the port yourself (once it is fixed)
+The fork is a git submodule in `third_party/luckperms` and is compiled together with the lobby
+(a Gradle composite build), so no Maven repository is needed. Clone with submodules:
 
 ```bash
-git clone -b feat/minestom https://github.com/LooFifteen/LuckPerms.git
-cd LuckPerms
-./gradlew :api:publishToMavenLocal :common:publishToMavenLocal :minestom:publishToMavenLocal -x test -x javadoc
-cd ../lobby
-./gradlew build -PwithLuckPerms
+git clone --recursive https://github.com/mohammadhadimohammadi2007-dot/lobby.git
+# or, in an existing clone:
+git submodule update --init
 ```
 
-The lobby build looks in your local Maven cache (`~/.m2`) first, then in the port's repository.
+## Changes in the fork
+
+Compared to the upstream port, the fork:
+
+- builds against Minestom `2026.10.05-26.2` and adds `slf4j-api` as `compileOnly`
+  (Minestom no longer exposes it);
+- moves `common` to Adventure `5.2.0`: `TranslationRegistry` → `TranslationStore.messageFormat(...)`,
+  `UTF8ResourceBundleControl` → plain `ResourceBundle.getBundle(...)` (UTF-8 since Java 9),
+  `TranslatableComponent.Builder#args` → `#arguments`;
+- updates the tests for Adventure 5 (`Component` is sealed and cannot be mocked).
+
+All 1116 LuckPerms `common` tests pass. These changes are meant to go upstream as a pull request.
+
+## Tested
+
+`LuckPermsLiveIT` (in `lobby-luckperms`) runs against a real MariaDB: it starts LuckPerms in the lobby,
+then a second, independent LuckPerms instance in another JVM gives the player a new group with a prefix
+and a permission on the same tables, and checks that the lobby picks the change up through SQL messaging.
+It runs when `LOBBY_TEST_DB_PORT` is set (see [CONTRIBUTING.md](../../CONTRIBUTING.md)).
