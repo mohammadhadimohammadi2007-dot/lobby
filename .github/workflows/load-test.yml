@@ -1,0 +1,30 @@
+# The chat load test: 200 fake players chatting for a minute. Too slow for every push, so it runs once a
+# week and whenever started by hand (Actions > Load test > Run workflow).
+name: Load test
+
+on:
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: How long the load runs, in seconds
+        default: "60"
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  chat-load:
+    runs-on: ubuntu-latest
+    env:
+      LOBBY_LOAD_TEST: 1
+      LOBBY_LOAD_TEST_SECONDS: ${{ github.event.inputs.seconds || '60' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Chat load test
+        run: ./gradlew :lobby-server:test --tests '*ChatLoadTest' -i

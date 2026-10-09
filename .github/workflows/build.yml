@@ -1,4 +1,4 @@
-# Builds both jars and runs the tests on every push and pull request.
+# Builds both jars and runs every test, the database tests included, on every push and pull request.
 name: Build
 
 on:
@@ -9,6 +9,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      # The database tests (LuckPerms, chat log and settings, LiteBans and SkinsRestorer readers) run
+      # against a throwaway MariaDB, the same version they were written against.
+      mariadb:
+        image: mariadb:12.3.2
+        env:
+          MARIADB_ROOT_PASSWORD: lobbytest
+          MARIADB_DATABASE: lobbytest
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      LOBBY_TEST_DB_HOST: 127.0.0.1
+      LOBBY_TEST_DB_PORT: 3306
+      LOBBY_TEST_DB_USER: root
+      LOBBY_TEST_DB_PASSWORD: lobbytest
+      LOBBY_TEST_DB_NAME: lobbytest
+      # A skipped database test fails the build here (see build.gradle.kts).
+      LOBBY_REQUIRE_DB_TESTS: 1
     steps:
       - uses: actions/checkout@v4
         with:

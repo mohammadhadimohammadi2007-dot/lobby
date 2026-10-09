@@ -40,6 +40,11 @@ unless you set `LOBBY_TEST_DB_PORT` (and optionally `LOBBY_TEST_DB_HOST`, `LOBBY
 `LOBBY_TEST_DB_USER`, `LOBBY_TEST_DB_PASSWORD`). They create and drop their own `lobbytest_` tables and
 `lobby_luckperms_it` database. Never point them at a production database.
 
+CI runs them on every push and pull request against a MariaDB 12.3.2 service container
+(`.github/workflows/build.yml`). There `LOBBY_REQUIRE_DB_TESTS=1` is set, and the build fails if any
+database test class is skipped or does not run, so a missing or broken database never goes unnoticed.
+Locally they simply skip without a database.
+
 ```bash
 LOBBY_TEST_DB_PORT=3306 LOBBY_TEST_DB_PASSWORD=secret ./gradlew test
 ```
@@ -55,6 +60,7 @@ LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test --tests '*ChatLoadTest'
 ```
 
 `LOBBY_LOAD_TEST_SECONDS` changes the duration. Run it after changing anything in the chat pipeline.
+In CI it runs every Monday and on demand (Actions > Load test > Run workflow), not on every push.
 
 ## Commits and pull requests
 
