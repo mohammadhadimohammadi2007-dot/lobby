@@ -6,6 +6,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -24,6 +25,11 @@ class ChatInstanceTest {
 
     @TempDir
     Path dir;
+
+    @AfterEach
+    void stopChat() {
+        ChatTestServer.stopAll();
+    }
 
     /** A second lobby instance of the same map, as {@code LobbyInstances} creates them. */
     private static Instance secondLobby(ChatTestServer server) {

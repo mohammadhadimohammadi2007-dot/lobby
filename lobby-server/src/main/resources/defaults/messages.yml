@@ -70,7 +70,49 @@ hologram-action-list: "<prefix><gray><name> runs on click: <white><actions>"
 hologram-action-invalid: "<prefix><red>That action cannot be read: <error>. Types: <types>."
 hologram-imported: "<prefix><green>Imported <white><count></white> hologram(s) from <white><file></white>."
 hologram-import-skipped: "<prefix><yellow>Not imported: <entry>"
+# <npc> = the NPC whose name tag a linked hologram became
+hologram-imported-name-tag: "<prefix><green>The hologram linked to <white><npc></white> is now its name tag."
 hologram-import-nothing: "<prefix><yellow>Nothing to import. Put FancyHolograms' holograms.yml in <white><file></white> and try again."
+
+# ---------------- NPCs (/npc, see docs/npcs.md) ----------------
+npc-usage: "<prefix><gray>Usage: <white>/npc create <name> | remove | copy | list | nearby | info | teleport | move_here | move_to | type | skin | displayname | name | equipment | glowing | turn_to_player | turn_to_player_distance | visibility_distance | interaction_cooldown | permission | action | import"
+# <name> = the NPC's name
+npc-created: "<prefix><green>Created the NPC <white><name></white> where you are standing."
+npc-exists: "<prefix><red>There is already an NPC called <name>."
+npc-deleted: "<prefix><green>Removed the NPC <white><name></white>."
+npc-unknown: "<prefix><red>There is no NPC called <name>."
+npc-invalid-name: "<prefix><red>'<name>' cannot be an NPC name. Use letters, digits, - and _ (at most 32)."
+# <count> = how many, <names> = their names
+npc-list: "<prefix><gray>NPCs (<white><count></white>): <names>"
+npc-list-empty: "<prefix><gray>No NPCs here. Create one with /npc create <name>."
+npc-info: "<prefix><gray>NPC <white><name></white> (<type>) at <x>, <y>, <z><newline><gray>Skin: <white><skin></white>, turns to players: <white><turn></white>, glowing: <white><glowing></white><newline><gray>Name: <white><lines></white> line(s), shown within <white><view-distance></white> blocks, visible to <white><permission></white><newline><gray>Click: <white><actions>"
+npc-moved: "<prefix><green>Moved <white><name></white>."
+npc-copied: "<prefix><green>Copied <white><name></white> to <white><new-name></white>."
+# <property> = what was changed, <value> = its new value
+npc-set: "<prefix><green><name>: <white><property></white> is now <white><value></white>."
+# <error> = what is wrong, <allowed> = what the option accepts
+npc-invalid-value: "<prefix><red><property>: <error>. Allowed: <allowed>."
+npc-not-a-player: "<prefix><red><name> is a <type>, not a player, so it has no skin. Use /npc type <name> player first."
+# <skin> = what was asked for
+npc-skin-looking-up: "<prefix><gray>Looking up the skin <white><skin></white> for <white><name></white>..."
+npc-skin-set: "<prefix><green><name> now has the skin <white><skin></white>."
+npc-skin-failed: "<prefix><red>No skin for <name>: <error>."
+# <items> = slot: item, ...
+npc-equipment-list: "<prefix><gray><name> holds and wears: <white><items>"
+# <line> = the line number
+npc-name-line: "<prefix><green>Changed the name of <white><name></white> (line <white><line></white>)."
+npc-name-no-such-line: "<prefix><red>There is no line <line>; the name of <name> has <lines>."
+npc-name-properties: "<prefix><gray>Name properties: <white><properties>"
+# <trigger> = any_click, left_click or right_click; <action> = one action, <actions> = all of them
+npc-action-added: "<prefix><green>Added <white><action></white> to the <trigger> actions of <white><name></white>."
+npc-action-changed: "<prefix><green>Changed the <trigger> actions of <white><name></white>."
+npc-action-list: "<prefix><gray><name>, <trigger>: <white><actions>"
+npc-actions-cleared: "<prefix><green><name> does nothing on <trigger> any more."
+npc-action-invalid: "<prefix><red>That action cannot be read: <error>. Types: <types>."
+npc-no-such-action: "<prefix><red>There is no action <number>; <trigger> has <count>."
+npc-imported: "<prefix><green>Imported <white><count></white> NPC(s) from <white><file></white>."
+npc-import-nothing: "<prefix><yellow>Nothing to import. Put FancyNpcs' npcs.yml in <white><file></white> and try again."
+npc-import-skipped: "<prefix><yellow>Not imported: <entry>"
 reload-done: "<prefix><green>Configuration reloaded."
 # <options> = list of changed options that only apply after a restart
 reload-restart-needed: "<prefix><yellow>These changes need a full restart: <white><options>"
@@ -94,6 +136,7 @@ info: |-
   <gray>World: <white><world></white> (<world-format>, <chunks> chunks)
   <gray>Integrations: <white><integrations>
   <gray>Bridge: <white><bridge>
+  <gray>Display thread: <white><display>
 
 # Shown when a player cannot join.
 kick-server-full: "<red>The lobby is full. Please try again in a moment."

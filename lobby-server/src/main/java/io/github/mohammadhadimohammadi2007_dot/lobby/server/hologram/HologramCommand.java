@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionEntries;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
@@ -52,12 +53,20 @@ public final class HologramCommand extends Command {
     private final HologramService holograms;
     private final LobbyText text;
     private final Path dataDir;
+    private final NameTags nameTags;
 
     public HologramCommand(HologramService holograms, LobbyText text, PermissionService permissions, Path dataDir) {
+        this(holograms, text, permissions, dataDir, NameTags.NONE);
+    }
+
+    /** @param nameTags the NPCs, so holograms FancyHolograms linked to an NPC become its name tag */
+    public HologramCommand(HologramService holograms, LobbyText text, PermissionService permissions, Path dataDir,
+                           NameTags nameTags) {
         super("hologram", "holograms", "hd");
         this.holograms = holograms;
         this.text = text;
         this.dataDir = dataDir;
+        this.nameTags = nameTags;
         CommandCondition allowed = (sender, commandString) -> {
             boolean has = permissions.hasPermission(sender, Permissions.COMMAND_HOLOGRAM);
             if (!has && commandString != null) {
@@ -323,7 +332,7 @@ public final class HologramCommand extends Command {
                         Messages.text("types", String.join(", ", ActionParser.typeNames()))));
                 return;
             }
-            List<String> lines = new ArrayList<>(data.actionLines());
+            List<Object> lines = new ArrayList<>(data.actionEntries());
             lines.add(line);
             holograms.setActions(data, lines, data.actions().cooldownMillis());
             sender.sendMessage(text.message(MessageKey.HOLOGRAM_ACTION_ADDED, sender,
@@ -342,8 +351,7 @@ public final class HologramCommand extends Command {
             if (data != null) {
                 sender.sendMessage(text.message(MessageKey.HOLOGRAM_ACTION_LIST, sender,
                         Messages.text("name", data.name()),
-                        Messages.text("actions", data.actionLines().isEmpty() ? "none"
-                                : String.join(" | ", data.actionLines()))));
+                        Messages.text("actions", ActionEntries.describeAll(data.actionEntries()))));
             }
         }, list, name);
         return command;
@@ -430,7 +438,7 @@ public final class HologramCommand extends Command {
 
     /** Imports a FancyHolograms file in the background, because it reads from disk. */
     private void importFile(CommandSender sender) {
-        Async.supply(() -> FancyHologramsImport.run(dataDir, holograms))
+        Async.supply(() -> FancyHologramsImport.run(dataDir, holograms, nameTags))
                 .whenComplete((result, error) -> Async.onTickThread(() -> {
                     if (error != null) {
                         sender.sendMessage(text.message(MessageKey.HOLOGRAM_ACTION_INVALID, sender,
@@ -442,7 +450,11 @@ public final class HologramCommand extends Command {
                         sender.sendMessage(text.message(MessageKey.HOLOGRAM_IMPORT_SKIPPED, sender,
                                 Messages.text("entry", skipped)));
                     }
-                    if (result.imported().isEmpty()) {
+                    for (String npc : result.nameTags()) {
+                        sender.sendMessage(text.message(MessageKey.HOLOGRAM_IMPORTED_NAME_TAG, sender,
+                                Messages.text("npc", npc)));
+                    }
+                    if (result.imported().isEmpty() && result.nameTags().isEmpty()) {
                         sender.sendMessage(text.message(MessageKey.HOLOGRAM_IMPORT_NOTHING, sender,
                                 Messages.text("file", result.file().toString())));
                         return;
@@ -518,8 +530,7 @@ public final class HologramCommand extends Command {
                 Messages.text("view-distance", (int) data.viewDistance()),
                 Messages.text("update-interval", data.effectiveUpdateIntervalTicks()),
                 Messages.text("permission", data.permission().isEmpty() ? "everyone" : data.permission()),
-                Messages.text("actions", data.actionLines().isEmpty() ? "none"
-                        : String.join(" | ", data.actionLines()))));
+                Messages.text("actions", ActionEntries.describeAll(data.actionEntries()))));
     }
 
     private void usage(CommandSender sender) {

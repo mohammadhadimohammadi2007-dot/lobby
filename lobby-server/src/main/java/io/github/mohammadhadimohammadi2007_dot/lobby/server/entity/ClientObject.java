@@ -2,6 +2,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.entity;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
+import net.minestom.server.network.packet.server.ServerPacket;
 
 import java.util.List;
 
@@ -54,4 +55,28 @@ public interface ClientObject {
      * @param viewer one viewer of the group, for placeholders
      */
     List<EntityPart> render(Object key, Player viewer);
+
+    /**
+     * True if {@link #viewerPackets} has anything to send. Only objects that answer true are asked, so
+     * the renderer does no per-viewer work for the others.
+     */
+    default boolean hasViewerPackets() {
+        return false;
+    }
+
+    /**
+     * Packets for one viewer on top of the shared ones, sent on every refresh: for example an NPC
+     * turning its head towards that viewer. Never re-renders anything, so it is cheap per viewer.
+     *
+     * @param entityIds   the ids this viewer's group of the object has, in render order
+     * @param justSpawned true if the entities were spawned for this viewer in this very refresh, so
+     *                    anything remembered about the viewer is stale
+     */
+    default List<ServerPacket> viewerPackets(Player viewer, List<Integer> entityIds, boolean justSpawned) {
+        return List.of();
+    }
+
+    /** The viewer no longer sees this object (out of range, left, or the object was removed). */
+    default void viewerGone(Player viewer) {
+    }
 }

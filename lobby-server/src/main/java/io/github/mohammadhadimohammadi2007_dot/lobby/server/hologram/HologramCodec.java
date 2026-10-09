@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionEntries;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataCodec;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataException;
@@ -49,22 +50,15 @@ public final class HologramCodec implements DataCodec<HologramData> {
         if (type == null) {
             throw new DataException("'type' must be one of " + String.join(", ", HologramType.configNames()));
         }
-        HologramData data = new HologramData(name, type, position(node.node("position")), lines(node));
-        data.frames(frames(node, data.lines()));
+        HologramData data = new HologramData(name, type, position(node.node("position")), List.of());
+        readAppearance(node, data, "holograms.yml: " + name);
         readMaterials(node, data, type);
-        readLook(node, data, name);
-        data.viewDistance(node.node("view-distance").getDouble(HologramData.DEFAULT_VIEW_DISTANCE));
-        data.updateIntervalTicks(node.node("update-interval").getInt(HologramData.AUTOMATIC_UPDATE_INTERVAL));
         data.permission(node.node("permission").getString(""));
-        data.lineSpacing(node.node("line-spacing").getDouble(HologramData.DEFAULT_LINE_SPACING));
-        data.brightness(node.node("brightness-block").getInt(HologramData.LIGHT_FROM_WORLD),
-                node.node("brightness-sky").getInt(HologramData.LIGHT_FROM_WORLD));
-        data.shadowRadius(node.node("shadow-radius").getDouble(0));
-        data.shadowStrength(node.node("shadow-strength").getDouble(1));
         HologramVisibility visibility = HologramVisibility.fromConfigName(
                 node.node("visibility").getString(HologramVisibility.ALL.configName()));
         if (visibility == null) {
-            warn(name, "visibility", node.node("visibility").getString(""), HologramVisibility.configNames());
+            warn("holograms.yml: " + name, "visibility", node.node("visibility").getString(""),
+                    HologramVisibility.configNames());
         } else {
             data.visibility(visibility);
         }
@@ -83,7 +77,46 @@ public final class HologramCodec implements DataCodec<HologramData> {
             position.node("yaw").set(data.position().yaw());
             position.node("pitch").set(data.position().pitch());
         }
-        if (data.type() == HologramType.TEXT) {
+        if (data.item() != null) {
+            node.node("item").set(data.item().key().value());
+        }
+        if (data.block() != null) {
+            node.node("block").set(data.block().key().value());
+        }
+        writeAppearance(data, node, data.type() == HologramType.TEXT);
+        node.node("permission").set(data.permission());
+        node.node("visibility").set(data.visibility().configName());
+        if (!data.actionEntries().isEmpty()) {
+            node.node("click-cooldown").set(data.actions().cooldownMillis());
+            ActionEntries.write(data.actionEntries(), node.node("actions"));
+        }
+    }
+
+    /**
+     * Reads how a hologram looks: its lines and frames, size, colours, light, shadow, view distance and
+     * update interval. Everything but where it is, what kind it is and who sees it, so an NPC's name tag
+     * reads exactly like a hologram.
+     *
+     * @param label where the section is, for warnings, e.g. {@code npcs.yml: shop.name}
+     */
+    public static void readAppearance(ConfigurationNode node, HologramData data, String label) throws DataException {
+        List<String> lines = lines(node);
+        data.lines(lines);
+        data.frames(frames(node, lines));
+        readLook(node, data, label);
+        data.viewDistance(node.node("view-distance").getDouble(HologramData.DEFAULT_VIEW_DISTANCE));
+        data.updateIntervalTicks(node.node("update-interval").getInt(HologramData.AUTOMATIC_UPDATE_INTERVAL));
+        data.lineSpacing(node.node("line-spacing").getDouble(HologramData.DEFAULT_LINE_SPACING));
+        data.brightness(node.node("brightness-block").getInt(HologramData.LIGHT_FROM_WORLD),
+                node.node("brightness-sky").getInt(HologramData.LIGHT_FROM_WORLD));
+        data.shadowRadius(node.node("shadow-radius").getDouble(0));
+        data.shadowStrength(node.node("shadow-strength").getDouble(1));
+    }
+
+    /** Writes what {@link #readAppearance} reads. */
+    public static void writeAppearance(HologramData data, ConfigurationNode node, boolean withLines)
+            throws SerializationException {
+        if (withLines) {
             node.node("lines").setList(String.class, data.lines());
             if (data.animated()) {
                 ConfigurationNode frames = node.node("frames");
@@ -91,12 +124,6 @@ public final class HologramCodec implements DataCodec<HologramData> {
                     frames.appendListNode().setList(String.class, frame);
                 }
             }
-        }
-        if (data.item() != null) {
-            node.node("item").set(data.item().key().value());
-        }
-        if (data.block() != null) {
-            node.node("block").set(data.block().key().value());
         }
         node.node("scale").set(data.scale());
         node.node("billboard").set(data.billboard().configName());
@@ -106,17 +133,11 @@ public final class HologramCodec implements DataCodec<HologramData> {
         node.node("see-through").set(data.seeThrough());
         node.node("view-distance").set(data.viewDistance());
         node.node("update-interval").set(data.updateIntervalTicks());
-        node.node("permission").set(data.permission());
         node.node("line-spacing").set(data.lineSpacing());
         node.node("brightness-block").set(data.brightnessBlock());
         node.node("brightness-sky").set(data.brightnessSky());
         node.node("shadow-radius").set(data.shadowRadius());
         node.node("shadow-strength").set(data.shadowStrength());
-        node.node("visibility").set(data.visibility().configName());
-        if (!data.actionLines().isEmpty()) {
-            node.node("click-cooldown").set(data.actions().cooldownMillis());
-            node.node("actions").setList(String.class, data.actionLines());
-        }
     }
 
     private static Pos position(ConfigurationNode node) throws DataException {
@@ -175,21 +196,21 @@ public final class HologramCodec implements DataCodec<HologramData> {
         }
     }
 
-    private static void readLook(ConfigurationNode node, HologramData data, String name) {
+    private static void readLook(ConfigurationNode node, HologramData data, String label) {
         data.scale(node.node("scale").getDouble(1));
         Billboard billboard = Billboard.fromConfigName(node.node("billboard").getString(DEFAULT_BILLBOARD));
         if (billboard == null) {
-            warn(name, "billboard", node.node("billboard").getString(""), Billboard.configNames());
+            warn(label, "billboard", node.node("billboard").getString(""), Billboard.configNames());
         } else {
             data.billboard(billboard);
         }
         TextAlignment alignment = TextAlignment.fromConfigName(node.node("alignment").getString(DEFAULT_ALIGNMENT));
         if (alignment == null) {
-            warn(name, "alignment", node.node("alignment").getString(""), TextAlignment.configNames());
+            warn(label, "alignment", node.node("alignment").getString(""), TextAlignment.configNames());
         } else {
             data.alignment(alignment);
         }
-        data.background(background(node.node("background").getString(DEFAULT), name));
+        data.background(background(node.node("background").getString(DEFAULT), label));
         data.textShadow(node.node("text-shadow").getBoolean(false));
         data.seeThrough(node.node("see-through").getBoolean(false));
     }
@@ -198,7 +219,7 @@ public final class HologramCodec implements DataCodec<HologramData> {
         List<Object> entries = DataNodes.entryList(node.node("actions"));
         long cooldown = Math.clamp(node.node("click-cooldown").getLong(DEFAULT_CLICK_COOLDOWN_MILLIS),
                 0, MAX_CLICK_COOLDOWN_MILLIS);
-        data.actions(entries.stream().map(String::valueOf).toList(),
+        data.actions(entries,
                 ActionParser.parseList(entries, cooldown, "holograms.yml: " + name + ".actions",
                         warning -> LOGGER.warn("{}", warning)));
     }
@@ -225,7 +246,7 @@ public final class HologramCodec implements DataCodec<HologramData> {
     }
 
     /** {@code default}, {@code transparent}, {@code #RRGGBB} or {@code #AARRGGBB}. */
-    private static @Nullable Integer background(String value, String name) {
+    private static @Nullable Integer background(String value, String label) {
         String text = value.strip().toLowerCase(Locale.ROOT);
         if (text.isEmpty() || text.equals(DEFAULT)) {
             return null;
@@ -244,7 +265,7 @@ public final class HologramCodec implements DataCodec<HologramData> {
         } catch (NumberFormatException ignored) {
             // Reported below like any other unreadable value.
         }
-        warn(name, "background", value, Set.of(DEFAULT, TRANSPARENT, "#RRGGBB", "#AARRGGBB"));
+        warn(label, "background", value, Set.of(DEFAULT, TRANSPARENT, "#RRGGBB", "#AARRGGBB"));
         return null;
     }
 
@@ -252,8 +273,8 @@ public final class HologramCodec implements DataCodec<HologramData> {
         return String.format("#%08X", argb);
     }
 
-    private static void warn(String name, String option, String value, Set<String> allowed) {
-        LOGGER.warn("holograms.yml: {}.{} has the invalid value '{}'. Allowed: {}. Using the default.",
-                name, option, value, String.join(", ", allowed.stream().sorted().toList()));
+    private static void warn(String label, String option, String value, Set<String> allowed) {
+        LOGGER.warn("{}.{} has the invalid value '{}'. Allowed: {}. Using the default.",
+                label, option, value, String.join(", ", allowed.stream().sorted().toList()));
     }
 }

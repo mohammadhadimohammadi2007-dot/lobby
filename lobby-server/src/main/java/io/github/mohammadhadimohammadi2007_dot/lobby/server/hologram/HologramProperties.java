@@ -16,10 +16,10 @@ import java.util.function.BiFunction;
  * accepts. Keeping them in one table means the command stays small and the help always matches what
  * really works.
  */
-final class HologramProperties {
+public final class HologramProperties {
 
     /** What happened to one property: the value as it is now, or why the value was refused. */
-    record Result(@Nullable String shown, @Nullable String error) {
+    public record Result(@Nullable String shown, @Nullable String error) {
 
         static Result ok(Object value) {
             return new Result(String.valueOf(value), null);
@@ -29,7 +29,7 @@ final class HologramProperties {
             return new Result(null, message);
         }
 
-        boolean failed() {
+        public boolean failed() {
             return error != null;
         }
     }
@@ -40,6 +40,11 @@ final class HologramProperties {
     private static final int OPAQUE = 0xFF000000;
     private static final String HEX_FORMAT = "#%08X";
     private static final double MAX_PITCH = 90;
+    /** FancyHolograms' name for the text update interval, which it counts in milliseconds. */
+    private static final String FANCY_INTERVAL = "updatetextinterval";
+    private static final long MILLIS_PER_SECOND = 1000;
+    private static final long MILLIS_PER_MINUTE = 60_000;
+    private static final double MILLIS_PER_TICK = 50;
 
     private static final Map<String, BiFunction<HologramData, String, Result>> SETTERS = new LinkedHashMap<>();
     private static final Map<String, String> ALLOWED = new LinkedHashMap<>();
@@ -50,7 +55,6 @@ final class HologramProperties {
      */
     private static final Map<String, String> FANCY_NAMES = Map.of(
             "visibilitydistance", "view-distance",
-            "updatetextinterval", "update-interval",
             "textshadow", "text-shadow",
             "seethrough", "see-through",
             "textalignment", "alignment",
@@ -251,12 +255,12 @@ final class HologramProperties {
     }
 
     /** Every property name, in the order the help shows them. */
-    static Set<String> names() {
+    public static Set<String> names() {
         return SETTERS.keySet();
     }
 
     /** What a property accepts, for the error message. */
-    static String allowed(String property) {
+    public static String allowed(String property) {
         return ALLOWED.getOrDefault(resolve(property), "");
     }
 
@@ -264,14 +268,47 @@ final class HologramProperties {
      * The command to use instead, when the "property" is really one of this lobby's own subcommands
      * (FancyHolograms edits lines through {@code edit <name> addline ...}), or {@code null}.
      */
-    static @Nullable String lineCommandFor(String property) {
+    public static @Nullable String lineCommandFor(String property) {
         return LINE_COMMANDS.get(property.toLowerCase(Locale.ROOT));
     }
 
     /** Changes one property, or says why it could not. {@code null} means there is no such property. */
-    static @Nullable Result apply(HologramData data, String property, String value) {
+    public static @Nullable Result apply(HologramData data, String property, String value) {
+        if (property.equalsIgnoreCase(FANCY_INTERVAL)) {
+            // Same name as FancyHolograms, so the same unit: milliseconds, "5s", "1m" or "never".
+            Integer ticks = fancyIntervalTicks(value);
+            if (ticks == null) {
+                return Result.error("not a duration such as 500, 5s, 1m or never");
+            }
+            data.updateIntervalTicks(ticks);
+            return Result.ok(data.updateIntervalTicks() + " ticks");
+        }
         BiFunction<HologramData, String, Result> setter = SETTERS.get(resolve(property));
         return setter == null ? null : setter.apply(data, value.strip());
+    }
+
+    /**
+     * FancyHolograms' text update interval in this lobby's ticks: a number is milliseconds, {@code s}
+     * and {@code m} mean seconds and minutes, and {@code never}, {@code off} or {@code none} turn it off.
+     */
+    static @Nullable Integer fancyIntervalTicks(String value) {
+        String text = value.strip().toLowerCase(Locale.ROOT);
+        if (text.equals("never") || text.equals("off") || text.equals("none")) {
+            return 0;
+        }
+        long multiplier = 1;
+        if (text.endsWith("s")) {
+            multiplier = MILLIS_PER_SECOND;
+            text = text.substring(0, text.length() - 1);
+        } else if (text.endsWith("m")) {
+            multiplier = MILLIS_PER_MINUTE;
+            text = text.substring(0, text.length() - 1);
+        }
+        Integer number = integer(text);
+        if (number == null || number < 0) {
+            return null;
+        }
+        return (int) Math.max(1, Math.round(number * multiplier / MILLIS_PER_TICK));
     }
 
     /** This lobby's name for a property, accepting FancyHolograms' names as well. */

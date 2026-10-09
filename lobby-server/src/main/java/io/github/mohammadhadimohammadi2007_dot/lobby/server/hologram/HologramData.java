@@ -72,7 +72,7 @@ public final class HologramData {
     private final Set<UUID> manualViewers = ConcurrentHashMap.newKeySet();
     private volatile PlaceholderScope textScope = PlaceholderScope.STATIC;
     private volatile boolean reshapeMatters;
-    private volatile List<String> actionLines = List.of();
+    private volatile List<Object> actionEntries = List.of();
     private volatile ActionList actions = ActionList.EMPTY;
 
     public HologramData(String name, HologramType type, Pos position, List<String> lines) {
@@ -328,17 +328,20 @@ public final class HologramData {
         return actions;
     }
 
-    /** The action list as written in the file, which is what is saved again. */
-    public List<String> actionLines() {
-        return actionLines;
+    /**
+     * The action list as written in the file, which is what is saved again: lines, and sections such as
+     * {@code random:}. See {@code ActionEntries}.
+     */
+    public List<Object> actionEntries() {
+        return actionEntries;
     }
 
     /**
      * Sets both at once: the lines as the admin wrote them, which are saved, and the parsed list, which
      * is run. They are one field in practice, so they are set together and can never disagree.
      */
-    public void actions(List<String> lines, ActionList parsed) {
-        actionLines = List.copyOf(lines);
+    public void actions(List<?> entries, ActionList parsed) {
+        actionEntries = List.copyOf(entries);
         actions = parsed;
     }
 
@@ -365,7 +368,7 @@ public final class HologramData {
         copy.shadowRadius = shadowRadius;
         copy.shadowStrength = shadowStrength;
         copy.visibility = visibility;
-        copy.actionLines = actionLines;
+        copy.actionEntries = actionEntries;
         copy.actions = actions;
         return copy;
     }

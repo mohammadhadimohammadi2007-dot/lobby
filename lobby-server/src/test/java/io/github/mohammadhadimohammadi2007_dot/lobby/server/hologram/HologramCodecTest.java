@@ -51,7 +51,7 @@ class HologramCodecTest {
         data.updateIntervalTicks(40);
         data.permission("lobby.vip");
         data.lineSpacing(0.3);
-        List<String> actionLines = List.of("message: hello", "sound: entity.experience_orb.pickup");
+        List<Object> actionLines = List.of("message: hello", "sound: entity.experience_orb.pickup");
         data.actions(actionLines, ActionParser.parseList(actionLines, 250, "test", warning -> { }));
 
         YamlDataStore<HologramData> store = store();
@@ -76,7 +76,7 @@ class HologramCodecTest {
         assertEquals(40, loaded.updateIntervalTicks());
         assertEquals("lobby.vip", loaded.permission());
         assertEquals(0.3, loaded.lineSpacing());
-        assertEquals(actionLines, loaded.actionLines(), "action lines are kept exactly as written");
+        assertEquals(actionLines, loaded.actionEntries(), "action lines are kept exactly as written");
         assertEquals(2, loaded.actions().actions().size());
         assertEquals(250, loaded.actions().cooldownMillis());
     }

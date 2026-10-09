@@ -8,6 +8,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -27,6 +28,11 @@ class ChatEnvTest {
 
     @TempDir
     Path dir;
+
+    @AfterEach
+    void stopChat() {
+        ChatTestServer.stopAll();
+    }
 
     private ChatTestServer start(Env env) throws Exception {
         return ChatTestServer.start(env, dir, UnaryOperator.identity());

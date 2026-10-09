@@ -40,6 +40,8 @@ import java.util.function.UnaryOperator;
 final class ChatTestServer {
 
     static final Pos SPAWN = new Pos(0.5, 41, 0.5);
+    /** Every server started by the current test, so it can be stopped before its folder is deleted. */
+    private static final List<ChatTestServer> STARTED = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     final Env env;
     final Instance instance;
@@ -74,7 +76,20 @@ final class ChatTestServer {
         env.process().eventHandler().addChild(players);
         placeholders.register(players);
         chat.register(players, env.process().command());
-        return new ChatTestServer(env, instance, chat);
+        ChatTestServer server = new ChatTestServer(env, instance, chat);
+        STARTED.add(server);
+        return server;
+    }
+
+    /**
+     * Stops every chat system started by the test, which waits for settings still being saved. Call it
+     * after each test: otherwise a late save can land in the temp folder while JUnit deletes it.
+     */
+    static void stopAll() {
+        for (ChatTestServer server : STARTED) {
+            server.chat.shutdown();
+        }
+        STARTED.clear();
     }
 
     ChatServices services() {

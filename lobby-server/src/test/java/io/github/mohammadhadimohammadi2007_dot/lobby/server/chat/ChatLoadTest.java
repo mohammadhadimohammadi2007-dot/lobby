@@ -4,6 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.Rendered
 import net.minestom.server.entity.Player;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,6 +45,11 @@ class ChatLoadTest {
 
     @TempDir
     Path dir;
+
+    @AfterEach
+    void stopChat() {
+        ChatTestServer.stopAll();
+    }
 
     @Test
     void twoHundredPlayersChatting(Env env) throws Exception {

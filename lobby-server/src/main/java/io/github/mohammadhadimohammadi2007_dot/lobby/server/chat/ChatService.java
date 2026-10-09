@@ -321,6 +321,7 @@ public final class ChatService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        services.settings().flush();
         services.log().close();
     }
 }

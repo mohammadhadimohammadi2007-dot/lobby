@@ -25,11 +25,12 @@ network, and it also runs completely on its own for testing or small servers.
 | Connection | Standalone (online or offline mode), Velocity modern forwarding, BungeeCord legacy forwarding (+ BungeeGuard) |
 | World | Loads `.polar` files and Anvil worlds (old and 26.1+ layouts), converts Anvil to Polar once, preloads everything, computes lighting if missing, never crashes on a missing map (flat platform fallback) |
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
-| Commands | `/spawn`, `/lobby <number>`, `/lobbies`, `/hologram`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
+| Commands | `/spawn`, `/lobby <number>`, `/lobbies`, `/hologram`, `/npc`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
 | Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
 | Holograms | Floating text, items and blocks with full `/hologram` commands, placeholders, animations, click actions, armor-stand fallback for 1.8 clients, and an importer for FancyHolograms ([guide](docs/holograms.md)) |
+| NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin, mirror), a multi-line name hologram, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
@@ -59,6 +60,7 @@ Type `stop` in the console to shut the server down.
 | `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/lobby reload` |
 | `filters/` | Blocked, censored and allowed word lists | `/lobby reload` |
 | `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/lobby reload` |
+| `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/lobby reload` |
 | `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/lobby reload` |
 
 Every option has a comment above it. Missing options use the default (with a warning in the console),
@@ -74,6 +76,7 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.info` | `/lobby info` |
 | `lobby.command.lobby` | `/lobby <number>` and `/lobbies` (everyone has it when LuckPerms is off) |
 | `lobby.command.hologram` | `/hologram` (create, edit and delete holograms) |
+| `lobby.command.npc` | `/npc` (create, edit and delete NPCs) |
 | `lobby.hologram.see.<name>` | See a hologram whose `visibility` is `permission` and that has no permission of its own |
 | `lobby.lobbies.join-full` | Join a lobby instance that is already at `players-per-instance` |
 | `lobby.bypass.protection` | Ignore the protection settings |
@@ -90,6 +93,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [Maps: Polar, Anvil and conversion](docs/maps.md)
 - [Several lobbies on one server](docs/instances.md)
 - [Holograms](docs/holograms.md)
+- [NPCs](docs/npcs.md)
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)

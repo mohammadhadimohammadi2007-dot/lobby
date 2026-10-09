@@ -1,20 +1,14 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObject;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.EntityPart;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
-import net.kyori.adventure.text.Component;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 /**
@@ -28,14 +22,6 @@ public final class Hologram implements ClientObject {
 
     /** The permission a hologram in {@code visibility: permission} mode needs when it has no own one. */
     public static final String SEE_PERMISSION_PREFIX = "lobby.hologram.see.";
-
-    /**
-     * What decides whether two viewers can share one rendered hologram: their client generation,
-     * whether their texts are reshaped for right-to-left reading, and, only for text that really
-     * differs per player, who they are.
-     */
-    record Variant(boolean legacy, boolean reshaped, @Nullable UUID viewer) {
-    }
 
     /**
      * Everything a hologram needs from the rest of the lobby.
@@ -100,11 +86,7 @@ public final class Hologram implements ClientObject {
 
     @Override
     public Object variantKey(Player viewer) {
-        boolean legacy = services.legacyClient().test(viewer);
-        // Persian text has two versions, not one per player: the fix is a setting with two values.
-        boolean reshaped = data.reshapeMatters() && services.text().transformsFor(viewer);
-        // Only text that really differs per player gets its own render; a player count does not.
-        return new Variant(legacy, reshaped, data.textScope().perPlayer() ? viewer.getUuid() : null);
+        return HologramText.variant(data, services.text(), viewer, services.legacyClient().test(viewer), false);
     }
 
     @Override
@@ -114,33 +96,7 @@ public final class Hologram implements ClientObject {
 
     @Override
     public List<EntityPart> render(Object key, Player viewer) {
-        boolean legacy = key instanceof Variant variant && variant.legacy();
-        List<Component> lines = data.type() == HologramType.TEXT ? lines(viewer, legacy) : List.of();
-        return legacy ? HologramParts.legacy(data, lines) : HologramParts.modern(data, lines);
-    }
-
-    private List<Component> lines(Player viewer, boolean legacy) {
-        List<String> frame = currentFrame();
-        List<Component> rendered = new ArrayList<>(frame.size());
-        for (String line : frame) {
-            Component component = services.text().render(line, viewer);
-            // Old clients cannot show the RGB colours, so they are mapped to the 16 they know.
-            rendered.add(legacy ? ComponentTransforms.downsampleColors(component) : component);
-        }
-        return rendered;
-    }
-
-    /**
-     * The frame to show now. It comes from the clock, not from a counter, so every group of viewers is
-     * on the same frame even though they are rendered separately.
-     */
-    private List<String> currentFrame() {
-        List<List<String>> frames = data.frames();
-        if (frames.size() == 1) {
-            return frames.getFirst();
-        }
-        long frameMillis = (long) Math.max(1, data.effectiveUpdateIntervalTicks()) * MinecraftServer.TICK_MS;
-        int index = (int) Math.floorMod(System.currentTimeMillis() / frameMillis, frames.size());
-        return frames.get(index);
+        boolean legacy = key instanceof HologramText.Variant variant && variant.legacy();
+        return HologramText.parts(data, services.text(), viewer, legacy);
     }
 }

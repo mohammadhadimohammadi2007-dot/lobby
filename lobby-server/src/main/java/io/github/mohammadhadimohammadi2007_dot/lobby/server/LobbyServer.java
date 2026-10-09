@@ -15,6 +15,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapsho
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Hologram;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramCommand;
@@ -37,6 +38,9 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.Mo
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcSkins;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
@@ -45,6 +49,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermi
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.protection.ProtectionListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.TickStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
@@ -61,6 +66,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -93,6 +99,8 @@ public final class LobbyServer implements ServerInfo {
     private ClientObjectRenderer display;
     private ClientObjectClicks clicks;
     private HologramService holograms;
+    private NpcService npcs;
+    private TeamManager teams;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -255,10 +263,16 @@ public final class LobbyServer implements ServerInfo {
     private void startDisplays() {
         display = new ClientObjectRenderer();
         clicks = new ClientObjectClicks(display);
-        Hologram.Services hologramServices = new Hologram.Services(text, permissions,
+        // The one place teams are made; NPCs use it to hide the player-list name above their heads.
+        teams = new TeamManager(player -> bridge.capabilities(player).protocolVersion(), false);
+        Hologram.Services displayServices = new Hologram.Services(text, permissions,
                 player -> bridge.capabilities(player).legacy(), WorldScope.mainMap(world.instance()));
-        holograms = HologramService.start(configManager.dataDir(), display, hologramServices, actions);
+        holograms = HologramService.start(configManager.dataDir(), display, displayServices, actions);
+        // NPC skins from Mojang work in every mode; the lookups run on virtual threads and are cached.
+        NpcSkins skins = new NpcSkins(new MojangSkinFetcher(), skinsRestorer);
+        npcs = NpcService.start(configManager.dataDir(), display, displayServices, actions, skins, teams);
         clicks.addHandler(holograms);
+        clicks.addHandler(npcs);
     }
 
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
@@ -287,6 +301,7 @@ public final class LobbyServer implements ServerInfo {
         chat.register(playerEvents, MinecraftServer.getCommandManager());
         menus.register(playerEvents);
         display.register(playerEvents);
+        teams.register(playerEvents);
         clicks.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
@@ -299,7 +314,8 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new SpawnCommand(configManager, text, permissions));
         commands.register(new LobbyCommand(configManager, text, permissions, this, lobbies));
         commands.register(new LobbiesCommand(text, permissions, menus));
-        commands.register(new HologramCommand(holograms, text, permissions, configManager.dataDir()));
+        commands.register(new HologramCommand(holograms, text, permissions, configManager.dataDir(), npcs));
+        commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
@@ -308,6 +324,7 @@ public final class LobbyServer implements ServerInfo {
         placeholders.invalidateAll();
         chat.reload(reloaded);
         holograms.reload();
+        npcs.reload();
         // Messages and placeholders may have changed, so every hologram is built again.
         display.invalidateAll();
         Async.onTickThread(() -> {
@@ -348,6 +365,7 @@ public final class LobbyServer implements ServerInfo {
         LOGGER.info("Shutting down...");
         chat.shutdown();
         holograms.shutdown();
+        npcs.shutdown();
         display.shutdown();
         permissions.shutdown();
         if (liteBans != null) {
@@ -411,6 +429,13 @@ public final class LobbyServer implements ServerInfo {
         return bridge.status();
     }
 
+    @Override
+    public String displayLoad() {
+        DisplayLoad.Snapshot load = display.load();
+        return String.format(Locale.ROOT, "%.1f%% busy, longest cycle %.1f ms (last minute); %d holograms, %d NPCs",
+                load.busyPercent(), load.longestCycleMillis(), holograms.count(), npcs.count());
+    }
+
     /** The lobby instances of this server. */
     public LobbyInstances lobbies() {
         return lobbies;
@@ -424,6 +449,11 @@ public final class LobbyServer implements ServerInfo {
     /** Shared actions for NPCs, holograms, menus, hotbar items and portals. */
     public ActionServices actions() {
         return actions;
+    }
+
+    /** The NPCs of this server. */
+    public NpcService npcs() {
+        return npcs;
     }
 
     /** The holograms of this server. */

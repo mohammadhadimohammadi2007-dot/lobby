@@ -24,7 +24,7 @@ import java.util.Map;
  * classic lobby trick instead: one invisible armor stand per line of text, or a floating item for item
  * and block holograms. Both are packets only; nothing of this exists in the world.
  */
-final class HologramParts {
+public final class HologramParts {
 
     /** Minecraft's own translucent background, which is what a text display uses by default. */
     static final int DEFAULT_BACKGROUND = 0x40000000;
@@ -49,7 +49,7 @@ final class HologramParts {
     }
 
     /** What modern clients see: one display entity. */
-    static List<EntityPart> modern(HologramData data, List<Component> lines) {
+    public static List<EntityPart> modern(HologramData data, List<Component> lines) {
         return switch (data.type()) {
             case TEXT -> List.of(new EntityPart(EntityType.TEXT_DISPLAY, data.position(), textMetadata(data, lines)));
             case ITEM -> List.of(new EntityPart(EntityType.ITEM_DISPLAY, data.position(), itemDisplayMetadata(data)));
@@ -58,7 +58,7 @@ final class HologramParts {
     }
 
     /** What clients older than 1.19.4 see: armor stands and dropped items. */
-    static List<EntityPart> legacy(HologramData data, List<Component> lines) {
+    public static List<EntityPart> legacy(HologramData data, List<Component> lines) {
         if (data.type() != HologramType.TEXT) {
             return List.of(new EntityPart(EntityType.ITEM, data.position().sub(0, ITEM_DROP_OFFSET, 0),
                     Map.of(MetadataDef.ItemEntity.ITEM.index(), Metadata.ItemStack(legacyItem(data)),

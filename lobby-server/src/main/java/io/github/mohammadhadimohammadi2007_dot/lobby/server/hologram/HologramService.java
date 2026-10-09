@@ -6,7 +6,6 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.YamlDataStore;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderScope;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -167,39 +166,16 @@ public final class HologramService implements ClientObjectClicks.Handler {
         save();
     }
 
-    /**
-     * Works out how much this hologram's text can differ between players, which decides whether it is
-     * rendered once for everybody or once per viewer. Called whenever the lines change.
-     *
-     * <p>Persian and Arabic text is not per-player: the right-to-left fix is a setting with two values,
-     * so the hologram has one version with it and one without, each rendered once.
-     */
+    /** See {@link HologramText#classify}. Called whenever the lines change. */
     private void classify(HologramData data) {
-        PlaceholderScope scope = PlaceholderScope.STATIC;
-        boolean reshapeMatters = false;
-        for (List<String> frame : data.frames()) {
-            scope = scope.and(services.text().placeholders().scopeOf(frame));
-            reshapeMatters = reshapeMatters || frame.stream().anyMatch(HologramService::needsReshaping);
-        }
-        data.textScope(scope);
-        data.reshapeMatters(reshapeMatters);
-    }
-
-    /** True if the line contains Arabic-script letters, which the Persian fix may reorder per player. */
-    private static boolean needsReshaping(String line) {
-        for (int i = 0; i < line.length(); i++) {
-            if (Character.UnicodeBlock.of(line.charAt(i)) == Character.UnicodeBlock.ARABIC) {
-                return true;
-            }
-        }
-        return false;
+        HologramText.classify(data, services.text().placeholders());
     }
 
     /** Parses action lines and puts them on a hologram, keeping the lines as written. */
-    public synchronized void setActions(HologramData data, List<String> lines, long cooldownMillis) {
-        ActionList parsed = ActionParser.parseList(lines, cooldownMillis,
+    public synchronized void setActions(HologramData data, List<?> entries, long cooldownMillis) {
+        ActionList parsed = ActionParser.parseList(entries, cooldownMillis,
                 FILE_NAME + ": " + data.name() + ".actions", warning -> LOGGER.warn("{}", warning));
-        data.actions(lines, parsed);
+        data.actions(entries, parsed);
         changed(data);
     }
 

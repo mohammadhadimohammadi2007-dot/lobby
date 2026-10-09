@@ -173,7 +173,8 @@ public final class LobbyCommand extends Command {
                 Messages.text("world-format", info.world().format().name().toLowerCase(Locale.ROOT)),
                 Messages.text("chunks", info.world().chunkCount()),
                 Messages.text("integrations", integrations.isEmpty() ? "none" : integrations),
-                Messages.text("bridge", info.bridgeStatus()));
+                Messages.text("bridge", info.bridgeStatus()),
+                Messages.text("display", info.displayLoad()));
     }
 
     private static String format(double value, int decimals) {

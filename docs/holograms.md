@@ -57,10 +57,9 @@ lobby's name is different, FancyHolograms' name works as an alias:
 | `edit <name> addline <text>` | `addline <name> <text>` | the line commands are on their own here; typing it the FancyHolograms way tells you the command to use |
 | `edit <name> insertbefore <n> <text>` | `insertline <name> <n> <text>` | `insertbefore` also works |
 | `edit <name> visibilitydistance <n>` | `set <name> view-distance <n>` | `visibilitydistance` also works |
-| `edit <name> updatetextinterval <n>` | `set <name> update-interval <n>` | the name works, but **this lobby counts ticks, not seconds** (importing a file does convert them) |
+| `edit <name> updatetextinterval 5s` | `set <name> update-interval 100` | `updatetextinterval` also works and takes FancyHolograms' units: milliseconds, `5s`, `1m` or `never`. `update-interval` is in ticks |
 | `edit <name> textshadow`, `seethrough`, `textalignment` | `text-shadow`, `see-through`, `alignment` | the FancyHolograms spellings also work |
 | `edit <name> position` / `movehere` | `movehere <name>` | `position` and `here` also work |
-
 | `edit <name> rotate`, `rotatepitch` | `set <name> rotate`, `rotate-pitch` | the FancyHolograms spellings also work |
 | `edit <name> brightness block 7` | `set <name> brightness block 7` | same words |
 | `edit <name> shadowradius`, `shadowstrength` | `set <name> shadow-radius`, `shadow-strength` | the FancyHolograms spellings also work |
@@ -74,7 +73,8 @@ Two things are deliberately different, because they cannot mean the same here:
   decimals. Use `movehere` or edit `position` in the file.
 - **`linkwithnpc`** attaches a hologram to a FancyNpcs NPC. The NPCs of this lobby carry their own
   name holograms, which follow them and are rendered with the same rules as any other hologram, so
-  there is nothing to link.
+  there is nothing to link: edit the name with `/npc name` (see [NPCs](npcs.md)). Importing a
+  FancyHolograms hologram that is linked to an NPC makes it that NPC's name.
 
 ## Text
 
@@ -203,9 +203,22 @@ skipped; every other hologram still loads.
 1. Copy FancyHolograms' `holograms.yml` into `<server folder>/import/holograms.yml`.
 2. Run `/hologram import`.
 
-What both have in common is converted: position, type, text, alignment, text shadow, billboard, scale,
-visibility distance, background and the text update interval (FancyHolograms counts it in seconds, this
-lobby in ticks). The world in the file is ignored, because holograms here belong to the lobby map.
+The importer reads the keys FancyHolograms itself writes (checked against its source):
+
+| FancyHolograms | Here |
+|---|---|
+| `location.x/y/z/yaw/pitch` | the position; the world is ignored, holograms belong to the lobby map |
+| `type` | `text`, `item` or `block` |
+| `text`, `text_alignment`, `text_shadow`, `see_through`, `background` | the same |
+| `billboard`, `shadow_radius`, `shadow_strength`, `block_brightness`, `sky_brightness` | the same |
+| `scale_x`, `scale_y`, `scale_z` | `scale`; holograms here scale evenly, so an uneven scale is made even and reported |
+| `translation_x/y/z` | added to the position, which looks the same |
+| `visibility_distance` | `view-distance` |
+| `visibility`: `ALL`, `PERMISSION_REQUIRED`, `MANUAL` | `all`, `permission`, `manual`. The permission node changes from FancyHolograms' to `lobby.hologram.see.<name>` |
+| `update_text_interval` | `update-interval`: FancyHolograms counts **milliseconds**, this lobby ticks, so 1000 becomes 20; `-1` (never) becomes 0 |
+| `item` (both ways Bukkit writes an item) and `block` | the same item or block |
+| `linkedNpc` | the hologram becomes **that NPC's name** instead of a hologram of its own. Import the NPCs first (`/npc import`), or the hologram is reported and skipped |
+
 Anything that cannot be read is reported by name instead of guessed, and a hologram whose name already
 exists is never overwritten. Check the result with `/hologram list` afterwards.
 

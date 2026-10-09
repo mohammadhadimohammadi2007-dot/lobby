@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,6 +78,7 @@ public final class ClientObjectRenderer {
     private final Map<Integer, String> objectByEntityId = new ConcurrentHashMap<>();
     private final AtomicInteger refreshes = new AtomicInteger();
     private final AtomicInteger renders = new AtomicInteger();
+    private final DisplayLoad load = new DisplayLoad();
     private final int refreshTicks;
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "lobby-display");
@@ -154,6 +156,28 @@ public final class ClientObjectRenderer {
         return objectByEntityId.get(entityId);
     }
 
+    /** How busy the display thread was over the last minute, for {@code /lobby info}. */
+    public DisplayLoad.Snapshot load() {
+        return load.snapshot();
+    }
+
+    /**
+     * Runs other display work on this same thread and counts it in {@link #load()}, so one number
+     * covers everything the display thread does (the scoreboard and tab list use this).
+     */
+    public void runOnDisplayThread(Runnable task) {
+        worker.execute(() -> {
+            long start = System.nanoTime();
+            try {
+                task.run();
+            } catch (RuntimeException e) {
+                LOGGER.error("Display task failed", e);
+            } finally {
+                load.record(start, System.nanoTime() - start);
+            }
+        });
+    }
+
     /** How many refreshes ran, for tests and metrics. */
     public int refreshCount() {
         return refreshes.get();
@@ -190,6 +214,15 @@ public final class ClientObjectRenderer {
     }
 
     private void refresh() {
+        long start = System.nanoTime();
+        try {
+            refreshObjects();
+        } finally {
+            load.record(start, System.nanoTime() - start);
+        }
+    }
+
+    private void refreshObjects() {
         refreshes.incrementAndGet();
         Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
         for (Tracked entry : tracked.values()) {
@@ -234,6 +267,7 @@ public final class ClientObjectRenderer {
             for (Player viewer : gone) {
                 variant.getValue().viewers.remove(viewer.getUuid());
                 entry.viewerVariants.remove(viewer.getUuid());
+                entry.object.viewerGone(viewer);
                 if (viewer.isOnline()) {
                     viewer.sendPacket(PartPackets.destroy(variant.getValue().entityIds));
                 }
@@ -267,6 +301,9 @@ public final class ClientObjectRenderer {
                 List<Player> existing = new ArrayList<>(variant.viewers.values());
                 existing.removeAll(new HashSet<>(newViewers));
                 sendUpdates(variant, before, existing);
+            }
+            if (entry.object.hasViewerPackets()) {
+                sendViewerPackets(entry.object, variant, new HashSet<>(newViewers));
             }
         }
 
@@ -306,6 +343,19 @@ public final class ClientObjectRenderer {
         }
     }
 
+    /** The per-viewer packets of an object, such as an NPC looking at each player near it. */
+    private static void sendViewerPackets(ClientObject object, Variant variant, Set<Player> justSpawned) {
+        for (Player viewer : variant.viewers.values()) {
+            try {
+                for (ServerPacket packet : object.viewerPackets(viewer, variant.entityIds, justSpawned.contains(viewer))) {
+                    viewer.sendPacket(packet);
+                }
+            } catch (RuntimeException e) {
+                LOGGER.error("Could not update '{}' for {}", object.name(), viewer.getUsername(), e);
+            }
+        }
+    }
+
     /** Sends only what changed; parts that disappeared are destroyed, new ones spawned. */
     private void sendUpdates(Variant variant, List<EntityPart> before, List<Player> viewers) {
         if (viewers.isEmpty() || before.equals(variant.parts)) {
@@ -316,7 +366,8 @@ public final class ClientObjectRenderer {
             EntityPart now = variant.parts.get(i);
             if (i < before.size()) {
                 EntityPart was = before.get(i);
-                if (was.type().equals(now.type())) {
+                // A new skin needs a new player-list entry, which only a fresh spawn sends.
+                if (was.type().equals(now.type()) && Objects.equals(was.profile(), now.profile())) {
                     List<ServerPacket> diff = PartPackets.update(variant.entityIds.get(i), was, now);
                     if (diff != null) {
                         packets.addAll(diff);
@@ -354,6 +405,7 @@ public final class ClientObjectRenderer {
     private void despawnAll(Tracked entry) {
         for (Variant variant : entry.variants.values()) {
             for (Player viewer : variant.viewers.values()) {
+                entry.object.viewerGone(viewer);
                 if (viewer.isOnline()) {
                     viewer.sendPacket(PartPackets.destroy(variant.entityIds));
                 }
@@ -373,6 +425,7 @@ public final class ClientObjectRenderer {
                     if (variant != null) {
                         variant.viewers.remove(player.getUuid());
                     }
+                    entry.object.viewerGone(player);
                 }
             }
         });

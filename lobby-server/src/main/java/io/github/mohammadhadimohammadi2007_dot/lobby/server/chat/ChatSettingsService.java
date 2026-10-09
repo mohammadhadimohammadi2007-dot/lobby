@@ -7,8 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
 
 /**
@@ -19,8 +24,12 @@ public final class ChatSettingsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatSettingsService.class);
 
+    /** How long shutdown waits for settings that are still being saved. */
+    private static final long FLUSH_TIMEOUT_SECONDS = 5;
+
     private final SettingsStore store;
     private final Map<UUID, PlayerChatSettings> online = new ConcurrentHashMap<>();
+    private final Set<CompletableFuture<Void>> pendingSaves = ConcurrentHashMap.newKeySet();
 
     public ChatSettingsService(SettingsStore store) {
         this.store = store;
@@ -57,13 +66,30 @@ public final class ChatSettingsService {
     public PlayerChatSettings update(UUID player, UnaryOperator<PlayerChatSettings> change) {
         PlayerChatSettings updated = online.compute(player, (id, current) ->
                 change.apply(current == null ? PlayerChatSettings.DEFAULTS : current));
-        Async.run(() -> {
+        CompletableFuture<Void> save = Async.run(() -> {
             try {
                 store.save(player, updated);
             } catch (Exception e) {
                 LOGGER.warn("Could not save chat settings of {}: {}", player, e.getMessage());
             }
         });
+        pendingSaves.add(save);
+        save.whenComplete((ignored, error) -> pendingSaves.remove(save));
         return updated;
+    }
+
+    /**
+     * Waits until every change so far is saved. Called on shutdown, so a setting changed just before the
+     * server stops is not lost.
+     */
+    public void flush() {
+        try {
+            CompletableFuture.allOf(pendingSaves.toArray(CompletableFuture[]::new))
+                    .get(FLUSH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException e) {
+            LOGGER.warn("Some chat settings may not have been saved: {}", e.getMessage());
+        }
     }
 }
