@@ -42,6 +42,50 @@ public final class LegacyText {
         return deserialize(cut(legacy, maxChars));
     }
 
+    /**
+     * A line split over two parts of at most {@code maxChars} each, as old clients need for a sidebar
+     * line (team prefix, then suffix). The second part starts with the colour and styles the first one
+     * ended with, so the line looks unbroken; whatever does not fit in both is cut off.
+     *
+     * @param first  the text for the prefix
+     * @param second the text for the suffix, empty if the line fits in the prefix
+     */
+    public record Split(Component first, Component second) {
+    }
+
+    public static Split split(Component component, int maxChars) {
+        String legacy = serialize(component);
+        if (legacy.length() <= maxChars) {
+            return new Split(component, Component.empty());
+        }
+        String first = cut(legacy, maxChars);
+        String rest = legacy.substring(first.length());
+        String carried = rest.startsWith(String.valueOf(LegacyComponentSerializer.SECTION_CHAR))
+                ? rest : activeCodes(first) + rest;
+        return new Split(deserialize(first), deserialize(cut(carried, maxChars)));
+    }
+
+    /** The colour code and the style codes after it that are in effect at the end of {@code legacy}. */
+    static String activeCodes(String legacy) {
+        String color = "";
+        StringBuilder styles = new StringBuilder();
+        for (int i = 0; i + 1 < legacy.length(); i++) {
+            if (legacy.charAt(i) != LegacyComponentSerializer.SECTION_CHAR) {
+                continue;
+            }
+            char code = Character.toLowerCase(legacy.charAt(i + 1));
+            if (Character.digit(code, 16) >= 0 || code == 'r') {
+                // A colour (or reset) ends every style, as in Minecraft.
+                color = code == 'r' ? "" : legacy.substring(i, i + 2);
+                styles.setLength(0);
+            } else if (code >= 'k' && code <= 'o') {
+                styles.append(legacy, i, i + 2);
+            }
+            i++;
+        }
+        return color + styles;
+    }
+
     /** Cuts a legacy string to {@code maxChars} without ending on a lone {@code §}. */
     public static String cut(String legacy, int maxChars) {
         if (legacy.length() <= maxChars) {

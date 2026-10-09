@@ -15,6 +15,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
@@ -102,6 +103,7 @@ public final class LobbyServer implements ServerInfo {
     private HologramService holograms;
     private NpcService npcs;
     private TeamManager teams;
+    private DisplayService displays;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -278,6 +280,9 @@ public final class LobbyServer implements ServerInfo {
         npcs = NpcService.start(configManager.dataDir(), display, displayServices, actions, skins, teams);
         clicks.addHandler(holograms);
         clicks.addHandler(npcs);
+        // Scoreboard, tab list, nametags and bars, on the same display thread.
+        displays = new DisplayService(configManager, text, permissions, display, teams,
+                player -> bridge.capabilities(player).protocolVersion());
     }
 
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
@@ -307,6 +312,7 @@ public final class LobbyServer implements ServerInfo {
         menus.register(playerEvents);
         display.register(playerEvents);
         teams.register(playerEvents);
+        displays.register(playerEvents);
         clicks.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
@@ -371,6 +377,7 @@ public final class LobbyServer implements ServerInfo {
         chat.shutdown();
         holograms.shutdown();
         npcs.shutdown();
+        displays.shutdown();
         display.shutdown();
         permissions.shutdown();
         if (liteBans != null) {
@@ -437,8 +444,10 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public String displayLoad() {
         DisplayLoad.Snapshot load = display.load();
-        return String.format(Locale.ROOT, "%.1f%% busy, longest cycle %.1f ms (last minute); %d holograms, %d NPCs",
-                load.busyPercent(), load.longestCycleMillis(), holograms.count(), npcs.count());
+        return String.format(Locale.ROOT, "%.1f%% busy, longest cycle %.1f ms (last minute); %d holograms, %d NPCs;"
+                        + " %d scoreboard refreshes skipped because it was busy",
+                load.busyPercent(), load.longestCycleMillis(), holograms.count(), npcs.count(),
+                displays.skippedRefreshes());
     }
 
     /** The lobby instances of this server. */

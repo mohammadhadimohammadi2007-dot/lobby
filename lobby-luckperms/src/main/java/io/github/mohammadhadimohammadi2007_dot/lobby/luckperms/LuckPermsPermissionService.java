@@ -6,6 +6,7 @@ import me.lucko.luckperms.minestom.LuckPermsMinestom;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
+import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -76,11 +77,15 @@ final class LuckPermsPermissionService implements PermissionService {
             }
         }
         String primaryGroup = meta.getPrimaryGroup() != null ? meta.getPrimaryGroup() : user.getPrimaryGroup();
+        // Groups are always loaded in memory, so this is a map lookup.
+        Group group = luckPerms.getGroupManager().getGroup(primaryGroup);
+        int weight = group == null ? 0 : group.getWeight().orElse(0);
         return new PlayerMeta(
                 meta.getPrefix() != null ? meta.getPrefix() : "",
                 meta.getSuffix() != null ? meta.getSuffix() : "",
                 primaryGroup,
-                values);
+                values,
+                weight);
     }
 
     @Override

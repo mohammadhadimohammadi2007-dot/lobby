@@ -15,6 +15,7 @@ import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.network.packet.server.play.TeamsPacket.CollisionRule;
 import net.minestom.server.network.packet.server.play.TeamsPacket.NameTagVisibility;
 import net.minestom.server.utils.PacketSendingUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,13 +53,25 @@ public final class TeamManager {
     private static final int MAX_PRIVATE_ID = 15;
     private static final byte NO_FRIENDLY_FLAGS = 0;
 
-    /** One team as all clients know it. */
+    /**
+     * One team as all clients know it.
+     *
+     * @param legacyPrefix the prefix for 1.8-1.12 clients, or {@code null} to shorten {@link #prefix}
+     */
     private record Team(String name, Component prefix, Component suffix, TeamColor color,
-                        NameTagVisibility nameTag, CollisionRule collision, Set<String> members) {
+                        NameTagVisibility nameTag, CollisionRule collision, Set<String> members,
+                        @Nullable Component legacyPrefix, @Nullable Component legacySuffix) {
+
+        Team(String name, Component prefix, Component suffix, TeamColor color, NameTagVisibility nameTag,
+             CollisionRule collision, Set<String> members) {
+            this(name, prefix, suffix, color, nameTag, collision, members, null, null);
+        }
 
         TeamsPacket.Settings settings(boolean legacy) {
-            Component shortPrefix = legacy ? LegacyText.limit(prefix, LEGACY_LIMIT) : prefix;
-            Component shortSuffix = legacy ? LegacyText.limit(suffix, LEGACY_LIMIT) : suffix;
+            Component shortPrefix = legacy ? LegacyText.limit(legacyPrefix != null ? legacyPrefix : prefix, LEGACY_LIMIT)
+                    : prefix;
+            Component shortSuffix = legacy ? LegacyText.limit(legacySuffix != null ? legacySuffix : suffix, LEGACY_LIMIT)
+                    : suffix;
             return new TeamsPacket.Settings(Component.empty(), shortPrefix, shortSuffix, nameTag, collision, color,
                     NO_FRIENDLY_FLAGS);
         }
@@ -102,10 +115,20 @@ public final class TeamManager {
      * Puts {@code player} in their own team: listed by {@code order} in tab (0 first) with the given nametag
      * prefix, suffix and name color. Only what changed is sent.
      */
-    public synchronized void setPlayer(Player player, int order, Component prefix, Component suffix, TeamColor color) {
+    public void setPlayer(Player player, int order, Component prefix, Component suffix, TeamColor color) {
+        setPlayer(player, order, prefix, suffix, null, null, color);
+    }
+
+    /**
+     * Like {@link #setPlayer(Player, int, Component, Component, TeamColor)}, with other versions of the
+     * prefix and suffix for 1.8-1.12 clients ({@code null} to shorten the normal ones).
+     */
+    public synchronized void setPlayer(Player player, int order, Component prefix, Component suffix,
+                                       @Nullable Component legacyPrefix, @Nullable Component legacySuffix,
+                                       TeamColor color) {
         String name = String.format("%02d", Math.clamp(order, 0, MAX_ORDER)) + "p" + idOf(player);
         Team wanted = new Team(name, prefix, suffix, color, NameTagVisibility.ALWAYS, playerCollision,
-                Set.of(player.getUsername()));
+                Set.of(player.getUsername()), legacyPrefix, legacySuffix);
         String current = playerTeams.get(player.getUuid());
         if (current != null && current.equals(name)) {
             Team old = teams.get(name);

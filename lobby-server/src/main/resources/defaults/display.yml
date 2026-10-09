@@ -1,0 +1,125 @@
+# =====================================================================
+#  Display - the scoreboard, tab list, nametags, boss bar, join title and action bar.
+#  Changes apply with /lobby reload.
+#
+#  Text is MiniMessage (<gold>, <bold>, <gradient:...>, <#ff8800>) with placeholders such as
+#  %player_name% or %server_online% (docs/placeholders.md).
+#
+#  1.8-1.12 clients only know 16 colours and have length limits. Every text can have a "legacy"
+#  version for them; without one, the normal text is shortened and its colours mapped to the 16 old
+#  ones automatically. See docs/display.md.
+# =====================================================================
+
+# ---------------- Scoreboard (the sidebar on the right) ----------------
+scoreboard:
+  enabled: true
+  # Each player sees the board with the highest priority whose permission they have.
+  # A board with an empty permission is for everyone.
+  boards:
+    default:
+      priority: 0
+      permission: ""
+      # One title per frame; more than one animates it, changing every "title-interval" ticks.
+      title:
+        - "<gradient:#ffaa00:#ffee55><bold>LOBBY</bold></gradient>"
+      title-interval: 20
+      # How often a line is refreshed, in ticks (20 = 1 second). A line can set its own:
+      #   - text: "<gray>Ping: <white>%player_ping%ms"
+      #     interval: 40
+      update-interval: 20
+      # At most 15 lines. An empty line is a spacer.
+      lines:
+        - ""
+        - "<white>%player_name%"
+        - "<gray>Rank: %luckperms_prefix%"
+        - ""
+        - "<gray>Lobby: <yellow>#%lobby_id%"
+        - "<gray>Online: <green>%server_online%"
+        - ""
+        - "<yellow>play.example.net"
+      # Optional versions for 1.8-1.12, used instead of the lines above. Each line shows at most 32
+      # characters there (colour codes count).
+      # legacy-title:
+      #   - "&6&lLOBBY"
+      # legacy-lines:
+      #   - ""
+      #   - "&f%player_name%"
+
+# ---------------- Tab list ----------------
+tab:
+  enabled: true
+  # How often names, header and footer are refreshed, in ticks.
+  update-interval: 20
+  header:
+    - "<gradient:#ffaa00:#ffee55><bold>EXAMPLE NETWORK</bold></gradient>"
+    - "<gray>Online: <white>%server_online%"
+    - ""
+  footer:
+    - ""
+    - "<gray>Lobby <yellow>#%lobby_id%</yellow> - Ping: <white>%player_ping%ms"
+  # How each player is written in the tab list.
+  name-format: "%luckperms_prefix%%player_name%%luckperms_suffix%"
+  # Optional versions for 1.8-1.12:
+  # legacy-header: ["&6&lEXAMPLE NETWORK", "&7Online: &f%server_online%"]
+  # legacy-footer: ["&7Ping: &f%player_ping%ms"]
+  # legacy-name-format: "%luckperms_prefix%%player_name%"
+  # Who is listed:
+  #   server   - everyone on this server (the default)
+  #   instance - only players in the same lobby instance (see config.yml, lobbies)
+  show: server
+  # Players are sorted by the weight of their LuckPerms group, highest first. Groups without a weight
+  # (or every group, without LuckPerms) are sorted by this list, first listed first.
+  group-order:
+    - owner
+    - admin
+    - mod
+    - helper
+    - vip
+    - default
+
+# ---------------- Nametags (above players' heads) ----------------
+nametags:
+  enabled: true
+  prefix: "%luckperms_prefix%"
+  suffix: "%luckperms_suffix%"
+  # The colour of the name itself: "auto" takes the last colour of the prefix, or one of Minecraft's
+  # 16 colours (white, gray, gold, red, ...).
+  name-color: auto
+
+# ---------------- Boss bar ----------------
+bossbar:
+  enabled: true
+  # How long each message is shown before the next one, in ticks.
+  interval: 200
+  # Each player rotates through the messages they have the permission for ("" = everyone).
+  # color: pink, blue, red, green, yellow, purple, white
+  # style: progress, notched_6, notched_10, notched_12, notched_20
+  # progress: 0.0 to 1.0
+  messages:
+    - text: "<yellow>Welcome to <gold><bold>Example Network</bold></gold>, %player_name%!"
+      color: yellow
+      style: progress
+      progress: 1.0
+    - text: "<gray>There are <green>%server_online%</green> players in this lobby"
+      color: green
+    - text: "<aqua>Right-click the compass to pick a game"
+      color: blue
+
+# ---------------- Join title ----------------
+join-title:
+  enabled: true
+  title: "<gold><bold>Welcome</bold>"
+  subtitle: "<gray>%player_name%"
+  # Optional versions for 1.8-1.12: legacy-title, legacy-subtitle.
+  # In ticks: fading in, staying, fading out, and the wait after joining before it shows.
+  fade-in: 10
+  stay: 60
+  fade-out: 20
+  delay: 20
+
+# ---------------- Action bar (above the hotbar) ----------------
+action-bar:
+  enabled: false
+  interval: 100
+  messages:
+    - text: "<gray>Use <yellow>/lobby</yellow> to change lobby"

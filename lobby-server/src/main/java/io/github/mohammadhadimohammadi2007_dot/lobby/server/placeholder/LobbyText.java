@@ -50,6 +50,14 @@ public final class LobbyText {
         return viewerTransformApplies.test(viewer);
     }
 
+    /**
+     * Applies the viewer's text fix to an already rendered text, for text that is about someone else
+     * (a name in the tab list) but read by {@code viewer}.
+     */
+    public Component forViewer(Player viewer, Component rendered) {
+        return viewerTransform.apply(viewer, rendered);
+    }
+
     /** The placeholder engine. */
     public PlaceholderService placeholders() {
         return placeholders;

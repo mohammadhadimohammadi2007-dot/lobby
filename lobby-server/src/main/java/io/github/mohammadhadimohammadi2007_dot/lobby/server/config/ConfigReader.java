@@ -247,6 +247,35 @@ public final class ConfigReader {
     }
 
     /**
+     * A list of lines that may be text or sections, keeping empty lines (used for scoreboard lines, where an
+     * empty line is a spacer). Sections come back as maps of their values. A missing option gives the
+     * bundled list, or an empty one.
+     */
+    public List<Object> lineList(String path) {
+        ConfigurationNode node = user.node(split(path));
+        if (node.virtual() || node.raw() == null) {
+            node = defaults.node(split(path));
+            if (node.virtual()) {
+                return List.of();
+            }
+        }
+        if (!node.isList()) {
+            return invalid(path, node.raw(), "a list of lines", List.of());
+        }
+        List<Object> values = new ArrayList<>();
+        for (ConfigurationNode child : node.childrenList()) {
+            if (child.isMap()) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                child.childrenMap().forEach((key, value) -> map.put(String.valueOf(key), value.raw()));
+                values.add(map);
+            } else {
+                values.add(child.raw() == null ? "" : String.valueOf(child.raw()));
+            }
+        }
+        return values;
+    }
+
+    /**
      * A list of whole entries, which may be text or sections (used for action lists, where
      * {@code random:} holds a list of its own). An empty or missing option gives an empty list.
      */

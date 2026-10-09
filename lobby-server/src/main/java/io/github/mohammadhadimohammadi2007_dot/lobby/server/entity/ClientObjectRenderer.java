@@ -47,6 +47,12 @@ public final class ClientObjectRenderer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientObjectRenderer.class);
     private static final int DEFAULT_REFRESH_TICKS = 5;
+    /**
+     * How long one refresh may spend on objects that changed or are new before the rest wait for the next
+     * refresh. After {@code /lobby reload} every object is new at once; without this, the first refresh
+     * would show all of them to every player in one go.
+     */
+    private static final long BUDGET_NANOS = 50_000_000L;
     /** How long a {@link EntityPart.Listing#TEMPORARY} entry stays in the tab list, unless configured. */
     public static final long DEFAULT_TEMPORARY_LISTING_MILLIS = 3000;
 
@@ -77,6 +83,7 @@ public final class ClientObjectRenderer {
         private final Map<Object, Variant> variants = new LinkedHashMap<>();
         private final Map<UUID, Object> viewerVariants = new HashMap<>();
         private long nextContentUpdate;
+        private boolean booked;
         private boolean contentDirty = true;
 
         Tracked(ClientObject object) {
@@ -207,6 +214,24 @@ public final class ClientObjectRenderer {
         });
     }
 
+    /** How many objects there are, for tests. */
+    public int objectCount() {
+        return onWorker(tracked::size);
+    }
+
+    /** How many objects at least one player sees, for tests. */
+    public int shownObjectCount() {
+        return onWorker(() -> (int) tracked.values().stream().filter(entry -> !entry.variants.isEmpty()).count());
+    }
+
+    private int onWorker(java.util.concurrent.Callable<Integer> question) {
+        try {
+            return worker.submit(question).get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new IllegalStateException("display thread did not answer", e);
+        }
+    }
+
     /** How many refreshes ran, for tests and metrics. */
     public int refreshCount() {
         return refreshes.get();
@@ -215,6 +240,12 @@ public final class ClientObjectRenderer {
     /** How many times content was built, for tests and metrics (one per variant, not per viewer). */
     public int renderCount() {
         return renders.get();
+    }
+
+    /** Runs one refresh now as if {@code advanceTicks} ticks had passed, and waits for it. For tests. */
+    public void refreshNow(int advanceTicks) {
+        ticks += advanceTicks;
+        refreshNow();
     }
 
     /** Runs one refresh now and waits for it. For tests. */
@@ -253,14 +284,23 @@ public final class ClientObjectRenderer {
 
     private void refreshObjects() {
         refreshes.incrementAndGet();
-        tabRemovals.sendDue(System.nanoTime());
+        long start = System.nanoTime();
+        tabRemovals.sendDue(start);
         Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
         for (Tracked entry : tracked.values()) {
             // Both are asked, never short-circuited: a dirty object must still book its next update time,
             // or it would be built again on the very next refresh.
+            boolean overBudget = System.nanoTime() - start > BUDGET_NANOS;
+            if (overBudget && entry.variants.isEmpty() && entry.contentDirty) {
+                // A new object nobody sees yet: it appears on the next refresh.
+                continue;
+            }
             boolean due = dueForUpdate(entry);
-            boolean updateContent = entry.contentDirty || due;
-            entry.contentDirty = false;
+            boolean dirty = entry.contentDirty;
+            // An object already on screen whose content changed keeps its old look one refresh longer.
+            boolean deferred = dirty && !due && !entry.variants.isEmpty() && overBudget;
+            boolean updateContent = (dirty && !deferred) || due;
+            entry.contentDirty = deferred;
             try {
                 update(entry, online, updateContent);
             } catch (RuntimeException e) {
@@ -269,12 +309,31 @@ public final class ClientObjectRenderer {
         }
     }
 
+    /**
+     * True if the object's update interval came round. Objects with the same interval are spread over
+     * it, each at its own fixed offset, so fifty holograms that update every second are not all rebuilt
+     * in the same refresh.
+     */
     private boolean dueForUpdate(Tracked entry) {
         int interval = entry.object.updateIntervalTicks();
-        if (interval <= 0 || ticks < entry.nextContentUpdate) {
+        if (interval <= 0) {
             return false;
         }
-        entry.nextContentUpdate = ticks + interval;
+        if (!entry.booked) {
+            // The first build comes from the object being new; from then on it keeps its own offset.
+            entry.booked = true;
+            int slots = Math.max(1, interval / refreshTicks);
+            entry.nextContentUpdate = ticks + (long) refreshTicks * (1 + Math.floorMod(entry.object.name().hashCode(), slots));
+            return false;
+        }
+        if (ticks < entry.nextContentUpdate) {
+            return false;
+        }
+        entry.nextContentUpdate += interval;
+        if (entry.nextContentUpdate <= ticks) {
+            // It fell behind (the interval was shortened): start again from now.
+            entry.nextContentUpdate = ticks + interval;
+        }
         return true;
     }
 

@@ -66,7 +66,7 @@ public final class HologramText {
     }
 
     /** True if the line contains Arabic-script letters, which the Persian fix may reorder. */
-    private static boolean needsReshaping(String line) {
+    public static boolean needsReshaping(String line) {
         for (int i = 0; i < line.length(); i++) {
             if (Character.UnicodeBlock.of(line.charAt(i)) == Character.UnicodeBlock.ARABIC) {
                 return true;

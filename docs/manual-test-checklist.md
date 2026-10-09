@@ -32,7 +32,18 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
       invisible seat). Note how far it floats or sinks on each.
 - [ ] A villager NPC with `/npc glowing trader blue`: a blue outline.
 
-## 3. Holograms on 1.8
+## 3. Scoreboard and tab list
+
+- [ ] 1.8.9: the sidebar shows every line without cut-off colours; a long line ends cleanly at 32
+      characters; the red numbers are visible (they cannot be hidden before 1.20.3).
+- [ ] Latest client: no red numbers; the animated title changes.
+- [ ] Tab list on both: ranks with the highest LuckPerms weight on top; header and footer show.
+- [ ] Nametags above heads show the rank prefix on both clients (cut to 16 characters on 1.8).
+- [ ] With `tab.show: instance`, players of another lobby instance leave the tab list, and come back
+      with their skin after `/lobby <n>` to the same instance (1.8 included).
+- [ ] The boss bar shows and rotates on both (1.8 through ViaRewind).
+
+## 4. Holograms on 1.8
 
 - [ ] A hologram with several lines: armor-stand lines on 1.8, text displays on the latest client,
       at the same height.

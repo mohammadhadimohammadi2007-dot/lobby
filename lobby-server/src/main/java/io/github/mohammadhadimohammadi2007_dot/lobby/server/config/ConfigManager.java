@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public final class ConfigManager {
     public static final String MESSAGES_FILE = "messages.yml";
     public static final String CHAT_FILE = "chat.yml";
     public static final String MENUS_FILE = "menus.yml";
+    public static final String DISPLAY_FILE = "display.yml";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigManager.class);
 
@@ -57,7 +59,7 @@ public final class ConfigManager {
      * @throws ConfigException if a file cannot be used at all
      */
     public ConfigSnapshot load() throws ConfigException {
-        for (String file : List.of(CONFIG_FILE, INTEGRATIONS_FILE, CHAT_FILE, MENUS_FILE, MESSAGES_FILE)) {
+        for (String file : List.of(CONFIG_FILE, INTEGRATIONS_FILE, CHAT_FILE, MENUS_FILE, DISPLAY_FILE, MESSAGES_FILE)) {
             try {
                 if (ConfigFiles.createIfMissing(dataDir, file)) {
                     LOGGER.info("Created default {}", file);
@@ -118,11 +120,15 @@ public final class ConfigManager {
         MenuConfig menus = MenuConfig.read(menusReader);
         warnings.addAll(menusReader.warnings());
 
+        ConfigReader displayReader = reader(dataDir, DISPLAY_FILE);
+        DisplayConfig display = DisplayConfig.read(displayReader);
+        warnings.addAll(displayReader.warnings());
+
         ConfigReader messagesReader = reader(dataDir, MESSAGES_FILE);
         Messages messages = Messages.read(messagesReader);
         warnings.addAll(messagesReader.warnings());
 
-        return new ConfigSnapshot(config, integrations, chat, menus, messages, warnings);
+        return new ConfigSnapshot(config, integrations, chat, menus, display, messages, warnings);
     }
 
     private static ConfigReader reader(Path dataDir, String fileName) throws ConfigException {
