@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.common.ProtocolVersions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
@@ -262,14 +263,18 @@ public final class LobbyServer implements ServerInfo {
      */
     private void startDisplays() {
         display = new ClientObjectRenderer();
+        // Read on every spawn, so /lobby reload changes it for the next NPC that appears.
+        display.temporaryListingDelay(() -> configManager.current().config().npcs().legacyTabRemovalDelayMillis());
         clicks = new ClientObjectClicks(display);
         // The one place teams are made; NPCs use it to hide the player-list name above their heads.
         teams = new TeamManager(player -> bridge.capabilities(player).protocolVersion(), false);
         Hologram.Services displayServices = new Hologram.Services(text, permissions,
-                player -> bridge.capabilities(player).legacy(), WorldScope.mainMap(world.instance()));
+                player -> bridge.capabilities(player).legacy(), WorldScope.mainMap(world.instance()),
+                player -> bridge.capabilities(player).protocolVersion() >= ProtocolVersions.V1_20_5);
         holograms = HologramService.start(configManager.dataDir(), display, displayServices, actions);
         // NPC skins from Mojang work in every mode; the lookups run on virtual threads and are cached.
-        NpcSkins skins = new NpcSkins(new MojangSkinFetcher(), skinsRestorer);
+        NpcSkins skins = new NpcSkins(new MojangSkinFetcher(), skinsRestorer,
+                configManager.current().integrations().mineSkin().apiKey());
         npcs = NpcService.start(configManager.dataDir(), display, displayServices, actions, skins, teams);
         clicks.addHandler(holograms);
         clicks.addHandler(npcs);

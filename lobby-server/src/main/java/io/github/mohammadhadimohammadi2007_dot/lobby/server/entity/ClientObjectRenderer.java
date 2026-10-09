@@ -7,6 +7,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.network.packet.server.ServerPacket;
+import net.minestom.server.network.packet.server.play.SetPassengersPacket;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.PacketSendingUtils;
@@ -29,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +47,8 @@ public final class ClientObjectRenderer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientObjectRenderer.class);
     private static final int DEFAULT_REFRESH_TICKS = 5;
+    /** How long a {@link EntityPart.Listing#TEMPORARY} entry stays in the tab list, unless configured. */
+    public static final long DEFAULT_TEMPORARY_LISTING_MILLIS = 3000;
 
     /** One group of viewers that share entity ids because they see the same thing. */
     private static final class Variant {
@@ -58,6 +62,12 @@ public final class ClientObjectRenderer {
                 entityIds.add(Entity.generateId());
                 uuids.add(UUID.randomUUID());
             }
+        }
+
+        /** The UUID clients know part {@code index} of {@code of} by: its own if it has one, else the one picked here. */
+        UUID uuidOf(int index, List<EntityPart> of) {
+            UUID own = index < of.size() ? of.get(index).uuid() : null;
+            return own != null ? own : uuids.get(index);
         }
     }
 
@@ -79,6 +89,8 @@ public final class ClientObjectRenderer {
     private final AtomicInteger refreshes = new AtomicInteger();
     private final AtomicInteger renders = new AtomicInteger();
     private final DisplayLoad load = new DisplayLoad();
+    private final TabRemovals tabRemovals = new TabRemovals();
+    private volatile LongSupplier temporaryListingMillis = () -> DEFAULT_TEMPORARY_LISTING_MILLIS;
     private final int refreshTicks;
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "lobby-display");
@@ -156,6 +168,23 @@ public final class ClientObjectRenderer {
         return objectByEntityId.get(entityId);
     }
 
+    /**
+     * How long {@link EntityPart.Listing#TEMPORARY} entries stay in the tab list, in milliseconds. Read
+     * on every spawn, so a reloaded setting applies to the next spawn.
+     */
+    public void temporaryListingDelay(LongSupplier millis) {
+        temporaryListingMillis = millis;
+    }
+
+    /** How many temporary tab entries are waiting to be removed, for tests. */
+    public int pendingTabRemovals() {
+        try {
+            return worker.submit(tabRemovals::pendingCount).get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new IllegalStateException("could not count tab removals", e);
+        }
+    }
+
     /** How busy the display thread was over the last minute, for {@code /lobby info}. */
     public DisplayLoad.Snapshot load() {
         return load.snapshot();
@@ -224,6 +253,7 @@ public final class ClientObjectRenderer {
 
     private void refreshObjects() {
         refreshes.incrementAndGet();
+        tabRemovals.sendDue(System.nanoTime());
         Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
         for (Tracked entry : tracked.values()) {
             // Both are asked, never short-circuited: a dirty object must still book its next update time,
@@ -268,9 +298,7 @@ public final class ClientObjectRenderer {
                 variant.getValue().viewers.remove(viewer.getUuid());
                 entry.viewerVariants.remove(viewer.getUuid());
                 entry.object.viewerGone(viewer);
-                if (viewer.isOnline()) {
-                    viewer.sendPacket(PartPackets.destroy(variant.getValue().entityIds));
-                }
+                destroyFor(viewer, variant.getValue());
             }
         }
 
@@ -295,7 +323,7 @@ public final class ClientObjectRenderer {
                 }
             }
             if (!newViewers.isEmpty()) {
-                send(newViewers, spawnPackets(variant));
+                spawnTo(newViewers, variant);
             }
             if (!fresh && updateContent) {
                 List<Player> existing = new ArrayList<>(variant.viewers.values());
@@ -362,34 +390,105 @@ public final class ClientObjectRenderer {
             return;
         }
         List<ServerPacket> packets = new ArrayList<>();
+        List<Integer> spawned = new ArrayList<>();
+        boolean ridesChanged = false;
         for (int i = 0; i < variant.parts.size(); i++) {
             EntityPart now = variant.parts.get(i);
             if (i < before.size()) {
                 EntityPart was = before.get(i);
+                ridesChanged |= !was.passengers().equals(now.passengers());
                 // A new skin needs a new player-list entry, which only a fresh spawn sends.
-                if (was.type().equals(now.type()) && Objects.equals(was.profile(), now.profile())) {
-                    List<ServerPacket> diff = PartPackets.update(variant.entityIds.get(i), was, now);
+                if (was.type().equals(now.type()) && Objects.equals(was.uuid(), now.uuid()) && sameEntry(was, now)) {
+                    List<ServerPacket> diff = PartPackets.update(variant.entityIds.get(i),
+                            variant.uuidOf(i, variant.parts), was, now);
                     if (diff != null) {
                         packets.addAll(diff);
                     }
                     continue;
                 }
-                packets.add(PartPackets.destroy(List.of(variant.entityIds.get(i))));
+                packets.addAll(destroyPackets(variant, i, i + 1, before, viewers));
             }
-            packets.addAll(PartPackets.spawn(variant.entityIds.get(i), variant.uuids.get(i), now));
+            packets.addAll(PartPackets.spawn(variant.entityIds.get(i), variant.uuidOf(i, variant.parts), now));
+            spawned.add(i);
         }
         if (variant.parts.size() < before.size()) {
-            packets.add(PartPackets.destroy(variant.entityIds.subList(variant.parts.size(), before.size())));
+            packets.addAll(destroyPackets(variant, variant.parts.size(), before.size(), before, viewers));
+        }
+        if (ridesChanged || !spawned.isEmpty()) {
+            // A respawned rider or seat has lost its ride on the client, so every ride is sent again.
+            packets.addAll(PartPackets.passengers(variant.entityIds, variant.parts));
+            for (int i = 0; i < Math.min(before.size(), variant.parts.size()); i++) {
+                if (!before.get(i).passengers().isEmpty() && variant.parts.get(i).passengers().isEmpty()) {
+                    packets.add(new SetPassengersPacket(variant.entityIds.get(i), List.of()));
+                }
+            }
         }
         send(viewers, packets);
+        for (int i : spawned) {
+            scheduleTabRemoval(viewers, variant, i);
+        }
     }
 
-    private List<ServerPacket> spawnPackets(Variant variant) {
+    private static boolean sameEntry(EntityPart was, EntityPart now) {
+        if (was.profile() == null || now.profile() == null) {
+            return was.profile() == now.profile();
+        }
+        return was.profile().sameEntry(now.profile());
+    }
+
+    /** Spawns every part of a variant for new viewers, then their rides, then books temporary tab entries. */
+    private void spawnTo(List<Player> viewers, Variant variant) {
         List<ServerPacket> packets = new ArrayList<>(variant.parts.size() * 2);
         for (int i = 0; i < variant.parts.size(); i++) {
-            packets.addAll(PartPackets.spawn(variant.entityIds.get(i), variant.uuids.get(i), variant.parts.get(i)));
+            packets.addAll(PartPackets.spawn(variant.entityIds.get(i), variant.uuidOf(i, variant.parts),
+                    variant.parts.get(i)));
+        }
+        packets.addAll(PartPackets.passengers(variant.entityIds, variant.parts));
+        send(viewers, packets);
+        for (int i = 0; i < variant.parts.size(); i++) {
+            scheduleTabRemoval(viewers, variant, i);
+        }
+    }
+
+    private void scheduleTabRemoval(List<Player> viewers, Variant variant, int index) {
+        EntityPart part = variant.parts.get(index);
+        if (part.profile() != null && part.profile().listing() == EntityPart.Listing.TEMPORARY) {
+            long delay = TimeUnit.MILLISECONDS.toNanos(Math.max(0, temporaryListingMillis.getAsLong()));
+            tabRemovals.schedule(viewers, variant.uuidOf(index, variant.parts), System.nanoTime() + delay);
+        }
+    }
+
+    /**
+     * Destroy packets for the parts {@code from} to {@code to} of {@code parts}, with their player-list
+     * entries, and forgets those entries' pending removals for these viewers.
+     */
+    private List<ServerPacket> destroyPackets(Variant variant, int from, int to, List<EntityPart> parts,
+                                              Collection<Player> viewers) {
+        List<UUID> entries = new ArrayList<>();
+        for (int i = from; i < to && i < parts.size(); i++) {
+            if (parts.get(i).profile() != null) {
+                UUID uuid = variant.uuidOf(i, parts);
+                entries.add(uuid);
+                for (Player viewer : viewers) {
+                    tabRemovals.cancel(viewer, uuid);
+                }
+            }
+        }
+        List<ServerPacket> packets = new ArrayList<>(2);
+        packets.add(PartPackets.destroy(variant.entityIds.subList(from, to)));
+        if (!entries.isEmpty()) {
+            packets.add(PartPackets.removeEntries(entries));
         }
         return packets;
+    }
+
+    /** Destroys a whole variant for one viewer. */
+    private void destroyFor(Player viewer, Variant variant) {
+        List<ServerPacket> packets = destroyPackets(variant, 0, variant.entityIds.size(), variant.parts,
+                List.of(viewer));
+        if (viewer.isOnline()) {
+            packets.forEach(viewer::sendPacket);
+        }
     }
 
     private static void send(List<Player> viewers, List<ServerPacket> packets) {
@@ -406,9 +505,7 @@ public final class ClientObjectRenderer {
         for (Variant variant : entry.variants.values()) {
             for (Player viewer : variant.viewers.values()) {
                 entry.object.viewerGone(viewer);
-                if (viewer.isOnline()) {
-                    viewer.sendPacket(PartPackets.destroy(variant.entityIds));
-                }
+                destroyFor(viewer, variant);
             }
             variant.entityIds.forEach(objectByEntityId::remove);
         }
@@ -418,6 +515,7 @@ public final class ClientObjectRenderer {
 
     private void forget(Player player) {
         worker.execute(() -> {
+            tabRemovals.forget(player.getUuid());
             for (Tracked entry : tracked.values()) {
                 Object key = entry.viewerVariants.remove(player.getUuid());
                 if (key != null) {

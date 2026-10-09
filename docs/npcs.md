@@ -41,9 +41,12 @@ so admins coming from FancyNpcs can type what they know.
 | `/npc skin <npc> <skin>` | See [Skins](#skins) |
 | `/npc displayname <npc> <text>` | A one-line name; `@none` hides it |
 | `/npc name <npc> ...` | The name as a full hologram: see [The name](#the-name) |
-| `/npc equipment <npc> set <slot> <item>` | `main_hand`, `off_hand`, `helmet`, `chestplate`, `leggings`, `boots`; `air` empties a slot |
+| `/npc equipment <npc> set <slot> <item>` | `main_hand`, `off_hand`, `helmet`, `chestplate`, `leggings`, `boots`, `body`, `saddle`; `air` empties a slot |
 | `/npc equipment <npc> list\|clear` | Shows or removes everything it holds and wears |
-| `/npc glowing <npc> [true\|false\|toggle]` | A glowing outline |
+| `/npc glowing <npc> [true\|false\|toggle\|disabled\|<colour>]` | A glowing outline; a colour (`red`, `dark_purple`... Minecraft's 16) turns it on in that colour |
+| `/npc scale <npc> <factor>` | Its size, 0.0625 to 16 (1 is normal). Clients before 1.20.5 always see it at normal size |
+| `/npc pose <npc> <pose>` | `standing`, `crouching`, `sleeping`, `swimming` or `sitting` (player NPCs). FancyNpcs' `/npc attribute <npc> set pose <pose>` works too |
+| `/npc show_in_tab <npc> [true\|false\|toggle]` | Lists a player NPC in everyone's tab list, like a real player (off by default) |
 | `/npc turn_to_player <npc> [true\|false\|toggle]` | Looks at players who come near |
 | `/npc turn_to_player_distance <npc> <blocks>` | How near "near" is (5 by default) |
 | `/npc visibility_distance <npc> <blocks>` | How far away it is still shown (48 by default) |
@@ -61,14 +64,24 @@ so admins coming from FancyNpcs can type what they know.
 | `@none` | Minecraft's default skin |
 | `sr:knight` | A custom skin saved in SkinsRestorer (needs the SkinsRestorer integration) |
 | `mineskin:<uuid>` or a `https://mineskin.org/...` link | A skin already uploaded to MineSkin |
+| Any other `https://` link to a skin image (`.png`) | Uploaded to MineSkin once, then kept as `mineskin:<uuid>`. Needs a MineSkin API key |
 
 Skins are looked up in the background and saved in `data/npcs.yml` (`skin-texture`), so a restart never
 waits for Mojang or MineSkin, and an NPC keeps its skin even when they are down. `/npc skin` again looks
 it up again.
 
-A **link to an image** does not work: turning an image into a skin means uploading it to MineSkin, which
-needs a MineSkin API key. Upload it on mineskin.org yourself and use the link of the skin it gives you;
-reading an existing MineSkin skin needs no key.
+A **link to an image** needs a MineSkin API key (free at <https://mineskin.org/apikey>), because MineSkin
+has to turn the image into a skin first. Put it in `integrations.yml`:
+
+```yaml
+mineskin:
+  api-key: "your key"
+```
+
+With a key, the image is uploaded once and the NPC is saved with the skin MineSkin made
+(`mineskin:<uuid>`), so it is never uploaded again. Without a key the command says so and explains the
+way around it: upload the image on mineskin.org yourself and use the link of the skin it gives you.
+Reading a skin that is already on MineSkin never needs a key. The key is only ever sent to MineSkin.
 
 Only player NPCs have skins. `/npc type <npc> player` makes one a player again.
 
@@ -150,7 +163,11 @@ bedwars:
   turn-to-player: true
   turn-distance: 5.0
   glowing: false
-  equipment:
+  glow-color: white            # Minecraft's 16 colours: red, dark_purple, gold...
+  scale: 1.0                   # 1.20.5+ clients; older ones see 1
+  pose: standing               # standing, crouching, sleeping, swimming, sitting
+  show-in-tab: false
+  equipment:                   # main_hand, off_hand, helmet, chestplate, leggings, boots (and body, saddle)
     main_hand: red_bed
   view-distance: 48.0
   permission: ""               # "" = everyone
@@ -178,21 +195,38 @@ file untouched, and skipped; every other NPC still loads.
    linked hologram becomes its NPC's name.
 
 The importer reads the keys FancyNpcs itself writes (checked against its source): name, display name,
-type, location, skin (a looked-up name or link, a saved texture, or mirror), glowing, turn to player and
-its distance, interaction cooldown (seconds there, milliseconds here), visibility distance, equipment
-(both ways Bukkit writes an item) and the actions of every trigger, translated as above.
+type, location, skin (a looked-up name or link, a saved texture, or mirror; an image link only with a
+MineSkin API key), glowing and its colour, scale, show in tab, the `pose` attribute, turn to player and
+its distance, interaction cooldown (seconds there, milliseconds here), visibility distance, all six
+equipment slots (both ways Bukkit writes an item) and the actions of every trigger, translated as above.
 
-Not imported, and reported by name when used: an NPC's `scale` (NPCs here are their normal size), the
-glowing colour, `collidable` (packet NPCs never collide) and `show_in_tab` (an NPC is never in the tab
-list here). An NPC whose name already exists is never overwritten.
+Reported by name when used, and not imported:
+
+- an item's enchantments, dye colour, custom name or head texture: the NPC holds or wears the plain item;
+- FancyNpcs' other attributes (`on_fire`, `invisible`, the per-mob variants...): this lobby has no such
+  NPC setting.
+
+`collidable` is not read at all: an NPC made of packets never collides with anyone, whatever it says. An
+NPC whose name already exists is never overwritten.
 
 ## Things to know
 
-- A player NPC is a player only the clients know about. It is added to their player list, unlisted, so
-  it never shows in the tab list, and its name above the head is hidden by the lobby's hidden-name team;
-  the real name is the name hologram.
+- A player NPC is a player only the clients know about. A client only draws a player that is in its
+  player list, so the NPC is added to it. Clients 1.19.3 and newer get an entry that never shows in the
+  tab list. Older clients (1.8 through ViaRewind) cannot have such entries and often show Steve if the
+  entry is not listed while the NPC appears, so they get a listed entry that is taken out of their tab
+  list again after `npcs.legacy-tab-removal-delay` in `config.yml` (3 seconds by default; everything due
+  for one player goes in one packet). Raise it if 1.8 players still see Steve.
+- Its name above the head is hidden by the lobby's hidden-name team; the real name is the name hologram.
+  The same team gives the glowing outline its colour: a player NPC is in it by its profile name, any
+  other entity by its UUID.
+- A sitting NPC rides an invisible seat at its position, as in FancyNpcs: an empty text display for
+  1.19.4+ clients, an invisible marker armor stand for older ones. How high it sits differs a little
+  between client versions; move it with `/npc move_to` if it floats or sinks.
+- The name follows the NPC's size and pose: it sits just above a crouching, sleeping, sitting or scaled
+  NPC, at the height each client draws it.
 - Turning towards players is sent to each player separately and only when the direction changed by more
   than 2 degrees, so a still player costs nothing.
 - Clients older than 1.19.4 (1.8 through ViaRewind) see the same player or mob, and its name as
-  armor-stand lines, like any hologram. Whether ViaRewind keeps an unlisted NPC out of a 1.8 tab list is on the manual test
-  checklist, because it depends on ViaRewind, not on this lobby.
+  armor-stand lines, like any hologram. Whether the skin loads on 1.8 is the first item of the manual
+  test checklist, because it depends on ViaRewind, not on this lobby.

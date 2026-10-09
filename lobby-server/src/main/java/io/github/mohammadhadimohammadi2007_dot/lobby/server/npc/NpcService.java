@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +53,8 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
     private final NpcSkins skins;
     private final TeamManager teams;
     private final Map<String, Npc> npcs = new LinkedHashMap<>();
+    /** The team entry each NPC was last put in, so a changed type leaves its old entry behind cleanly. */
+    private final Map<String, String> teamEntries = new HashMap<>();
 
     private NpcService(YamlDataStore<NpcData> store, ClientObjectRenderer renderer, Hologram.Services services,
                        ActionServices actions, NpcSkins skins, TeamManager teams) {
@@ -81,6 +84,8 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
         for (Npc npc : npcs.values()) {
             renderer.remove(npc.name());
         }
+        teamEntries.values().forEach(teams::showName);
+        teamEntries.clear();
         npcs.clear();
         loadAll();
     }
@@ -159,8 +164,9 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
             return false;
         }
         renderer.remove(npc.name());
-        if (npc.data().isPlayer()) {
-            teams.showName(npc.data().profileName());
+        String entry = teamEntries.remove(npc.data().name());
+        if (entry != null) {
+            teams.showName(entry);
         }
         save();
         return true;
@@ -169,9 +175,7 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
     /** Call after changing an {@link NpcData}: saves the file and shows the change. */
     public synchronized void changed(NpcData data) {
         classify(data);
-        if (data.isPlayer()) {
-            teams.hideName(data.profileName());
-        }
+        joinTeam(data);
         renderer.invalidate(Npc.OBJECT_PREFIX + data.name());
         save();
     }
@@ -198,6 +202,9 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
         return skins.resolve(wanted).thenApply(result -> {
             // Only if nobody changed the skin again while it was being looked up.
             if (result.found() && wanted.equals(data.skin())) {
+                if (result.replacement() != null) {
+                    data.skin(result.replacement());
+                }
                 data.resolvedSkin(result.skin());
                 changed(data);
             } else if (!result.found()) {
@@ -205,6 +212,11 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
             }
             return result;
         });
+    }
+
+    /** True if image links can be used as skins (a MineSkin API key is set). */
+    public boolean canUploadSkins() {
+        return skins.canUpload();
     }
 
     /** Parses action lines and puts them on one trigger of an NPC, keeping the lines as written. */
@@ -293,10 +305,20 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
     private void show(NpcData data) {
         Npc npc = new Npc(data, services);
         npcs.put(data.name(), npc);
-        if (data.isPlayer()) {
-            // The real name is the name tag; the player-list name above the head stays hidden.
-            teams.hideName(data.profileName());
-        }
+        joinTeam(data);
         renderer.put(npc);
+    }
+
+    /**
+     * Puts the NPC in its hidden-name team: the real name is the name tag, so the player-list name above
+     * the head stays hidden, and the team's colour is the colour the NPC glows in.
+     */
+    private void joinTeam(NpcData data) {
+        String entry = data.teamEntry();
+        String previous = teamEntries.put(data.name(), entry);
+        if (previous != null && !previous.equals(entry)) {
+            teams.showName(previous);
+        }
+        teams.hideName(entry, data.glowColor());
     }
 }

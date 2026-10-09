@@ -6,11 +6,13 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataCodec;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataException;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataNodes;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramCodec;
+import net.minestom.server.color.TeamColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.item.Material;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -46,6 +48,21 @@ public final class NpcCodec implements DataCodec<NpcData> {
         data.turnToPlayer(node.node("turn-to-player").getBoolean(false));
         data.turnDistance(node.node("turn-distance").getDouble(NpcData.DEFAULT_TURN_DISTANCE));
         data.glowing(node.node("glowing").getBoolean(false));
+        String color = node.node("glow-color").getString("white");
+        TeamColor glowColor = glowColor(color);
+        if (glowColor == null) {
+            LOGGER.warn("{}: {}.glow-color: '{}' is not one of Minecraft's 16 colours. Using white.", FILE, name, color);
+        } else {
+            data.glowColor(glowColor);
+        }
+        data.scale(node.node("scale").getDouble(1));
+        String poseName = node.node("pose").getString("standing");
+        NpcPose pose = NpcPose.fromName(poseName);
+        if (pose == null || !data.pose(pose)) {
+            LOGGER.warn("{}: {}.pose: '{}' is not a pose of this NPC (standing, crouching, sleeping, swimming or"
+                    + " sitting, for player NPCs only). Using standing.", FILE, name, poseName);
+        }
+        data.showInTab(node.node("show-in-tab").getBoolean(false));
         readEquipment(node.node("equipment"), data, name);
         data.viewDistance(node.node("view-distance").getDouble(NpcData.DEFAULT_VIEW_DISTANCE));
         data.permission(node.node("permission").getString(""));
@@ -84,6 +101,12 @@ public final class NpcCodec implements DataCodec<NpcData> {
         node.node("turn-to-player").set(data.turnToPlayer());
         node.node("turn-distance").set(data.turnDistance());
         node.node("glowing").set(data.glowing());
+        node.node("glow-color").set(colorName(data.glowColor()));
+        node.node("scale").set(data.scale());
+        if (data.isPlayer()) {
+            node.node("pose").set(data.pose().configName());
+            node.node("show-in-tab").set(data.showInTab());
+        }
         for (Map.Entry<EquipmentSlot, Material> item : data.equipment().entrySet()) {
             node.node("equipment", slotName(item.getKey())).set(item.getValue().key().value());
         }
@@ -154,6 +177,25 @@ public final class NpcCodec implements DataCodec<NpcData> {
             }
             data.equipment(slot, material);
         }
+    }
+
+    /**
+     * The team colour with that name, as Minecraft and FancyNpcs write it ({@code dark_purple}), or
+     * {@code null}.
+     */
+    static @Nullable TeamColor glowColor(String name) {
+        String wanted = name.strip().toUpperCase(java.util.Locale.ROOT).replace('-', '_').replace(' ', '_');
+        for (TeamColor color : TeamColor.values()) {
+            if (color.name().equals(wanted)) {
+                return color;
+            }
+        }
+        return null;
+    }
+
+    /** How a colour is written: {@code dark_purple}. */
+    static String colorName(TeamColor color) {
+        return color.name().toLowerCase(Locale.ROOT);
     }
 
     /** The slot with that name, e.g. {@code main_hand} or {@code helmet}, or {@code null}. */

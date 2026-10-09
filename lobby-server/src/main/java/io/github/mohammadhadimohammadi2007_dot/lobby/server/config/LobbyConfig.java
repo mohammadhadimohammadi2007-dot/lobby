@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  * @param lobbies    how many lobby instances of that map to run
  * @param spawn      where players appear
  * @param protection what players may do in the lobby
+ * @param npcs       NPC settings
  * @param operators  lower-case usernames with every permission (used when LuckPerms is disabled)
  */
 public record LobbyConfig(
@@ -27,6 +28,7 @@ public record LobbyConfig(
         Lobbies lobbies,
         SpawnPoint spawn,
         Protection protection,
+        Npcs npcs,
         Set<String> operators
 ) {
 
@@ -46,6 +48,9 @@ public record LobbyConfig(
     private static final double MAX_COORDINATE = 30_000_000;
     /** Most lobby instances one server may run; more than this never fits a selector menu. */
     public static final int MAX_INSTANCES = 50;
+    /** Longest an old client keeps an NPC in its tab list; longer than this is only clutter. */
+    private static final int MAX_TAB_REMOVAL_DELAY_MILLIS = 30_000;
+    private static final int DEFAULT_TAB_REMOVAL_DELAY_MILLIS = 3000;
     /** Allowed characters for the lobby name. */
     private static final Pattern SERVER_NAME = Pattern.compile("[A-Za-z0-9_-]{1,32}");
 
@@ -102,6 +107,15 @@ public record LobbyConfig(
             int needed = Math.ceilDiv(maxPlayers, playersPerInstance);
             return Math.clamp(needed, 1, MAX_INSTANCES);
         }
+    }
+
+    /**
+     * {@code npcs:} section.
+     *
+     * @param legacyTabRemovalDelayMillis how long old clients keep a player NPC in their tab list, so its
+     *                                    skin loads
+     */
+    public record Npcs(int legacyTabRemovalDelayMillis) {
     }
 
     /** {@code spawn:} section. */
@@ -175,11 +189,14 @@ public record LobbyConfig(
                 reader.bool("protection.hunger"),
                 reader.bool("protection.item-drop"));
 
+        Npcs npcs = new Npcs(reader.integer("npcs.legacy-tab-removal-delay", 0, MAX_TAB_REMOVAL_DELAY_MILLIS,
+                DEFAULT_TAB_REMOVAL_DELAY_MILLIS));
+
         Set<String> operators = reader.stringList("operators").stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toUnmodifiableSet());
 
-        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, operators);
+        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, npcs, operators);
     }
 
     /** Reads the {@code lobbies:} section. {@code instances} is a number or the word {@code auto}. */

@@ -56,6 +56,13 @@ skinsrestorer:
   # Table prefix. Must match "tablePrefix" in your SkinsRestorer config.
   table-prefix: "sr_"
 
+# ---------------- MineSkin ----------------
+# NPC skins from https://mineskin.org. Skins already on MineSkin (a mineskin.org link or
+# mineskin:<uuid>) work without a key. Turning a link to a skin image (a .png) into a skin needs an
+# API key from https://mineskin.org/apikey. Keep it secret: anyone with it can use your MineSkin quota.
+mineskin:
+  api-key: ""
+
 # ---------------- SignedVelocity ----------------
 # Install SignedVelocity on your Velocity proxy and turn this on, so chat messages and commands that
 # proxy plugins cancel or change (for example LiteBans mutes on Velocity) are cancelled or changed here too.

@@ -82,7 +82,7 @@ public final class HologramText {
     }
 
     /** The current frame's lines, with placeholders filled in for {@code viewer}. */
-    static List<Component> lines(HologramData data, LobbyText text, Player viewer, boolean legacy) {
+    public static List<Component> lines(HologramData data, LobbyText text, Player viewer, boolean legacy) {
         List<String> frame = currentFrame(data);
         List<Component> rendered = new ArrayList<>(frame.size());
         for (String line : frame) {

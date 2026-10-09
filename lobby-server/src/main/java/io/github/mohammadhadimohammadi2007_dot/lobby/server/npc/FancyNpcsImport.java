@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.npc;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.DataException;
+import net.minestom.server.color.TeamColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.PlayerSkin;
@@ -24,9 +25,11 @@ import java.util.Map;
  * <p>The keys are the ones FancyNpcs itself writes (checked against its {@code NpcManagerImpl}):
  * {@code npcs.<id>.name}, {@code displayName} ({@code <empty>} for none), {@code type},
  * {@code location.*}, {@code skin.identifier}, {@code skin.mirrorSkin}, the older {@code skin.value} and
- * {@code skin.signature}, {@code glowing}, {@code turnToPlayer}, {@code turnToPlayerDistance},
- * {@code interactionCooldown} (seconds), {@code visibility_distance}, {@code equipment.<SLOT>} and
- * {@code actions.<TRIGGER>.<order>.action|value}.
+ * {@code skin.signature}, {@code glowing}, {@code glowingColor}, {@code showInTab}, {@code scale},
+ * {@code turnToPlayer}, {@code turnToPlayerDistance}, {@code interactionCooldown} (seconds),
+ * {@code visibility_distance}, {@code equipment.<SLOT>}, {@code attributes.pose} and
+ * {@code actions.<TRIGGER>.<order>.action|value}. {@code collidable} is not read: NPCs made of packets
+ * never collide with anyone.
  *
  * <p>The world is ignored, as NPCs here belong to the lobby map. What could not be mapped is reported by
  * name, and an NPC whose name already exists is never overwritten. Skins that are looked up (a player
@@ -120,6 +123,10 @@ public final class FancyNpcsImport {
         String displayName = node.node("displayName").getString(EMPTY_NAME);
         data.nameTag().frames(List.of(displayName.equalsIgnoreCase(EMPTY_NAME) ? List.of() : List.of(displayName)));
         data.glowing(node.node("glowing").getBoolean(false));
+        readGlowColor(node.node("glowingColor"), data, name, notes);
+        data.showInTab(data.isPlayer() && node.node("showInTab").getBoolean(false));
+        data.scale(node.node("scale").getDouble(1));
+        readAttributes(node.node("attributes"), data, name, notes);
         data.turnToPlayer(node.node("turnToPlayer").getBoolean(false));
         double turnDistance = node.node("turnToPlayerDistance").getDouble(0);
         if (turnDistance > 0) {
@@ -129,10 +136,6 @@ public final class FancyNpcsImport {
         readEquipment(node.node("equipment"), data, name, notes);
         data.clickCooldownMillis(Math.round(node.node("interactionCooldown").getDouble(0) * MILLIS_PER_SECOND));
         readActions(node.node("actions"), data, name, npcs, notes);
-        if (!node.node("scale").virtual() && node.node("scale").getDouble(1) != 1) {
-            notes.add(name + ": its scale of " + node.node("scale").getDouble(1) + " was not kept; NPCs here"
-                    + " are always their normal size");
-        }
         npcs.changed(data);
         readSkin(node.node("skin"), data, name, npcs, notes);
         return data;
@@ -169,7 +172,12 @@ public final class FancyNpcsImport {
             return;
         }
         try {
-            npcs.setSkin(data, NpcSkin.parse(identifier));
+            NpcSkin parsed = NpcSkin.parse(identifier);
+            if (parsed.kind() == NpcSkin.Kind.IMAGE && !npcs.canUploadSkins()) {
+                notes.add(name + ": its skin '" + identifier + "' was not kept: " + NpcSkins.NO_KEY_EXPLANATION);
+                return;
+            }
+            npcs.setSkin(data, parsed);
         } catch (NpcSkin.SkinException e) {
             notes.add(name + ": its skin '" + identifier + "' was not kept: " + e.getMessage());
         }
@@ -184,7 +192,10 @@ public final class FancyNpcsImport {
             String slotName = String.valueOf(entry.getKey()).toUpperCase(Locale.ROOT);
             EquipmentSlot slot = SLOTS.get(slotName);
             ConfigurationNode item = entry.getValue();
-            String itemName = item.node("id").getString(item.node("type").getString(item.getString("")));
+            // raw() only: asking a whole item section for a text default replaces the section with it.
+            boolean hasDetails = !item.node("meta").virtual() || !item.node("components").virtual();
+            Object written = item.isMap() ? firstNonNull(item.node("id").raw(), item.node("type").raw()) : item.raw();
+            String itemName = written == null ? "" : String.valueOf(written);
             String key = itemName.strip().toLowerCase(Locale.ROOT);
             Material material = key.isEmpty() ? null : Material.fromKey(key.contains(":") ? key : "minecraft:" + key);
             if (slot == null || material == null) {
@@ -192,6 +203,48 @@ public final class FancyNpcsImport {
                 continue;
             }
             data.equipment(slot, material);
+            if (hasDetails) {
+                notes.add(name + ": the equipment " + slotName + " is kept as a plain " + material.key().value()
+                        + "; its enchantments, colour, name or head texture were not");
+            }
+        }
+    }
+
+    private static @Nullable Object firstNonNull(@Nullable Object first, @Nullable Object second) {
+        return first != null ? first : second;
+    }
+
+    /** FancyNpcs writes the colour's Adventure name, for example {@code dark_purple}. */
+    private static void readGlowColor(ConfigurationNode node, NpcData data, String name, List<String> notes) {
+        String written = node.getString("white");
+        TeamColor color = NpcCodec.glowColor(written);
+        if (color == null) {
+            notes.add(name + ": its glowing colour '" + written + "' is not one of Minecraft's 16; it glows white");
+            return;
+        }
+        data.glowColor(color);
+    }
+
+    /**
+     * {@code attributes.<name>}: the pose is kept; the other attributes FancyNpcs has (on_fire, invisible,
+     * the per-mob variants...) are reported by name.
+     */
+    private static void readAttributes(ConfigurationNode attributes, NpcData data, String name, List<String> notes) {
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : attributes.childrenMap().entrySet()) {
+            String attribute = String.valueOf(entry.getKey());
+            String value = entry.getValue().getString("");
+            if (value.isBlank()) {
+                continue;
+            }
+            if (attribute.equalsIgnoreCase("pose")) {
+                NpcPose pose = NpcPose.fromName(value);
+                if (pose == null || !data.pose(pose)) {
+                    notes.add(name + ": its pose '" + value + "' was not kept");
+                }
+                continue;
+            }
+            notes.add(name + ": its attribute " + attribute + "=" + value + " was not kept; this lobby has no"
+                    + " such NPC setting");
         }
     }
 

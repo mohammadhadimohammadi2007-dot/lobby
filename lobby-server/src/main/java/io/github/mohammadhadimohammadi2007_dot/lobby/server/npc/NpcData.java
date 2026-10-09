@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.npc;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramData;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramType;
+import net.minestom.server.color.TeamColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
@@ -32,6 +33,9 @@ public final class NpcData {
     public static final double DEFAULT_VIEW_DISTANCE = 48;
     public static final double DEFAULT_TURN_DISTANCE = 5;
     public static final double MAX_TURN_DISTANCE = 32;
+    /** The range of Minecraft's {@code scale} attribute. */
+    public static final double MIN_SCALE = 0.0625;
+    public static final double MAX_SCALE = 16;
     /** Space between the top of the NPC and the bottom of its name. */
     static final double NAME_GAP = 0.15;
     /** A profile name may be at most 16 characters. */
@@ -48,6 +52,10 @@ public final class NpcData {
     private volatile boolean turnToPlayer;
     private volatile double turnDistance = DEFAULT_TURN_DISTANCE;
     private volatile boolean glowing;
+    private volatile TeamColor glowColor = TeamColor.WHITE;
+    private volatile double scale = 1;
+    private volatile NpcPose pose = NpcPose.STANDING;
+    private volatile boolean showInTab;
     private volatile Map<EquipmentSlot, Material> equipment = Map.of();
     private volatile double viewDistance = DEFAULT_VIEW_DISTANCE;
     private volatile String permission = "";
@@ -60,7 +68,8 @@ public final class NpcData {
         this.profileId = UUID.nameUUIDFromBytes(("lobby-npc:" + name).getBytes(StandardCharsets.UTF_8));
         this.profileName = profileNameOf(profileId);
         this.position = position;
-        this.nameTag = new HologramData(name, HologramType.TEXT, nameTagPosition(position, type), nameLines);
+        this.nameTag = new HologramData(name, HologramType.TEXT, position, nameLines);
+        placeNameTag();
     }
 
     /**
@@ -95,17 +104,20 @@ public final class NpcData {
     /** Moves the NPC; its name tag moves with it. */
     public void position(Pos value) {
         position = value;
-        nameTag.position(nameTagPosition(value, type));
+        placeNameTag();
     }
 
     public EntityType type() {
         return type;
     }
 
-    /** Changes what the NPC is; the name tag moves to the new height. */
+    /** Changes what the NPC is; the name tag moves to the new height. Only players have poses. */
     public void type(EntityType value) {
         type = value;
-        nameTag.position(nameTagPosition(position, value));
+        if (value != EntityType.PLAYER) {
+            pose = NpcPose.STANDING;
+        }
+        placeNameTag();
     }
 
     /** True for an NPC that looks like a player, with a skin. */
@@ -155,6 +167,62 @@ public final class NpcData {
 
     public void glowing(boolean value) {
         glowing = value;
+    }
+
+    /** The colour of the glowing outline, set through the NPC's team. */
+    public TeamColor glowColor() {
+        return glowColor;
+    }
+
+    public void glowColor(TeamColor value) {
+        glowColor = value;
+    }
+
+    /** How big the NPC is, 1 for normal. Clients before 1.20.5 always see it at normal size. */
+    public double scale() {
+        return scale;
+    }
+
+    /** Resizes the NPC; the name tag moves to the new height. */
+    public void scale(double value) {
+        scale = Math.clamp(value, MIN_SCALE, MAX_SCALE);
+        placeNameTag();
+    }
+
+    /** How a player NPC stands; always {@link NpcPose#STANDING} for other entities. */
+    public NpcPose pose() {
+        return pose;
+    }
+
+    /**
+     * Changes the pose; the name tag moves to the new height.
+     *
+     * @return false (and nothing changes) for an NPC that is not a player
+     */
+    public boolean pose(NpcPose value) {
+        if (!isPlayer() && value != NpcPose.STANDING) {
+            return false;
+        }
+        pose = value;
+        placeNameTag();
+        return true;
+    }
+
+    /** True if a player NPC is listed in every viewer's tab list, like a real player. Off by default. */
+    public boolean showInTab() {
+        return showInTab;
+    }
+
+    public void showInTab(boolean value) {
+        showInTab = value;
+    }
+
+    /**
+     * The name this NPC is in its team by: the profile name for a player, the UUID for any other
+     * entity, as that is how Minecraft matches team members.
+     */
+    public String teamEntry() {
+        return isPlayer() ? profileName : profileId.toString();
     }
 
     /** What the NPC holds and wears. */
@@ -249,11 +317,16 @@ public final class NpcData {
     public NpcData copy(String newName) {
         NpcData copy = new NpcData(newName, position, nameTag.lines());
         copy.type(type);
+        copy.scale(scale);
+        copy.pose(pose);
         copy.skin = skin;
         copy.resolvedSkin = resolvedSkin;
         copy.turnToPlayer = turnToPlayer;
         copy.turnDistance = turnDistance;
         copy.glowing = glowing;
+        copy.glowColor = glowColor;
+        copy.scale = scale;
+        copy.showInTab = showInTab;
         copy.equipment = equipment;
         copy.viewDistance = viewDistance;
         copy.permission = permission;
@@ -286,8 +359,18 @@ public final class NpcData {
         to.reshapeMatters(from.reshapeMatters());
     }
 
-    /** Where the name goes: just above the top of the entity. */
-    static Pos nameTagPosition(Pos npc, EntityType type) {
-        return new Pos(npc.x(), npc.y() + type.height() + NAME_GAP, npc.z());
+    /**
+     * How tall the NPC looks, from its position up: its type's height in its pose, times its scale for
+     * clients that draw the scale.
+     */
+    public double height(boolean scaled) {
+        double height = isPlayer() ? pose.playerHeight() : type.height();
+        return scaled ? height * scale : height;
+    }
+
+    /** Puts the name just above the top of the NPC as clients that draw its scale see it. */
+    private void placeNameTag() {
+        Pos npc = position;
+        nameTag.position(new Pos(npc.x(), npc.y() + height(true) + NAME_GAP, npc.z()));
     }
 }

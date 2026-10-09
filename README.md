@@ -30,7 +30,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
 | Holograms | Floating text, items and blocks with full `/hologram` commands, placeholders, animations, click actions, armor-stand fallback for 1.8 clients, and an importer for FancyHolograms ([guide](docs/holograms.md)) |
-| NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin, mirror), a multi-line name hologram, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
+| NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin including image uploads with an API key, mirror) that load on 1.8 too, a multi-line name hologram, scale, poses and sitting, coloured glow, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
@@ -95,6 +95,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [Holograms](docs/holograms.md)
 - [NPCs](docs/npcs.md)
 - [Supported client versions](docs/client-versions.md)
+- [Manual test checklist](docs/manual-test-checklist.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)
 - Integrations: [Database](docs/integrations/database.md) ·

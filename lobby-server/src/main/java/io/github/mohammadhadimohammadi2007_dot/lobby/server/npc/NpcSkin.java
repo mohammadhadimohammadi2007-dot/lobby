@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
  *   <li>{@code sr:<name>}: a custom skin saved in SkinsRestorer</li>
  *   <li>{@code mineskin:<uuid>} or a {@code https://mineskin.org/...} link: a skin already uploaded to
  *       MineSkin (reading one needs no API key)</li>
+ *   <li>any other {@code https://} link: a skin image, uploaded to MineSkin once (this needs a MineSkin
+ *       API key in integrations.yml) and from then on stored as {@code mineskin:<uuid>}</li>
  *   <li>{@code @texture}: a texture value and signature written in the data file</li>
  * </ul>
  *
@@ -32,6 +34,8 @@ public record NpcSkin(Kind kind, String source) {
         PLAYER,
         SKINSRESTORER,
         MINESKIN,
+        /** A link to a skin image, which MineSkin turns into a skin. */
+        IMAGE,
         TEXTURE
     }
 
@@ -57,8 +61,7 @@ public record NpcSkin(Kind kind, String source) {
     /**
      * Reads what an admin typed.
      *
-     * @throws SkinException if it is none of the accepted forms, for example a link to an image, which
-     *                       would need MineSkin to upload it first and that needs an API key
+     * @throws SkinException if it is none of the accepted forms
      */
     public static NpcSkin parse(String text) throws SkinException {
         String value = text.strip();
@@ -89,9 +92,7 @@ public record NpcSkin(Kind kind, String source) {
             return new NpcSkin(Kind.MINESKIN, mineskin);
         }
         if (lower.startsWith("http://") || lower.startsWith("https://")) {
-            throw new SkinException("a link to an image needs uploading to MineSkin first, which needs a"
-                    + " MineSkin API key this lobby does not have. Upload it on mineskin.org and use that"
-                    + " skin's link instead");
+            return new NpcSkin(Kind.IMAGE, value);
         }
         if (PLAYER_NAME.matcher(value).matches()) {
             return new NpcSkin(Kind.PLAYER, value);
@@ -126,11 +127,12 @@ public record NpcSkin(Kind kind, String source) {
             case PLAYER -> source;
             case SKINSRESTORER -> SKINSRESTORER_PREFIX + source;
             case MINESKIN -> MINESKIN_PREFIX + source;
+            case IMAGE -> source;
         };
     }
 
     /** True if the skin is looked up somewhere, so it can be fetched again. */
     public boolean fetched() {
-        return kind == Kind.PLAYER || kind == Kind.SKINSRESTORER || kind == Kind.MINESKIN;
+        return kind == Kind.PLAYER || kind == Kind.SKINSRESTORER || kind == Kind.MINESKIN || kind == Kind.IMAGE;
     }
 }

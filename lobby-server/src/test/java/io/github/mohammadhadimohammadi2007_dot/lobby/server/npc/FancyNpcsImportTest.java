@@ -12,6 +12,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placehol
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
+import net.minestom.server.color.TeamColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
@@ -87,15 +88,18 @@ class FancyNpcsImportTest {
                       z: -3.5
                       yaw: 180.0
                       pitch: 0.0
-                    showInTab: false
+                    showInTab: true
                     spawnEntity: true
                     collidable: true
                     glowing: true
-                    glowingColor: gold
+                    glowingColor: dark_purple
                     turnToPlayer: true
                     turnToPlayerDistance: 7
                     interactionCooldown: 1.5
-                    scale: 1.0
+                    scale: 1.5
+                    attributes:
+                      pose: crouching
+                      on_fire: 'true'
                     visibility_distance: 30
                     skin:
                       value: dGV4dHVyZQ==
@@ -111,6 +115,26 @@ class FancyNpcsImportTest {
                         DataVersion: 4189
                         id: minecraft:golden_helmet
                         count: 1
+                      OFFHAND:
+                        ==: org.bukkit.inventory.ItemStack
+                        v: 3700
+                        type: SHIELD
+                      CHEST:
+                        ==: org.bukkit.inventory.ItemStack
+                        v: 3700
+                        type: LEATHER_CHESTPLATE
+                        meta:
+                          ==: ItemMeta
+                          meta-type: COLORABLE_ARMOR
+                          color: {==: Color, RED: 255, BLUE: 0, GREEN: 0}
+                      LEGS:
+                        ==: org.bukkit.inventory.ItemStack
+                        v: 3700
+                        type: IRON_LEGGINGS
+                      FEET:
+                        ==: org.bukkit.inventory.ItemStack
+                        v: 3700
+                        type: DIAMOND_BOOTS
                     actions:
                       ANY_CLICK:
                         1:
@@ -151,8 +175,18 @@ class FancyNpcsImportTest {
         // FancyNpcs keeps the cooldown in seconds.
         assertEquals(1500, bedwars.clickCooldownMillis());
         assertEquals(new PlayerSkin("dGV4dHVyZQ==", "c2lnbmF0dXJl"), bedwars.resolvedSkin());
-        assertEquals(Map.of(EquipmentSlot.MAIN_HAND, Material.RED_BED, EquipmentSlot.HELMET, Material.GOLDEN_HELMET),
-                bedwars.equipment(), "both ways Bukkit writes an item");
+        assertEquals(Map.of(EquipmentSlot.MAIN_HAND, Material.RED_BED, EquipmentSlot.HELMET, Material.GOLDEN_HELMET,
+                EquipmentSlot.OFF_HAND, Material.SHIELD, EquipmentSlot.CHESTPLATE, Material.LEATHER_CHESTPLATE,
+                EquipmentSlot.LEGGINGS, Material.IRON_LEGGINGS, EquipmentSlot.BOOTS, Material.DIAMOND_BOOTS),
+                bedwars.equipment(), "all six of FancyNpcs' slots, both ways Bukkit writes an item");
+        assertTrue(result.skipped().stream().anyMatch(note -> note.contains("CHEST") && note.contains("colour")),
+                "the dye of the chestplate is reported as lost: " + result.skipped());
+        assertEquals(TeamColor.DARK_PURPLE, bedwars.glowColor());
+        assertEquals(1.5, bedwars.scale());
+        assertTrue(bedwars.showInTab());
+        assertEquals(NpcPose.CROUCHING, bedwars.pose());
+        assertTrue(result.skipped().stream().anyMatch(note -> note.contains("on_fire")),
+                "an attribute this lobby has no setting for is reported: " + result.skipped());
         assertEquals(List.of("message: <green>Good luck!", "connect: bedwars-1"),
                 bedwars.actions(NpcTrigger.ANY_CLICK).entries());
         // wait is in seconds there, and the operator command is refused.

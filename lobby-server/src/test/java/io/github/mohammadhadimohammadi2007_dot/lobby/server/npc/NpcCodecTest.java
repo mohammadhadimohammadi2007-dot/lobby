@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.npc;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.data.YamlDataStore;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Billboard;
+import net.minestom.server.color.TeamColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
@@ -39,8 +40,15 @@ class NpcCodecTest {
         data.turnToPlayer(true);
         data.turnDistance(8);
         data.glowing(true);
+        data.glowColor(TeamColor.GOLD);
+        data.scale(1.5);
+        data.pose(NpcPose.SITTING);
+        data.showInTab(true);
+        for (EquipmentSlot slot : List.of(EquipmentSlot.MAIN_HAND, EquipmentSlot.OFF_HAND, EquipmentSlot.HELMET,
+                EquipmentSlot.CHESTPLATE, EquipmentSlot.LEGGINGS, EquipmentSlot.BOOTS)) {
+            data.equipment(slot, Material.GOLDEN_HELMET);
+        }
         data.equipment(EquipmentSlot.MAIN_HAND, Material.RED_BED);
-        data.equipment(EquipmentSlot.HELMET, Material.GOLDEN_HELMET);
         data.viewDistance(32);
         data.permission("lobby.bedwars");
         data.nameTag().scale(1.25);
@@ -77,8 +85,12 @@ class NpcCodecTest {
         assertTrue(loaded.turnToPlayer());
         assertEquals(8, loaded.turnDistance());
         assertTrue(loaded.glowing());
-        assertEquals(Map.of(EquipmentSlot.MAIN_HAND, Material.RED_BED, EquipmentSlot.HELMET, Material.GOLDEN_HELMET),
-                loaded.equipment());
+        assertEquals(TeamColor.GOLD, loaded.glowColor());
+        assertEquals(1.5, loaded.scale());
+        assertEquals(NpcPose.SITTING, loaded.pose());
+        assertTrue(loaded.showInTab());
+        assertEquals(data.equipment(), loaded.equipment(), "every slot FancyNpcs has, and the rest");
+        assertEquals(6, loaded.equipment().size());
         assertEquals(32, loaded.viewDistance());
         assertEquals("lobby.bedwars", loaded.permission());
         assertEquals(750, loaded.clickCooldownMillis());
@@ -88,8 +100,8 @@ class NpcCodecTest {
                 .keySet().iterator().next());
         assertEquals(List.of("open_menu: bedwars"), loaded.actions(NpcTrigger.RIGHT_CLICK).entries());
         assertEquals(List.of(), loaded.actions(NpcTrigger.LEFT_CLICK).entries());
-        // The name tag sits just above the head and follows the NPC.
-        assertEquals(65 + EntityType.PLAYER.height() + NpcData.NAME_GAP, loaded.nameTag().position().y(), 1e-9);
+        // The name tag sits just above the head of the sitting, 1.5 times bigger NPC.
+        assertEquals(65 + (1.8 - NpcPose.SEAT_DROP) * 1.5 + NpcData.NAME_GAP, loaded.nameTag().position().y(), 1e-9);
     }
 
     @Test

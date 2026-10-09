@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * @param skinsRestorer SkinsRestorer settings
  * @param bridge        proxy bridge settings
  * @param signedVelocity SignedVelocity sync settings
+ * @param mineSkin      MineSkin settings
  */
 public record IntegrationsConfig(
         Database database,
@@ -19,7 +20,8 @@ public record IntegrationsConfig(
         LiteBans liteBans,
         SkinsRestorer skinsRestorer,
         Bridge bridge,
-        SignedVelocity signedVelocity
+        SignedVelocity signedVelocity,
+        MineSkin mineSkin
 ) {
 
     private static final int MAX_PORT = 65535;
@@ -57,6 +59,20 @@ public record IntegrationsConfig(
     public record SignedVelocity(boolean enabled) {
     }
 
+    /** {@code mineskin:} section; an empty key means only skins already on MineSkin can be used. */
+    public record MineSkin(String apiKey) {
+
+        public boolean hasKey() {
+            return !apiKey.isBlank();
+        }
+
+        /** Hides the key, so this record can be logged safely. */
+        @Override
+        public String toString() {
+            return "MineSkin[" + (hasKey() ? "key set" : "no key") + "]";
+        }
+    }
+
     /** True if any enabled integration needs the shared database pool. */
     public boolean needsDatabase() {
         return luckPerms.enabled || liteBans.enabled || skinsRestorer.enabled;
@@ -90,7 +106,8 @@ public record IntegrationsConfig(
                 prefix(reader, "skinsrestorer.table-prefix"));
         Bridge bridge = new Bridge(reader.bool("bridge.enabled"));
         SignedVelocity signedVelocity = new SignedVelocity(reader.bool("signedvelocity.enabled"));
-        return new IntegrationsConfig(database, luckPerms, liteBans, skinsRestorer, bridge, signedVelocity);
+        MineSkin mineSkin = new MineSkin(reader.string("mineskin.api-key", "").strip());
+        return new IntegrationsConfig(database, luckPerms, liteBans, skinsRestorer, bridge, signedVelocity, mineSkin);
     }
 
     private static String prefix(ConfigReader reader, String path) throws ConfigException {

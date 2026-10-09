@@ -78,6 +78,15 @@ lobbies:
   #   fill-first    - the first one that still has room, so lobby 1 fills up before lobby 2 is used
   join: least-players
 
+# ---------------- NPCs ----------------
+npcs:
+  # A client only draws a player NPC's skin if the NPC is in its player list (the tab list).
+  # Clients 1.19.3 and newer can have entries that never show in the tab list. Older clients cannot:
+  # 1.8.9 through ViaRewind often shows Steve if the entry is not listed while the NPC appears, so for
+  # those clients the NPC is listed and removed from their tab list again after this many
+  # milliseconds (0-30000). Raise it if 1.8 players still see Steve; 0 removes it right away.
+  legacy-tab-removal-delay: 3000
+
 # Where players appear when they join or use /spawn. Set it in game with /lobby setspawn.
 spawn:
   x: 0.5

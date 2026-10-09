@@ -28,8 +28,9 @@ import java.util.stream.Collectors;
 
 /**
  * {@code /npc}, with the subcommand names of FancyNpcs (create, remove, copy, list, nearby, info,
- * teleport, move_here, move_to, type, skin, displayname, equipment, glowing, turn_to_player,
- * turn_to_player_distance, visibility_distance, interaction_cooldown, action), plus {@code name} for the
+ * teleport, move_here, move_to, type, skin, displayname, equipment, glowing, scale, show_in_tab,
+ * attribute, turn_to_player, turn_to_player_distance, visibility_distance, interaction_cooldown, action),
+ * {@code pose}, plus {@code name} for the
  * multi-line name tag, {@code permission} and {@code import}. See docs/npcs.md.
  */
 public final class NpcCommand extends Command {
@@ -67,7 +68,6 @@ public final class NpcCommand extends Command {
         addSubcommand(moveTo(npc));
         addSubcommand(type(npc));
         addSubcommand(skin(npc));
-        addSubcommand(toggle("glowing", npc, NpcData::glowing, NpcData::glowing));
         addSubcommand(toggle("turn_to_player", npc, NpcData::turnToPlayer, NpcData::turnToPlayer));
         addSubcommand(distance("turn_to_player_distance", npc, NpcData::turnDistance));
         addSubcommand(distance("visibility_distance", npc, NpcData::viewDistance));
@@ -75,6 +75,7 @@ public final class NpcCommand extends Command {
         addSubcommand(permission(npc));
         addSubcommand(equipment(npc));
         new NpcNameCommands(support).addTo(this, npc);
+        new NpcLookCommands(support).addTo(this, npc);
         new NpcActionCommands(support).addTo(this, npc);
         addSubcommand(importCommand());
     }
@@ -180,7 +181,10 @@ public final class NpcCommand extends Command {
                 Messages.text("z", round(position.z())),
                 Messages.text("skin", npc.isPlayer() ? npc.skin().describe() : "-"),
                 Messages.text("turn", npc.turnToPlayer() ? "yes, within " + (int) npc.turnDistance() + " blocks" : "no"),
-                Messages.text("glowing", npc.glowing() ? "yes" : "no"),
+                Messages.text("glowing", npc.glowing() ? NpcCodec.colorName(npc.glowColor()) : "no"),
+                Messages.text("scale", npc.scale()),
+                Messages.text("pose", npc.pose().configName()),
+                Messages.text("tab", npc.showInTab() ? "yes" : "no"),
                 Messages.text("lines", npc.nameTag().lines().size()),
                 Messages.text("view-distance", (int) npc.viewDistance()),
                 Messages.text("permission", npc.permission().isEmpty() ? "everyone" : npc.permission()),
@@ -286,6 +290,11 @@ public final class NpcCommand extends Command {
             support.invalid(sender, "skin", e.getMessage(), "a player name, @mirror, @none, sr:<name> or a MineSkin link");
             return;
         }
+        if (skin.kind() == NpcSkin.Kind.IMAGE && !support.npcs.canUploadSkins()) {
+            support.invalid(sender, "skin", NpcSkins.NO_KEY_EXPLANATION, "a player name, @mirror, @none,"
+                    + " sr:<name> or a MineSkin link");
+            return;
+        }
         if (skin.fetched()) {
             sender.sendMessage(support.text.message(MessageKey.NPC_SKIN_LOOKING_UP, sender,
                     Messages.text("name", npc.name()), Messages.text("skin", skin.describe())));
@@ -298,7 +307,7 @@ public final class NpcCommand extends Command {
                 return;
             }
             sender.sendMessage(support.text.message(MessageKey.NPC_SKIN_SET, sender,
-                    Messages.text("name", npc.name()), Messages.text("skin", skin.describe())));
+                    Messages.text("name", npc.name()), Messages.text("skin", npc.skin().describe())));
         }));
     }
 

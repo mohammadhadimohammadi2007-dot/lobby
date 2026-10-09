@@ -85,7 +85,7 @@ npc-invalid-name: "<prefix><red>'<name>' cannot be an NPC name. Use letters, dig
 # <count> = how many, <names> = their names
 npc-list: "<prefix><gray>NPCs (<white><count></white>): <names>"
 npc-list-empty: "<prefix><gray>No NPCs here. Create one with /npc create <name>."
-npc-info: "<prefix><gray>NPC <white><name></white> (<type>) at <x>, <y>, <z><newline><gray>Skin: <white><skin></white>, turns to players: <white><turn></white>, glowing: <white><glowing></white><newline><gray>Name: <white><lines></white> line(s), shown within <white><view-distance></white> blocks, visible to <white><permission></white><newline><gray>Click: <white><actions>"
+npc-info: "<prefix><gray>NPC <white><name></white> (<type>) at <x>, <y>, <z><newline><gray>Skin: <white><skin></white>, turns to players: <white><turn></white>, glowing: <white><glowing></white><newline><gray>Scale: <white><scale></white>, pose: <white><pose></white>, in the tab list: <white><tab></white><newline><gray>Name: <white><lines></white> line(s), shown within <white><view-distance></white> blocks, visible to <white><permission></white><newline><gray>Click: <white><actions>"
 npc-moved: "<prefix><green>Moved <white><name></white>."
 npc-copied: "<prefix><green>Copied <white><name></white> to <white><new-name></white>."
 # <property> = what was changed, <value> = its new value

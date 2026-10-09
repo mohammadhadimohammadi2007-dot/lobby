@@ -224,7 +224,10 @@ public final class FancyHologramsImport {
      * {@code type: DIAMOND_SWORD}, newer ones with {@code id: minecraft:diamond_sword}.
      */
     private static Material item(ConfigurationNode node) {
-        String name = node.node("id").getString(node.node("type").getString(node.getString("stone")));
+        // raw() only: asking a whole item section for a text default replaces the section with it.
+        Object written = node.isMap() ? (node.node("id").raw() != null ? node.node("id").raw() : node.node("type").raw())
+                : node.raw();
+        String name = written == null ? "stone" : String.valueOf(written);
         Material material = Material.fromKey(key(name));
         return material == null ? Material.STONE : material;
     }

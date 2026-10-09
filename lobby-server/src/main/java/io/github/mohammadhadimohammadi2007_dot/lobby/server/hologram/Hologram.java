@@ -29,9 +29,16 @@ public final class Hologram implements ClientObject {
      * @param legacyClient true for a viewer whose client is older than 1.19.4 and has no display
      *                     entities (normally {@code bridge.capabilities(player).legacy()})
      * @param scope        which worlds the holograms belong to
+     * @param scaleSupported true for a viewer whose client draws the {@code scale} attribute (1.20.5+)
      */
     public record Services(LobbyText text, PermissionService permissions, Predicate<Player> legacyClient,
-                           WorldScope scope) {
+                           WorldScope scope, Predicate<Player> scaleSupported) {
+
+        /** Services that treat every client with display entities as drawing the scale too. */
+        public Services(LobbyText text, PermissionService permissions, Predicate<Player> legacyClient,
+                        WorldScope scope) {
+            this(text, permissions, legacyClient, scope, legacyClient.negate());
+        }
     }
 
     private final HologramData data;

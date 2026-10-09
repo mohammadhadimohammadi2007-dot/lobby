@@ -34,7 +34,9 @@ import java.util.function.ToIntFunction;
  * features that made their own teams would silently break each other.
  *
  * <p>Team names keep features apart: {@code <order>p<id>} for players (sorted by order in tab),
- * {@code zzhidden} for NPCs whose names must not show, {@code s<id>} for per-viewer sidebar lines.
+ * {@code zzhidden} for NPCs whose names must not show (and {@code zzh<colour>} for those that glow in a
+ * colour other than white, since the team colour is the glow colour), {@code s<id>} for per-viewer
+ * sidebar lines.
  * Clients older than 1.13 only allow 16 characters in a prefix or suffix, so they get shortened copies.
  */
 public final class TeamManager {
@@ -44,6 +46,8 @@ public final class TeamManager {
     /** Highest tab order; lower orders are listed first. */
     public static final int MAX_ORDER = 99;
     private static final String HIDDEN_TEAM = "zzhidden";
+    /** Hidden-name teams of other glow colours: {@code zzh} and the colour, at most 15 characters. */
+    private static final String HIDDEN_COLOR_PREFIX = "zzh";
     private static final String PRIVATE_PREFIX = "s";
     private static final int MAX_PRIVATE_ID = 15;
     private static final byte NO_FRIENDLY_FLAGS = 0;
@@ -69,6 +73,8 @@ public final class TeamManager {
     private final Map<String, Team> teams = new LinkedHashMap<>();
     private final Map<UUID, String> playerTeams = new HashMap<>();
     private final Map<UUID, String> playerIds = new HashMap<>();
+    /** Which hidden-name team each hidden entry is in. */
+    private final Map<String, String> hiddenTeamOf = new HashMap<>();
     private int nextId;
 
     /**
@@ -132,21 +138,57 @@ public final class TeamManager {
 
     /**
      * Hides the name above an entity: a player NPC's profile name, or another entity's UUID as text.
-     * Hidden entities also never collide.
+     * Hidden entities also never collide, and glow white.
      */
-    public synchronized void hideName(String entry) {
-        Team hidden = teams.get(HIDDEN_TEAM);
-        if (hidden.members().add(entry)) {
-            broadcast(legacy -> new TeamsPacket(HIDDEN_TEAM, new TeamsPacket.AddEntitiesToTeamAction(List.of(entry))));
+    public void hideName(String entry) {
+        hideName(entry, TeamColor.WHITE);
+    }
+
+    /**
+     * Hides the name above an entity and makes it glow in {@code glow} when it glows at all. An entry
+     * moving to another colour leaves its old team first, so it is never in two.
+     */
+    public synchronized void hideName(String entry, TeamColor glow) {
+        String wanted = glow == TeamColor.WHITE ? HIDDEN_TEAM
+                : HIDDEN_COLOR_PREFIX + glow.name().toLowerCase(java.util.Locale.ROOT);
+        String current = hiddenTeamOf.get(entry);
+        if (wanted.equals(current)) {
+            return;
         }
+        if (current != null) {
+            leaveHidden(entry, current);
+        }
+        hiddenTeamOf.put(entry, wanted);
+        Team team = teams.get(wanted);
+        if (team == null) {
+            Set<String> members = new LinkedHashSet<>();
+            members.add(entry);
+            Team created = new Team(wanted, Component.empty(), Component.empty(), glow, NameTagVisibility.NEVER,
+                    CollisionRule.NEVER, members);
+            teams.put(wanted, created);
+            broadcast(created::create);
+            return;
+        }
+        team.members().add(entry);
+        broadcast(legacy -> new TeamsPacket(wanted, new TeamsPacket.AddEntitiesToTeamAction(List.of(entry))));
     }
 
     /** Shows the name above an entity again. */
     public synchronized void showName(String entry) {
-        Team hidden = teams.get(HIDDEN_TEAM);
-        if (hidden.members().remove(entry)) {
-            broadcast(legacy -> new TeamsPacket(HIDDEN_TEAM, new TeamsPacket.RemoveEntitiesToTeamAction(List.of(entry))));
+        String current = hiddenTeamOf.remove(entry);
+        if (current != null) {
+            leaveHidden(entry, current);
         }
+    }
+
+    /** The hidden-name team an entry is in, or {@code null}; for tests. */
+    public synchronized String hiddenTeamOf(String entry) {
+        return hiddenTeamOf.get(entry);
+    }
+
+    private void leaveHidden(String entry, String team) {
+        teams.get(team).members().remove(entry);
+        broadcast(legacy -> new TeamsPacket(team, new TeamsPacket.RemoveEntitiesToTeamAction(List.of(entry))));
     }
 
     /**
