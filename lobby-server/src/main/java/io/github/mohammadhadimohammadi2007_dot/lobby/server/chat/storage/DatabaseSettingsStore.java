@@ -39,8 +39,11 @@ public final class DatabaseSettingsStore implements SettingsStore {
                         + "persian BOOLEAN NULL,"
                         + "channel VARCHAR(32) NULL,"
                         + "ignored TEXT NOT NULL,"
-                        + "updated BIGINT NOT NULL"
+                        + "updated BIGINT NOT NULL,"
+                        + "visibility VARCHAR(8) NULL"
                         + ") DEFAULT CHARSET=utf8mb4");
+                // Tables made before the visibility setting existed get the column now.
+                statement.execute("ALTER TABLE " + store.table + " ADD COLUMN IF NOT EXISTS visibility VARCHAR(8) NULL");
             }
             return null;
         });
@@ -51,7 +54,7 @@ public final class DatabaseSettingsStore implements SettingsStore {
     public Optional<PlayerChatSettings> load(UUID player) throws SQLException {
         return database.queryNow(connection -> {
             try (PreparedStatement statement = connection.prepareStatement(
-                    "SELECT chat_visible, mentions, persian, channel, ignored FROM " + table + " WHERE uuid = ?")) {
+                    "SELECT chat_visible, mentions, persian, channel, ignored, visibility FROM " + table + " WHERE uuid = ?")) {
                 statement.setString(1, player.toString());
                 try (ResultSet row = statement.executeQuery()) {
                     if (!row.next()) {
@@ -60,7 +63,8 @@ public final class DatabaseSettingsStore implements SettingsStore {
                     boolean persian = row.getBoolean("persian");
                     Boolean persianChoice = row.wasNull() ? null : persian;
                     return Optional.of(new PlayerChatSettings(row.getBoolean("chat_visible"), row.getBoolean("mentions"),
-                            persianChoice, row.getString("channel"), parseIgnored(row.getString("ignored"))));
+                            persianChoice, row.getString("channel"), parseIgnored(row.getString("ignored")),
+                            row.getString("visibility")));
                 }
             }
         });
@@ -70,9 +74,11 @@ public final class DatabaseSettingsStore implements SettingsStore {
     public void save(UUID player, PlayerChatSettings settings) throws SQLException {
         database.queryNow(connection -> {
             try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + table
-                    + " (uuid, chat_visible, mentions, persian, channel, ignored, updated) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    + " (uuid, chat_visible, mentions, persian, channel, ignored, updated, visibility)"
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                     + " ON DUPLICATE KEY UPDATE chat_visible = VALUES(chat_visible), mentions = VALUES(mentions),"
-                    + " persian = VALUES(persian), channel = VALUES(channel), ignored = VALUES(ignored), updated = VALUES(updated)")) {
+                    + " persian = VALUES(persian), channel = VALUES(channel), ignored = VALUES(ignored),"
+                    + " updated = VALUES(updated), visibility = VALUES(visibility)")) {
                 statement.setString(1, player.toString());
                 statement.setBoolean(2, settings.chatVisible());
                 statement.setBoolean(3, settings.mentions());
@@ -84,6 +90,7 @@ public final class DatabaseSettingsStore implements SettingsStore {
                 statement.setString(5, settings.channel());
                 statement.setString(6, String.join(",", settings.ignored().stream().map(UUID::toString).toList()));
                 statement.setLong(7, System.currentTimeMillis());
+                statement.setString(8, settings.visibility());
                 statement.executeUpdate();
             }
             return null;

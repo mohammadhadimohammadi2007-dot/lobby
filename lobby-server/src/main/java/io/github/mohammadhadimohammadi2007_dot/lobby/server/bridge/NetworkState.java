@@ -65,6 +65,42 @@ public final class NetworkState {
         return status == null ? 0 : status.maxPlayers();
     }
 
+    /** How a group of servers is doing, for menus: can players join it at all? */
+    public enum GroupStatus {
+        /** At least one server is up and has room. */
+        ONLINE,
+        /** Every server that is up is full. */
+        FULL,
+        /** No server of the group is up (or the group is unknown). */
+        OFFLINE;
+
+        /** What placeholders show: {@code online}, {@code full} or {@code offline}. */
+        public String text() {
+            return name().toLowerCase(java.util.Locale.ROOT);
+        }
+    }
+
+    /** Whether a group has a server players can join. */
+    public GroupStatus groupStatus(String groupName) {
+        boolean anyUp = false;
+        for (String server : group(groupName)) {
+            if (!serverOnline(server)) {
+                continue;
+            }
+            anyUp = true;
+            int max = serverMaxPlayers(server);
+            if (max <= 0 || online(server) < max) {
+                return GroupStatus.ONLINE;
+            }
+        }
+        return anyUp ? GroupStatus.FULL : GroupStatus.OFFLINE;
+    }
+
+    /** The player limits of a group's servers that are up, added together. */
+    public int groupMaxPlayers(String groupName) {
+        return group(groupName).stream().filter(this::serverOnline).mapToInt(this::serverMaxPlayers).sum();
+    }
+
     /** When the last snapshot arrived, or empty if none has arrived yet. */
     public Optional<Long> lastUpdateMillis() {
         long last = lastUpdateMillis;

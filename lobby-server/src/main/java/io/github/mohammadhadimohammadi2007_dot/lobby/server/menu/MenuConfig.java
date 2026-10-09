@@ -119,7 +119,7 @@ public record MenuConfig(Map<String, MenuDefinition> menus) {
     }
 
     /** The material, or {@code null} with a warning if the name is unknown. */
-    private static @Nullable Material material(ConfigReader reader, String option, String name) {
+    public static @Nullable Material material(ConfigReader reader, String option, String name) {
         String key = name.strip().toLowerCase(Locale.ROOT);
         Material material = Material.fromKey(key.contains(":") ? key : "minecraft:" + key);
         if (material == null) {

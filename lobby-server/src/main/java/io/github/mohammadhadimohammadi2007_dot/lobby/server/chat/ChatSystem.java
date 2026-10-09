@@ -108,6 +108,11 @@ public final class ChatSystem {
         return "on, " + service.services().filter().get().entryCount() + " filter entries, " + storageDescription;
     }
 
+    /** Every player's saved settings (chat choices and lobby choices such as player visibility). */
+    public ChatSettingsService settings() {
+        return service().services().settings();
+    }
+
     public ChatService service() {
         return service;
     }

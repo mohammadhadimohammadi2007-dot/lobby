@@ -59,7 +59,7 @@ class ChatStorageIT {
 
         assertEquals(Optional.empty(), store.load(player));
 
-        PlayerChatSettings first = new PlayerChatSettings(false, true, null, "global", ignored);
+        PlayerChatSettings first = new PlayerChatSettings(false, true, null, "global", ignored, "staff");
         store.save(player, first);
         assertEquals(Optional.of(first), store.load(player));
 
@@ -69,6 +69,30 @@ class ChatStorageIT {
 
         // Creating the store again keeps the table and its rows.
         assertEquals(Optional.of(second), DatabaseSettingsStore.create(pool, PREFIX).load(player));
+    }
+
+    @Test
+    void aTableFromBeforeTheVisibilitySettingGetsItsColumn() throws Exception {
+        String prefix = PREFIX + "old_";
+        String table = prefix + "chat_settings";
+        execute("DROP TABLE IF EXISTS " + table);
+        // The table as earlier versions made it, with one saved player.
+        execute("CREATE TABLE " + table + " (uuid CHAR(36) NOT NULL PRIMARY KEY, chat_visible BOOLEAN NOT NULL,"
+                + " mentions BOOLEAN NOT NULL, persian BOOLEAN NULL, channel VARCHAR(32) NULL, ignored TEXT NOT NULL,"
+                + " updated BIGINT NOT NULL) DEFAULT CHARSET=utf8mb4");
+        UUID player = UUID.randomUUID();
+        execute("INSERT INTO " + table + " VALUES ('" + player + "', 0, 1, NULL, NULL, '', 0)");
+        try {
+            DatabaseSettingsStore store = DatabaseSettingsStore.create(pool, prefix);
+
+            PlayerChatSettings loaded = store.load(player).orElseThrow();
+            assertEquals(false, loaded.chatVisible(), "the old row is kept");
+            assertEquals(null, loaded.visibility(), "no choice yet, so the server default applies");
+            store.save(player, loaded.withVisibility("none"));
+            assertEquals("none", store.load(player).orElseThrow().visibility());
+        } finally {
+            execute("DROP TABLE IF EXISTS " + table);
+        }
     }
 
     @Test

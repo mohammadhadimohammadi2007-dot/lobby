@@ -1,0 +1,64 @@
+# =====================================================================
+#  Hotbar - the items players get in their hotbar when they join and whenever they change lobby.
+#  Players can never move, drop or swap them. Changes apply with /lobby reload.
+#  Guide: docs/hotbar.md
+# =====================================================================
+
+enabled: true
+# Empty the whole inventory before the items are given.
+clear-inventory: true
+
+# Every item:
+#   slot:                0 (left) to 8 (right)
+#   material:            item name, e.g. "compass"
+#   amount, name, lore, glow:  as in menus.yml (MiniMessage, %placeholders% work)
+#   permission:          needed to get the item ("" = everyone)
+#   actions:             what right-clicking with it does (the same actions as everywhere else)
+#   click-cooldown:      milliseconds before the same player may use it again
+items:
+  games:
+    slot: 0
+    material: compass
+    name: "<green><bold>Game Selector</bold> <gray>(right-click)"
+    lore:
+      - "<gray>Pick a game to play."
+    actions:
+      - "open_menu: servers"
+  lobbies:
+    slot: 1
+    material: nether_star
+    name: "<yellow><bold>Lobby Selector</bold> <gray>(right-click)"
+    lore:
+      - "<gray>Switch to another lobby."
+    actions:
+      - "open_menu: lobbies"
+  # type: visibility makes the player-visibility switch. Each click goes to the next mode
+  # (all -> staff -> none -> all), and the item shows the current one.
+  visibility:
+    slot: 7
+    type: visibility
+    modes:
+      all:
+        material: lime_dye
+        name: "<green>Players: <white>all shown <gray>(right-click)"
+      staff:
+        material: purple_dye
+        name: "<light_purple>Players: <white>staff only <gray>(right-click)"
+      none:
+        material: gray_dye
+        name: "<gray>Players: <white>hidden <gray>(right-click)"
+  menu:
+    slot: 8
+    material: chest
+    name: "<gold><bold>Lobby Menu</bold> <gray>(right-click)"
+    actions:
+      - "open_menu: lobby"
+
+# ---------------- Player visibility ----------------
+visibility:
+  # What players see before they ever use the switch: all, staff or none.
+  default: all
+  # Players with this permission are shown in "staff" mode.
+  staff-permission: "lobby.visibility.staff"
+  # Milliseconds between two switches, so spamming it cannot flood the server.
+  cooldown: 3000

@@ -32,6 +32,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Holograms | Floating text, items and blocks with full `/hologram` commands, placeholders, animations, click actions, armor-stand fallback for 1.8 clients, and an importer for FancyHolograms ([guide](docs/holograms.md)) |
 | NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin including image uploads with an API key, mirror) that load on 1.8 too, a multi-line name hologram, scale, poses and sitting, coloured glow, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
 | Scoreboard and tab | Per-player sidebar with animated titles and per-line intervals (only changed lines are sent, red numbers hidden on 1.20.3+, 32-character lines on 1.8), tab header/footer and rank names sorted by LuckPerms weight, nametags, rotating boss bar and action bar, join title ([guide](docs/display.md)) |
+| Hotbar and selectors | Locked hotbar items with actions, a game selector that shows each game's status (online, full, offline), a lobby selector with this server's instances and the network's other lobbies, and a saved player-visibility switch (all, staff, none) ([hotbar](docs/hotbar.md), [menus](docs/menus.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
@@ -62,6 +63,7 @@ Type `stop` in the console to shut the server down.
 | `filters/` | Blocked, censored and allowed word lists | `/lobby reload` |
 | `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/lobby reload` |
 | `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/lobby reload` |
+| `hotbar.yml` | Hotbar items and player visibility ([guide](docs/hotbar.md)) | `/lobby reload` |
 | `display.yml` | Scoreboard, tab list, nametags, boss bar, join title, action bar ([guide](docs/display.md)) | `/lobby reload` |
 | `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/lobby reload` |
 
@@ -97,6 +99,8 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [Holograms](docs/holograms.md)
 - [NPCs](docs/npcs.md)
 - [Scoreboard, tab list, nametags, boss bar](docs/display.md)
+- [Hotbar items and player visibility](docs/hotbar.md)
+- [Menus and the server selector](docs/menus.md)
 - [Supported client versions](docs/client-versions.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
 - [Chat](docs/chat.md)

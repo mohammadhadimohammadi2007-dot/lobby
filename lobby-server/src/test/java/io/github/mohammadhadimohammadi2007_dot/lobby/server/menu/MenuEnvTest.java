@@ -1,19 +1,21 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.menu;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.NetworkState;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstanceInfo;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldFormat;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,7 +56,7 @@ class MenuEnvTest {
     @TempDir
     Path dir;
 
-    private record Setup(MenuService menus, ConfigManager config, Instance instance) {
+    private record Setup(MenuService menus, ConfigManager config, Instance instance, BridgeService bridge) {
     }
 
     private Setup start(Env env) throws Exception {
@@ -75,7 +78,7 @@ class MenuEnvTest {
         EventNode<PlayerEvent> node = EventNode.type("menu-test", EventFilter.PLAYER);
         env.process().eventHandler().addChild(node);
         menus.register(node);
-        return new Setup(menus, config, instance);
+        return new Setup(menus, config, instance, bridge);
     }
 
     private Player join(Env env, Instance instance, String name) {
@@ -103,6 +106,39 @@ class MenuEnvTest {
         assertEquals(Material.GRAY_STAINED_GLASS_PANE, lobby.fill());
         assertEquals(4, lobby.items().size());
         assertNull(snapshot.menus().menu("nothing"));
+    }
+
+    @Test
+    void theServerSelectorShowsEachGamesStatus(Env env) throws Exception {
+        Setup setup = start(env);
+        NetworkState network = setup.bridge().networkState();
+        network.update(new BridgeMessage.NetworkSnapshot(25, Map.of("bw-1", 20, "sw-1", 5), Map.of(
+                "bedwars", List.of("bw-1"), "skywars", List.of("sw-1"), "duels", List.of("du-1"))));
+        network.update(new BridgeMessage.ServerStatus(Map.of(
+                "bw-1", new BridgeMessage.ServerStatus.Status(true, 20),
+                "sw-1", new BridgeMessage.ServerStatus.Status(true, 50),
+                "du-1", new BridgeMessage.ServerStatus.Status(false, 0))));
+        Player player = join(env, setup.instance(), "Steve");
+
+        setup.menus().open(player, "servers");
+
+        var inventory = player.getOpenInventory();
+        assertNotNull(inventory);
+        // BedWars is full (20 of 20), SkyWars has room, Duels is down.
+        ItemStack bedwars = inventory.getItemStack(11);
+        assertEquals(Material.RED_WOOL, bedwars.material());
+        assertTrue(lore(bedwars).contains("Full right now"), lore(bedwars));
+        ItemStack skywars = inventory.getItemStack(13);
+        assertEquals(Material.ENDER_EYE, skywars.material());
+        assertTrue(lore(skywars).contains("Playing: 5"), lore(skywars));
+        assertTrue(lore(skywars).contains("Click to play"), lore(skywars));
+        assertEquals(Material.BARRIER, inventory.getItemStack(15).material(), "an offline game");
+    }
+
+    private static String lore(ItemStack item) {
+        var lines = item.get(net.minestom.server.component.DataComponents.LORE);
+        return lines == null ? "" : lines.stream().map(PlainTextComponentSerializer.plainText()::serialize)
+                .reduce("", (a, b) -> a + " | " + b);
     }
 
     @Test

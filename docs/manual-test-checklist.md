@@ -43,7 +43,21 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
       with their skin after `/lobby <n>` to the same instance (1.8 included).
 - [ ] The boss bar shows and rotates on both (1.8 through ViaRewind).
 
-## 4. Holograms on 1.8
+## 4. Hotbar, selectors and visibility
+
+- [ ] On join and after `/lobby 2`: compass, nether star, dye and chest in slots 1, 2, 8 and 9, on 1.8
+      and on the latest client.
+- [ ] They cannot be moved, dropped (Q), swapped to the off hand (F) or placed, on either client.
+- [ ] Right-clicking each one in the air and on a block runs it exactly once (1.8 through ViaRewind sends
+      block clicks differently).
+- [ ] The game selector: a game shows "Click to play", "Full" or "Offline" as its servers are; a click
+      connects through the proxy.
+- [ ] The lobby selector: this server's lobbies, then the network's other lobby servers; a click
+      connects.
+- [ ] The visibility switch: all, then staff only, then nobody; NPCs and holograms stay. Rejoin: the
+      choice is kept.
+
+## 5. Holograms on 1.8
 
 - [ ] A hologram with several lines: armor-stand lines on 1.8, text displays on the latest client,
       at the same height.

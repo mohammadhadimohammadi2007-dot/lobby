@@ -30,6 +30,7 @@ public final class ChatSettingsService {
     private final SettingsStore store;
     private final Map<UUID, PlayerChatSettings> online = new ConcurrentHashMap<>();
     private final Set<CompletableFuture<Void>> pendingSaves = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, CompletableFuture<Void>> loaded = new ConcurrentHashMap<>();
 
     public ChatSettingsService(SettingsStore store) {
         this.store = store;
@@ -43,18 +44,30 @@ public final class ChatSettingsService {
     /** Loads a player's settings in the background. */
     public void load(UUID player) {
         online.put(player, PlayerChatSettings.DEFAULTS);
+        CompletableFuture<Void> done = whenLoaded(player);
         Async.run(() -> {
             try {
                 store.load(player).ifPresent(settings -> online.computeIfPresent(player, (id, current) -> settings));
             } catch (Exception e) {
                 LOGGER.warn("Could not load chat settings of {}: {}", player, e.getMessage());
+            } finally {
+                done.complete(null);
             }
         });
+    }
+
+    /**
+     * Completes once a joining player's settings have been read (or could not be), so features that
+     * depend on a saved choice, like player visibility, can apply it.
+     */
+    public CompletableFuture<Void> whenLoaded(UUID player) {
+        return loaded.computeIfAbsent(player, ignored -> new CompletableFuture<>());
     }
 
     /** Forgets a player who left. */
     public void forget(UUID player) {
         online.remove(player);
+        loaded.remove(player);
     }
 
     /** The player's settings; defaults if not loaded (yet). */

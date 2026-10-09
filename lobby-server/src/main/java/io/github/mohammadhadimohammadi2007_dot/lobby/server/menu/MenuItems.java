@@ -13,13 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Turns a {@link MenuItem} into the item one player sees, with placeholders filled in. */
-final class MenuItems {
+public final class MenuItems {
 
     private MenuItems() {
     }
 
     /** The item for this viewer. Old clients get the 16 colors, since they cannot show the others. */
-    static ItemStack build(MenuItem item, Player viewer, LobbyText text, boolean legacyClient) {
+    public static ItemStack build(MenuItem item, Player viewer, LobbyText text, boolean legacyClient) {
         ItemStack.Builder builder = ItemStack.builder(item.material()).amount(item.amount());
         if (!item.name().isBlank()) {
             builder.customName(clean(text.render(item.name(), viewer), legacyClient));

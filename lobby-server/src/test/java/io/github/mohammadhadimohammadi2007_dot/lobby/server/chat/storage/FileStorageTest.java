@@ -25,7 +25,7 @@ class FileStorageTest {
         UUID player = UUID.randomUUID();
         assertEquals(Optional.empty(), store.load(player));
 
-        PlayerChatSettings settings = new PlayerChatSettings(false, false, true, "staff", Set.of(UUID.randomUUID()));
+        PlayerChatSettings settings = new PlayerChatSettings(false, false, true, "staff", Set.of(UUID.randomUUID()), "none");
         store.save(player, settings);
 
         assertEquals(Optional.of(settings), new FileSettingsStore(dir).load(player));

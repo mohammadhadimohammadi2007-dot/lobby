@@ -23,6 +23,14 @@ public enum MessageKey {
     LOBBY_SELECTOR_PLAYERS("lobby-selector-players"),
     LOBBY_SELECTOR_CURRENT("lobby-selector-current"),
     LOBBY_SELECTOR_CLICK("lobby-selector-click"),
+    LOBBY_SELECTOR_SERVER_NAME("lobby-selector-server-name"),
+    LOBBY_SELECTOR_SERVER_PLAYERS("lobby-selector-server-players"),
+    LOBBY_SELECTOR_SERVER_OFFLINE("lobby-selector-server-offline"),
+    VISIBILITY_CHANGED("visibility-changed"),
+    VISIBILITY_COOLDOWN("visibility-cooldown"),
+    VISIBILITY_ALL("visibility-all"),
+    VISIBILITY_STAFF("visibility-staff"),
+    VISIBILITY_NONE("visibility-none"),
 
     // Holograms
     HOLOGRAM_USAGE("hologram-usage"),

@@ -29,6 +29,102 @@
 # Items are read-only: players can never take, drop or move them.
 
 menus:
+  # The server selector, opened by the compass in the hotbar. Each game has three entries in one slot:
+  # the first whose show-if holds is shown, so the item changes with the game's status.
+  # %group_status_<group>% is online, full or offline (the groups come from the proxy bridge).
+  servers:
+    title: "<dark_gray>Games"
+    rows: 3
+    refresh: 20
+    fill: "black_stained_glass_pane"
+    items:
+      bedwars-online:
+        slot: 11
+        material: "red_wool"
+        name: "<red><bold>BedWars"
+        lore:
+          - "<gray>Playing: <white>%group_online_bedwars%"
+          - ""
+          - "<green>Click to play"
+        show-if:
+          - "%group_status_bedwars% == online"
+        actions:
+          - "close_menu"
+          - "connect_group: bedwars"
+      bedwars-full:
+        slot: 11
+        material: "red_wool"
+        name: "<red><bold>BedWars"
+        lore:
+          - "<gray>Playing: <white>%group_online_bedwars%</white>/<white>%group_max_bedwars%"
+          - ""
+          - "<gold>Full right now, try again soon"
+        show-if:
+          - "%group_status_bedwars% == full"
+      bedwars-offline:
+        slot: 11
+        material: "barrier"
+        name: "<red><bold>BedWars"
+        lore:
+          - "<red>Offline"
+      skywars-online:
+        slot: 13
+        material: "ender_eye"
+        name: "<aqua><bold>SkyWars"
+        lore:
+          - "<gray>Playing: <white>%group_online_skywars%"
+          - ""
+          - "<green>Click to play"
+        show-if:
+          - "%group_status_skywars% == online"
+        actions:
+          - "close_menu"
+          - "connect_group: skywars"
+      skywars-full:
+        slot: 13
+        material: "ender_eye"
+        name: "<aqua><bold>SkyWars"
+        lore:
+          - "<gray>Playing: <white>%group_online_skywars%</white>/<white>%group_max_skywars%"
+          - ""
+          - "<gold>Full right now, try again soon"
+        show-if:
+          - "%group_status_skywars% == full"
+      skywars-offline:
+        slot: 13
+        material: "barrier"
+        name: "<aqua><bold>SkyWars"
+        lore:
+          - "<red>Offline"
+      duels-online:
+        slot: 15
+        material: "iron_sword"
+        name: "<yellow><bold>Duels"
+        lore:
+          - "<gray>Playing: <white>%group_online_duels%"
+          - ""
+          - "<green>Click to play"
+        show-if:
+          - "%group_status_duels% == online"
+        actions:
+          - "close_menu"
+          - "connect_group: duels"
+      duels-full:
+        slot: 15
+        material: "iron_sword"
+        name: "<yellow><bold>Duels"
+        lore:
+          - "<gray>Playing: <white>%group_online_duels%</white>/<white>%group_max_duels%"
+          - ""
+          - "<gold>Full right now, try again soon"
+        show-if:
+          - "%group_status_duels% == full"
+      duels-offline:
+        slot: 15
+        material: "barrier"
+        name: "<yellow><bold>Duels"
+        lore:
+          - "<red>Offline"
   # Opened with /lobby or from a hotbar item. Replace these items with your own.
   lobby:
     title: "<dark_gray>Lobby"

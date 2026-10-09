@@ -17,6 +17,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.VisibilityService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Hologram;
@@ -104,6 +106,7 @@ public final class LobbyServer implements ServerInfo {
     private NpcService npcs;
     private TeamManager teams;
     private DisplayService displays;
+    private HotbarService hotbar;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -131,6 +134,7 @@ public final class LobbyServer implements ServerInfo {
         startActions(snapshot);
         startChat(snapshot);
         startDisplays();
+        startHotbar();
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
@@ -254,7 +258,7 @@ public final class LobbyServer implements ServerInfo {
             actions.connector(new BungeeConnector(text));
         }
         menus = new MenuService(() -> configManager.current().menus(), text, actions, bridge);
-        menus.addBuiltIn(LobbySelectorMenu.NAME, new LobbySelectorMenu(configManager, lobbies)::build);
+        menus.addBuiltIn(LobbySelectorMenu.NAME, new LobbySelectorMenu(configManager, lobbies, bridge.networkState())::build);
         actions.menus(menus);
         actions.lobbies(lobbies);
     }
@@ -285,6 +289,12 @@ public final class LobbyServer implements ServerInfo {
                 player -> bridge.capabilities(player).protocolVersion());
     }
 
+    /** Hotbar items and player visibility; the visibility choice is kept with the players' chat settings. */
+    private void startHotbar() {
+        VisibilityService visibility = new VisibilityService(configManager, permissions, chat.settings(), text);
+        hotbar = new HotbarService(configManager, text, actions, bridge, visibility);
+    }
+
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
     private void startChat(ConfigSnapshot snapshot) {
         SignedVelocityReceiver signedVelocity = null;
@@ -313,6 +323,7 @@ public final class LobbyServer implements ServerInfo {
         display.register(playerEvents);
         teams.register(playerEvents);
         displays.register(playerEvents);
+        hotbar.register(playerEvents);
         clicks.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
@@ -340,6 +351,7 @@ public final class LobbyServer implements ServerInfo {
         display.invalidateAll();
         Async.onTickThread(() -> {
             lobbies.applyWorldRules(reloaded.config().world());
+            hotbar.giveAll();
             // The operators list may have changed, which changes which commands players can see.
             for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
                 player.refreshCommands();

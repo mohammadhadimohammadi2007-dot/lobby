@@ -30,6 +30,16 @@ lobby-selector-name: "<yellow><bold>Lobby <number>"
 lobby-selector-players: "<gray><players> player(s)"
 lobby-selector-current: "<green>You are here"
 lobby-selector-click: "<yellow>Click to join"
+# The other lobby servers of the network (the "lobbies" group of the bridge). <server> is its name.
+lobby-selector-server-name: "<aqua><bold><server>"
+lobby-selector-server-players: "<gray><players> player(s)"
+lobby-selector-server-offline: "<red>Offline"
+# The player visibility switch in the hotbar. <mode> is one of the three texts below; <seconds> the wait.
+visibility-changed: "<prefix><gray>You now see <mode><gray>."
+visibility-cooldown: "<prefix><red>Wait <seconds>s before switching again."
+visibility-all: "<green>all players"
+visibility-staff: "<light_purple>only staff"
+visibility-none: "<red>no players"
 
 # ---------------- Holograms (/hologram, see docs/holograms.md) ----------------
 hologram-usage: "<prefix><gray>Usage: <white>/hologram list | near | create <name> | delete <name> | info <name> | addline <name> <text> | set <name> <property> <value> | action add <name> <action> | teleport <name> | goto <name> | copy <name> <new> | import"

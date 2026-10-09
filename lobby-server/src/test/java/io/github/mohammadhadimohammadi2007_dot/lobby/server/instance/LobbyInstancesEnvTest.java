@@ -1,7 +1,10 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.instance;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.NetworkState;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuDefinition;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuItem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
@@ -12,6 +15,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.SystemChatPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.testing.Collector;
@@ -24,6 +28,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -176,7 +181,7 @@ class LobbyInstancesEnvTest {
         LobbyInstances lobbies = lobbies(env, config);
         Player steve = join(env, lobbies.byNumber(2), "Steve");
 
-        MenuDefinition menu = new LobbySelectorMenu(config, lobbies).build(steve);
+        MenuDefinition menu = new LobbySelectorMenu(config, lobbies, new NetworkState()).build(steve);
 
         assertEquals(LobbySelectorMenu.NAME, menu.name());
         assertEquals(3, menu.items().size());
@@ -189,6 +194,33 @@ class LobbyInstancesEnvTest {
         // The counts are placeholders, so they stay live while the menu is open.
         assertTrue(menu.items().get(2).lore().getFirst().contains("%lobby_online_3%"),
                 menu.items().get(2).lore().toString());
+    }
+
+    @Test
+    void theSelectorAlsoListsTheNetworksOtherLobbyServers(Env env) throws Exception {
+        ConfigManager config = config("instances: 1", "instances: 2");
+        LobbyInstances lobbies = lobbies(env, config);
+        Player steve = join(env, lobbies.byNumber(1), "Steve");
+        String self = config.current().config().server().name();
+        NetworkState network = new NetworkState();
+        network.update(new BridgeMessage.NetworkSnapshot(10, Map.of("lobby-2", 4), Map.of(
+                LobbySelectorMenu.LOBBIES_GROUP, List.of(self, "lobby-2", "lobby-3"))));
+        network.update(new BridgeMessage.ServerStatus(Map.of(
+                "lobby-2", new BridgeMessage.ServerStatus.Status(true, 100),
+                "lobby-3", new BridgeMessage.ServerStatus.Status(false, 0))));
+
+        MenuDefinition menu = new LobbySelectorMenu(config, lobbies, network).build(steve);
+
+        // Two instances here, then the other servers from the next row on; this server is not listed twice.
+        assertEquals(4, menu.items().size());
+        MenuItem online = menu.items().get(2);
+        assertEquals(List.of(9), online.slots());
+        assertEquals(Material.BOOK, online.material());
+        assertTrue(online.lore().getFirst().contains("%bungee_lobby-2%"), online.lore().toString());
+        assertFalse(online.actions().isEmpty(), "a click connects to it");
+        MenuItem offline = menu.items().get(3);
+        assertEquals(Material.BARRIER, offline.material());
+        assertTrue(offline.actions().isEmpty(), "an offline server cannot be joined");
     }
 
     private static List<String> lines(Collector<SystemChatPacket> messages) {

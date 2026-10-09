@@ -68,6 +68,8 @@ These are cached per player and refreshed as soon as LuckPerms reports a change.
 | `%bungee_total%` | Players on the whole network (same name as PlaceholderAPI's Bungee expansion) |
 | `%bungee_<server>%` | Players on one backend server, e.g. `%bungee_bw-1%` |
 | `%group_online_<group>%` | Players on all servers of a bridge group, e.g. `%group_online_bedwars%` |
+| `%group_max_<group>%` | The player limits of the group's servers that are up, added together |
+| `%group_status_<group>%` | `online` (a server is up and has room), `full` (every server that is up is full) or `offline`. For menus that change with the status ([menus](menus.md)) |
 | `%lobby_servers%` | Number of lobby servers on the network (size of the `lobbies` bridge group, or 1) |
 
 Without the bridge, all counts are `0`.
