@@ -134,3 +134,5 @@ tab list, nametags and boss bar, with values that change every second:
 | Hologram/NPC refresh (4 a second) | median 24-29 ms |
 | Scoreboard/tab/bars refresh (10 a second) | median 2.5 ms |
 | One player joining 200 | about 50 ms of display-thread work |
+| Allocation on the display thread | about 85 MB per second of work (baseline for later tuning) |
+| Garbage collection | about 150-160 ms over 20 seconds, 27-30 collections, 512 MB test heap |

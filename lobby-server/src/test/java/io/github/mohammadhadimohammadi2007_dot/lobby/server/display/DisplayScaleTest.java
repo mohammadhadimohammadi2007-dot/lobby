@@ -189,6 +189,10 @@ class DisplayScaleTest {
         java.util.Arrays.fill(longestByKind, 0);
         callsByKind.forEach(List::clear);
         long gcBefore = gcMillis();
+        long gcCountBefore = gcCount();
+        long displayAllocatedBefore = displayThreadAllocated();
+        long allAllocatedBefore = allThreadsAllocated();
+        long measureStart = System.nanoTime();
         long[] busy = new long[MEASURED_SECONDS];
         long longest = 0;
         for (int i = 0; i < MEASURED_SECONDS; i++) {
@@ -198,6 +202,10 @@ class DisplayScaleTest {
         }
 
         long gcDuring = gcMillis() - gcBefore;
+        long gcCollections = gcCount() - gcCountBefore;
+        double wallSeconds = (System.nanoTime() - measureStart) / 1e9;
+        double displayMb = (displayThreadAllocated() - displayAllocatedBefore) / (1024.0 * 1024.0);
+        double allMb = (allThreadsAllocated() - allAllocatedBefore) / (1024.0 * 1024.0);
         double averageMillis = java.util.Arrays.stream(busy).average().orElse(0) / NANOS_PER_MILLI;
         double worstMillis = java.util.Arrays.stream(busy).max().orElse(0) / NANOS_PER_MILLI;
         DisplayLoad.Snapshot load = server.renderer.load();
@@ -224,8 +232,15 @@ class DisplayScaleTest {
                     sorted.get(Math.min(sorted.size() - 1, (int) (sorted.size() * 0.99))) / NANOS_PER_MILLI,
                     sorted.size()));
         }
-        System.out.println("  garbage collection during the " + MEASURED_SECONDS + " measured seconds: " + gcDuring
-                + " ms, heap max " + Runtime.getRuntime().maxMemory() / (1024 * 1024) + " MB");
+        // Per simulated second (one second of real server work), and per wall-clock second of this run.
+        System.out.println(String.format(Locale.ROOT,
+                "  allocation on the display thread: %.1f MB per simulated second (%.0f MB in all; %.1f MB/s of"
+                        + " wall time); every thread of the test JVM: %.1f MB per simulated second",
+                displayMb / MEASURED_SECONDS, displayMb, displayMb / wallSeconds, allMb / MEASURED_SECONDS));
+        System.out.println(String.format(Locale.ROOT,
+                "  garbage collection: %d ms in %d collections over %d simulated seconds (%.1f s of wall time),"
+                        + " heap max %d MB", gcDuring, gcCollections, MEASURED_SECONDS, wallSeconds,
+                Runtime.getRuntime().maxMemory() / (1024 * 1024)));
         // The target is well under half; this only catches a big step backwards on a slow machine.
         assertTrue(averageMillis < 800, "the display thread was busy " + averageMillis + " ms per second");
     }
@@ -269,6 +284,24 @@ class DisplayScaleTest {
 
     private static int shownObjects(DisplayTestServer server) {
         return server.renderer.shownObjectCount();
+    }
+
+    private static long gcCount() {
+        return java.lang.management.ManagementFactory.getGarbageCollectorMXBeans().stream()
+                .mapToLong(java.lang.management.GarbageCollectorMXBean::getCollectionCount).sum();
+    }
+
+    /** Bytes the display thread has allocated so far. */
+    private static long displayThreadAllocated() {
+        com.sun.management.ThreadMXBean threads =
+                (com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean();
+        return Thread.getAllStackTraces().keySet().stream().filter(t -> t.getName().equals("lobby-display"))
+                .mapToLong(t -> threads.getThreadAllocatedBytes(t.threadId())).sum();
+    }
+
+    private static long allThreadsAllocated() {
+        return ((com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean())
+                .getTotalThreadAllocatedBytes();
     }
 
     private static long gcMillis() {
