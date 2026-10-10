@@ -65,7 +65,7 @@ public final class LobbyBridgePlugin {
     private final Map<UUID, SkinsRestorerHook.Skin> skins = new ConcurrentHashMap<>();
     private BridgeConfig config;
     private CommandGate commandGate;
-    private boolean viaVersion;
+    private volatile boolean viaVersion;
 
     @Inject
     public LobbyBridgePlugin(ProxyServer proxy, Logger logger, @DataDirectory Path dataDir) {
@@ -90,6 +90,10 @@ public final class LobbyBridgePlugin {
         commandGate = new CommandGate(config.allowedCommands());
 
         viaVersion = proxy.getPluginManager().isLoaded("viaversion");
+        if (!viaVersion) {
+            logger.info("ViaVersion is not installed, so client versions come from Velocity. With modern forwarding,"
+                    + " clients older than 1.13 cannot be detected that way: through ViaVersion they look like 1.13.");
+        }
         proxy.getChannelRegistrar().register(CHANNEL);
         proxy.getEventManager().register(this, ServerPostConnectEvent.class, this::onServerConnected);
         proxy.getEventManager().register(this, PluginMessageEvent.class, this::onPluginMessage);
@@ -316,12 +320,21 @@ public final class LobbyBridgePlugin {
         return new BridgeMessage.NetworkSnapshot(proxy.getPlayerCount(), counts, config.groups());
     }
 
+    /**
+     * The player's real client version: from ViaVersion when it is installed (only {@link ViaVersionHook}
+     * touches its classes, and only then), otherwise Velocity's.
+     */
     private int clientProtocol(Player player) {
         if (viaVersion) {
             try {
                 return ViaVersionHook.clientProtocol(player.getUniqueId());
             } catch (RuntimeException e) {
                 logger.debug("ViaVersion did not know {}, using Velocity's version", player.getUsername(), e);
+            } catch (LinkageError e) {
+                // A ViaVersion whose API no longer matches: stop asking it.
+                viaVersion = false;
+                logger.warn("Could not use ViaVersion's API ({}); client versions now come from Velocity, so clients"
+                        + " older than 1.13 look like 1.13.", e.toString());
             }
         }
         return player.getProtocolVersion().getProtocol();

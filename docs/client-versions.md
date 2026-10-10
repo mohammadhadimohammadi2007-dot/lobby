@@ -15,6 +15,7 @@ In standalone mode there is no proxy, so only the lobby's own version can join.
 ## Old clients
 
 - Keep the map between **Y 0 and Y 255** (see [maps.md](maps.md)).
-- Install the [bridge](velocity.md#3-install-the-bridge-optional-recommended) so the lobby knows each
-  player's real version. Players below 1.19.4 are marked as `LEGACY`; later phases use this to show
+- Install the [bridge](velocity.md#3-install-the-bridge-optional-recommended) on the same proxy as
+  ViaVersion, so the lobby knows each player's real version (the bridge asks ViaVersion; Velocity alone
+  reports 1.13 for anything older). `/lobby info` shows it as "Your client". Players below 1.19.4 are marked as `LEGACY`; later phases use this to show
   them compatible holograms, NPCs and menus.

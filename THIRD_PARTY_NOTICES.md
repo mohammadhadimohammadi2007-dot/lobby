@@ -59,8 +59,13 @@ The Velocity bridge plugin is built against two APIs that belong to GPL-3.0 prog
 | API | License | Why |
 |---|---|---|
 | [velocity-api](https://github.com/PaperMC/Velocity) | GPL-3.0 | Any Velocity plugin must be compiled against it |
-| [viaversion-api](https://github.com/ViaVersion/ViaVersion) | GPL-3.0 | Optional: asks ViaVersion for a player's real client version, with a fallback when it is absent |
+| [viaversion-api](https://github.com/ViaVersion/ViaVersion) | GPL-3.0 | Optional runtime integration: asks ViaVersion for a player's real client version |
 
 Both are `compileOnly`: no ViaVersion or Velocity code is copied into this repository and neither is
 bundled in any jar this project produces. They are provided at runtime by the proxy the server owner
-installed.
+installed. The build checks this: `checkBundledClasses` (part of `./gradlew check`) fails if
+`lobby-bridge.jar` holds any ViaVersion or Velocity class, or anything else that is not this project's.
+
+ViaVersion is optional. Every use of its API is in one class, `ViaVersionHook`, which is only loaded when
+the proxy has ViaVersion installed. Without it (or if its API does not match), the bridge uses the version
+Velocity reports, which with modern forwarding shows clients older than 1.13 as 1.13.

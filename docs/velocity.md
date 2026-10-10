@@ -80,7 +80,13 @@ These names are not known to the proxy, so what uses them will show offline or f
 lobby's files, so they match.
 
 If ViaVersion is installed on the proxy, the bridge asks it for the real client version; otherwise it
-uses Velocity's. Without the bridge, every player counts as a modern client, all counts are 0, every
+uses Velocity's. Velocity's alone is not enough for old clients: with modern forwarding, ViaVersion
+translates clients older than 1.13 to 1.13 before Velocity sees them (modern forwarding needs a login
+message that only exists from 1.13 on), so Velocity reports 1.13 for a 1.8.9 player. The bridge says so in
+the proxy log when it starts without ViaVersion. To check a player, have them run `/lobby info`: "Your
+client" shows the version the lobby uses and whether the proxy reported it.
+
+Without the bridge, every player counts as a modern client, all counts are 0, every
 server shows as offline, global and staff chat stay on the local lobby, and chat auto-mute falls back to a
 local temporary mute.
 
