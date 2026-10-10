@@ -34,7 +34,8 @@ import java.util.function.ToIntFunction;
  * and teams decide tab order, nametag prefix/suffix, hidden NPC names and collisions all at once, so
  * features that made their own teams would silently break each other.
  *
- * <p>Team names keep features apart: {@code <order>p<id>} for players (sorted by order in tab),
+ * <p>Team names keep features apart: {@code <order>p<name>} for players (tab sorts by team name, so by
+ * order and then by the lower-cased player name, the same on every client version),
  * {@code zzhidden} for NPCs whose names must not show (and {@code zzh<colour>} for those that glow in a
  * colour other than white, since the team colour is the glow colour), {@code s<id>} for per-viewer
  * sidebar lines.
@@ -51,6 +52,10 @@ public final class TeamManager {
     private static final String HIDDEN_COLOR_PREFIX = "zzh";
     private static final String PRIVATE_PREFIX = "s";
     private static final int MAX_PRIVATE_ID = 15;
+    /** Team names of 1.8-1.17 clients have at most 16 characters. */
+    private static final int MAX_TEAM_NAME = 16;
+    /** Between the shortened name and the player's id when two shortened names would clash. */
+    private static final char CLASH_MARK = '~';
     private static final byte NO_FRIENDLY_FLAGS = 0;
 
     /**
@@ -126,7 +131,7 @@ public final class TeamManager {
     public synchronized void setPlayer(Player player, int order, Component prefix, Component suffix,
                                        @Nullable Component legacyPrefix, @Nullable Component legacySuffix,
                                        TeamColor color) {
-        String name = String.format("%02d", Math.clamp(order, 0, MAX_ORDER)) + "p" + idOf(player);
+        String name = playerTeamName(player, Math.clamp(order, 0, MAX_ORDER));
         Team wanted = new Team(name, prefix, suffix, color, NameTagVisibility.ALWAYS, playerCollision,
                 Set.of(player.getUsername()), legacyPrefix, legacySuffix);
         String current = playerTeams.get(player.getUuid());
@@ -248,6 +253,26 @@ public final class TeamManager {
     /** Names of all shared teams, for tests and debugging. */
     public synchronized List<String> teamNames() {
         return new ArrayList<>(teams.keySet());
+    }
+
+    /**
+     * {@code <order>p<name>}: two digits, then the lower-cased name cut to fit 16 characters. In the rare
+     * case that another player's team already has that name (names that only differ after the cut, or in
+     * case on an offline server), the end of the name is replaced by {@code ~} and the player's id.
+     */
+    private String playerTeamName(Player player, int order) {
+        String start = String.format("%02d", order) + "p";
+        String lower = player.getUsername().toLowerCase(java.util.Locale.ROOT);
+        String name = start + cut(lower, MAX_TEAM_NAME - start.length());
+        if (!teams.containsKey(name) || name.equals(playerTeams.get(player.getUuid()))) {
+            return name;
+        }
+        String id = CLASH_MARK + idOf(player);
+        return start + cut(lower, MAX_TEAM_NAME - start.length() - id.length()) + id;
+    }
+
+    private static String cut(String text, int length) {
+        return text.length() <= length ? text : text.substring(0, length);
     }
 
     private String idOf(Player player) {

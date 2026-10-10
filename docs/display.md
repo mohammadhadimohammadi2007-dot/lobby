@@ -64,7 +64,7 @@ tab:
 
 - **Sorting.** Players are sorted by the weight of their LuckPerms group, highest first (`/lp group
   admin setweight 100`). A group without a weight is placed by `group-order`, first listed first;
-  without LuckPerms, `group-order` decides alone. Players of equal rank stay in join order.
+  without LuckPerms, `group-order` decides alone. Players of equal rank are sorted by name, ignoring case.
 - **Names.** Each name is rendered once per refresh, plus once more for 1.8-1.12. Only names that
   changed are sent, all in one packet.
 - **`show: instance`.** Players of other instances are taken out of the tab list.

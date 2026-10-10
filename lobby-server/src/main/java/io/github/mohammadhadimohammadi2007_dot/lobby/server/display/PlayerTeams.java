@@ -25,7 +25,8 @@ import java.util.TreeSet;
  *
  * <p>Sorting: by the weight of the player's LuckPerms group, highest first. A group without a weight is
  * placed by {@code tab.group-order}. Weights are turned into places 0-98 by rank among the players
- * online, so any weights work, not only small ones.
+ * online, so any weights work, not only small ones. Players of the same place are sorted by name, ignoring
+ * case.
  */
 final class PlayerTeams {
 

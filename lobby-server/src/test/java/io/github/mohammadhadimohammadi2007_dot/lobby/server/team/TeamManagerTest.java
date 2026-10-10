@@ -70,12 +70,12 @@ class TeamManagerTest {
         teams.hideName("npc_0001");
 
         List<String> names = teams.teamNames();
-        assertEquals(List.of("zzhidden", "05p0", "50p1"), names);
+        assertEquals(List.of("zzhidden", "05psteve", "50pold"), names);
         // Tab sorts by team name: staff (05) before VIP (50); hidden NPC names last.
         assertTrue(names.get(1).compareTo(names.get(2)) < 0 && names.get(2).compareTo(names.get(0)) < 0);
 
-        TeamsPacket forModern = createOf(steve.teams().collect(), "05p0");
-        TeamsPacket forLegacy = createOf(old.teams().collect(), "05p0");
+        TeamsPacket forModern = createOf(steve.teams().collect(), "05psteve");
+        TeamsPacket forLegacy = createOf(old.teams().collect(), "05psteve");
         TeamsPacket.CreateTeamAction modern = (TeamsPacket.CreateTeamAction) forModern.action();
         TeamsPacket.CreateTeamAction legacy = (TeamsPacket.CreateTeamAction) forLegacy.action();
         assertEquals("[Admin-of-everything] ", LegacyText.serialize(modern.settings().teamPrefix()));
@@ -97,9 +97,25 @@ class TeamManagerTest {
 
         List<String> actions = steve.teams().collect().stream()
                 .map(packet -> packet.teamName() + ":" + packet.action().getClass().getSimpleName()).toList();
-        assertEquals(List.of("10p0:CreateTeamAction", "10p0:UpdateTeamAction", "10p0:RemoveTeamAction",
-                "20p0:CreateTeamAction", "20p0:RemoveTeamAction"), actions);
+        assertEquals(List.of("10psteve:CreateTeamAction", "10psteve:UpdateTeamAction", "10psteve:RemoveTeamAction",
+                "20psteve:CreateTeamAction", "20psteve:RemoveTeamAction"), actions);
         assertEquals(List.of("zzhidden"), teams.teamNames());
+    }
+
+    @Test
+    void playersOfTheSameRankAreSortedByNameIgnoringCase(Env env) {
+        TeamManager teams = manager();
+        Instance instance = env.createFlatInstance();
+        for (String name : List.of("zed", "Alex", "bob", "Carl_99", "VeryLongName1234")) {
+            teams.setPlayer(join(env, instance, name).player(), 3, Component.empty(), Component.empty(), TeamColor.WHITE);
+        }
+        Joined clash = join(env, instance, "VeryLongName1299");
+        teams.setPlayer(clash.player(), 3, Component.empty(), Component.empty(), TeamColor.WHITE);
+
+        List<String> names = teams.teamNames().stream().filter(name -> !name.startsWith("zz")).sorted().toList();
+        assertEquals(List.of("03palex", "03pbob", "03pcarl_99", "03pverylongname1", "03pverylongnam~0", "03pzed"), names,
+                "sorted like a client sorts teams: by name, case ignored; a clash after the cut gets the id");
+        assertTrue(names.stream().allMatch(name -> name.length() <= 16), names.toString());
     }
 
     @Test
@@ -114,7 +130,7 @@ class TeamManagerTest {
         teams.sendAllTo(alex.player());
 
         List<TeamsPacket> packets = alex.teams().collect();
-        assertEquals(List.of("zzhidden", "01p0"), packets.stream().map(TeamsPacket::teamName).toList());
+        assertEquals(List.of("zzhidden", "01psteve"), packets.stream().map(TeamsPacket::teamName).toList());
         TeamsPacket.CreateTeamAction hidden = (TeamsPacket.CreateTeamAction) packets.getFirst().action();
         assertEquals(List.of("npc_1"), hidden.entities());
         assertEquals(TeamsPacket.NameTagVisibility.NEVER, hidden.settings().nameTagVisibility());
