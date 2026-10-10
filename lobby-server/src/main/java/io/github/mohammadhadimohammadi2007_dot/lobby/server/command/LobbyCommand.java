@@ -175,7 +175,8 @@ public final class LobbyCommand extends Command {
                 Messages.text("integrations", integrations.isEmpty() ? "none" : integrations),
                 Messages.text("bridge", info.bridgeStatus()),
                 Messages.text("display", info.displayLoad()),
-                Messages.text("network", info.networkCheck()));
+                Messages.text("network", info.networkCheck()),
+                Messages.text("client", sender instanceof Player player ? info.clientOf(player) : "console"));
     }
 
     private static String format(double value, int decimals) {

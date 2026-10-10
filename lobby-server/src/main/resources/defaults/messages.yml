@@ -158,7 +158,8 @@ setspawn-failed: "<prefix><red>Could not save the spawn: <error>"
 
 # /lobby info
 # <mode> <players> <max-players> <tps> <mspt> <memory-used> <memory-max>
-# <world> <world-format> <chunks> <integrations> <bridge>
+# <world> <world-format> <chunks> <integrations> <bridge> <display> <network>
+# <client> = the version the lobby uses for you, and whether the proxy reported it
 info: |-
   <gold><bold>Lobby info</bold></gold>
   <gray>Mode: <white><mode>
@@ -168,8 +169,9 @@ info: |-
   <gray>World: <white><world></white> (<world-format>, <chunks> chunks)
   <gray>Integrations: <white><integrations>
   <gray>Bridge: <white><bridge>
-  <gray>Display thread: <white><display>
+  <gray>Display threads: <white><display>
   <gray>Network names: <white><network>
+  <gray>Your client: <white><client>
 
 # Shown when a player cannot join.
 kick-server-full: "<red>The lobby is full. Please try again in a moment."

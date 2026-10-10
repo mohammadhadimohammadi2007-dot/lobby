@@ -4,9 +4,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * How busy the display thread is: the share of the last minute it spent working, and its longest single
- * refresh in that minute. Holograms, NPCs and later the scoreboard and tab list all run on that one
- * thread, so this is the number that says when it needs splitting.
+ * How busy a display thread is: the share of the last minute it spent working, and its longest single
+ * refresh in that minute. Holograms and NPCs have one thread, the scoreboard, tab list, nametags and bars
+ * another ({@link MeasuredThread}); each has its own numbers.
  *
  * <p>Thread-safe; recording costs one deque operation per refresh.
  */

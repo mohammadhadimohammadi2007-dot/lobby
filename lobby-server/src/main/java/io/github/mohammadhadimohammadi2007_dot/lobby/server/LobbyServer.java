@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabilities;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbiesCommand;
@@ -310,8 +311,8 @@ public final class LobbyServer implements ServerInfo {
         npcs = NpcService.start(configManager.dataDir(), display, displayServices, actions, skins, teams);
         clicks.addHandler(holograms);
         clicks.addHandler(npcs);
-        // Scoreboard, tab list, nametags and bars, on the same display thread.
-        displays = new DisplayService(configManager, text, permissions, display, teams,
+        // Scoreboard, tab list, nametags and bars, on a thread of their own.
+        displays = new DisplayService(configManager, text, permissions, teams,
                 player -> bridge.capabilities(player).protocolVersion());
     }
 
@@ -520,11 +521,20 @@ public final class LobbyServer implements ServerInfo {
 
     @Override
     public String displayLoad() {
-        DisplayLoad.Snapshot load = display.load();
-        return String.format(Locale.ROOT, "%.1f%% busy, longest cycle %.1f ms (last minute); %d holograms, %d NPCs;"
-                        + " %d scoreboard refreshes skipped because it was busy",
-                load.busyPercent(), load.longestCycleMillis(), holograms.count(), npcs.count(),
-                displays.skippedRefreshes());
+        DisplayLoad.Snapshot objects = display.load();
+        DisplayLoad.Snapshot board = displays.load();
+        return String.format(Locale.ROOT, "holograms and NPCs %.1f%% busy, longest cycle %.1f ms (%d holograms, %d NPCs);"
+                        + " scoreboard and tab %.1f%% busy, longest cycle %.1f ms, %d refreshes skipped (last minute)",
+                objects.busyPercent(), objects.longestCycleMillis(), holograms.count(), npcs.count(),
+                board.busyPercent(), board.longestCycleMillis(), displays.skippedRefreshes());
+    }
+
+    @Override
+    public String clientOf(Player player) {
+        ClientCapabilities client = bridge.capabilities(player);
+        return ProtocolVersions.name(client.protocolVersion()) + " (protocol " + client.protocolVersion() + "), "
+                + client.tier().name().toLowerCase(Locale.ROOT)
+                + (client.reported() ? ", reported by the proxy" : ", not reported by a proxy (this server's own version)");
     }
 
     /** The lobby instances of this server. */

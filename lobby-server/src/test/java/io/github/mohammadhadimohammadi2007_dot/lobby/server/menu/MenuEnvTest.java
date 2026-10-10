@@ -31,14 +31,18 @@ import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.SetSlotPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.testing.Env;
+import net.minestom.testing.Collector;
 import net.minestom.testing.EnvTest;
+import net.minestom.testing.TestConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -133,6 +137,32 @@ class MenuEnvTest {
         assertTrue(lore(skywars).contains("Playing: 5"), lore(skywars));
         assertTrue(lore(skywars).contains("Click to play"), lore(skywars));
         assertEquals(Material.BARRIER, inventory.getItemStack(15).material(), "an offline game");
+    }
+
+    @Test
+    void anOpenMenuIsRebuiltInTheBackgroundAndOnlyChangedSlotsAreSent(Env env) throws Exception {
+        Setup setup = start(env);
+        NetworkState network = setup.bridge().networkState();
+        network.update(new BridgeMessage.NetworkSnapshot(25, Map.of("bw-1", 20, "sw-1", 5), Map.of(
+                "bedwars", List.of("bw-1"), "skywars", List.of("sw-1"), "duels", List.of("du-1"))));
+        network.update(new BridgeMessage.ServerStatus(Map.of(
+                "bw-1", new BridgeMessage.ServerStatus.Status(true, 20),
+                "sw-1", new BridgeMessage.ServerStatus.Status(true, 50),
+                "du-1", new BridgeMessage.ServerStatus.Status(false, 0))));
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player player = connection.connect(setup.instance(), new Pos(0, 41, 0));
+        setup.menus().open(player, "servers");
+        Inventory inventory = (Inventory) player.getOpenInventory();
+        assertTrue(lore(inventory.getItemStack(13)).contains("Playing: 5"));
+        Collector<SetSlotPacket> slots = connection.trackIncoming(SetSlotPacket.class);
+
+        network.update(new BridgeMessage.NetworkSnapshot(27, Map.of("bw-1", 20, "sw-1", 7), Map.of(
+                "bedwars", List.of("bw-1"), "skywars", List.of("sw-1"), "duels", List.of("du-1"))));
+        env.tickWhile(() -> !lore(inventory.getItemStack(13)).contains("Playing: 7"), Duration.ofSeconds(5));
+
+        assertTrue(lore(inventory.getItemStack(13)).contains("Playing: 7"), lore(inventory.getItemStack(13)));
+        assertEquals(List.of(13), slots.collect().stream().map(SetSlotPacket::slot).map(Integer::valueOf).distinct().toList(),
+                "only the SkyWars item changed");
     }
 
     private static String lore(ItemStack item) {

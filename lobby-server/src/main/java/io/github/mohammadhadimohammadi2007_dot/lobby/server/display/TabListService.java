@@ -26,7 +26,7 @@ import java.util.UUID;
  *
  * <p>Names are the same for every viewer, so each is rendered once per refresh (once more for 1.8-1.12
  * clients), and only names that changed are sent: all of them in one packet per group of viewers.
- * Only used on the display thread.
+ * Only used on the board thread.
  */
 final class TabListService {
 

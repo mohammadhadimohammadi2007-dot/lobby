@@ -5,6 +5,15 @@ ViaBackwards and ViaRewind. Run them before a release on a Velocity network with
 proxy, with a **1.8.9** client and the **latest** client side by side. Most players of a typical network
 are on 1.8, so the 1.8 items come first.
 
+## 0. The client version (check this first)
+
+Everything 1.8-specific below depends on the lobby knowing that a client is 1.8.
+
+- [ ] Join with **1.8.9** through Velocity and run `/lobby info`: "Your client" says
+      `1.8.x (protocol 47), legacy, reported by the proxy`. If it says protocol 393 (1.13) or "not reported",
+      the 1.8 handling is off for everyone; fix that before testing anything else.
+- [ ] Join with the latest client: "Your client" names the latest version, `modern, reported by the proxy`.
+
 ## 1. NPC skins on 1.8 (most important)
 
 The lobby lists a player NPC in a 1.8 client's tab list while it appears, then removes it after

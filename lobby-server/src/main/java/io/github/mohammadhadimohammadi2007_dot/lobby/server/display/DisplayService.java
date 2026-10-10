@@ -2,6 +2,8 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.display;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
@@ -27,11 +29,11 @@ import java.util.function.ToIntFunction;
 /**
  * The scoreboard, tab list, nametags, boss bar, action bar and join title, from {@code display.yml}.
  *
- * <p>Everything runs on the display thread of the {@link ClientObjectRenderer}, next to holograms and
- * NPCs, so the one busy-percentage in {@code /lobby info} covers all of it, and none of it ever runs on
- * the tick thread. A refresh is started every {@link #STEP_TICKS} ticks; each part decides whether it is
- * due. If the display thread is still busy with the previous one, the new one is skipped instead of
- * queueing up.
+ * <p>Everything runs on its own thread, {@code lobby-board}, never on the tick thread, and apart from the
+ * holograms and NPCs (which have the display thread of the {@link ClientObjectRenderer}): a busy moment
+ * there, such as players walking past many NPCs, never makes the scoreboard late. A refresh is started
+ * every {@link #STEP_TICKS} ticks; each part decides whether it is due. If the thread is still busy with
+ * the previous one, the new one is skipped instead of queueing up.
  */
 public final class DisplayService {
 
@@ -39,7 +41,7 @@ public final class DisplayService {
     static final int STEP_TICKS = SidebarConfig.MIN_INTERVAL_TICKS;
 
     private final ConfigManager config;
-    private final ClientObjectRenderer display;
+    private final MeasuredThread board = new MeasuredThread("lobby-board");
     private final TextCache text;
     private final SidebarService sidebar;
     private final TabListService tab;
@@ -55,10 +57,9 @@ public final class DisplayService {
     /**
      * @param protocolOf each player's real protocol version (from the bridge)
      */
-    public DisplayService(ConfigManager config, LobbyText text, PermissionService permissions, ClientObjectRenderer display,
-                          TeamManager teams, ToIntFunction<Player> protocolOf) {
+    public DisplayService(ConfigManager config, LobbyText text, PermissionService permissions, TeamManager teams,
+                          ToIntFunction<Player> protocolOf) {
         this.config = config;
-        this.display = display;
         ClientTiers tiers = new ClientTiers(protocolOf);
         this.text = new TextCache(text, tiers);
         this.sidebar = new SidebarService(new SidebarPackets(teams), tiers, permissions);
@@ -73,19 +74,19 @@ public final class DisplayService {
         node.addListener(PlayerSpawnEvent.class, event -> {
             if (event.isFirstSpawn()) {
                 bars.scheduleJoinTitle(config.current().display().bars().joinTitle(), event.getPlayer(), text,
-                        display::runOnDisplayThread);
+                        board::execute);
             }
         });
         node.addListener(PlayerDisconnectEvent.class, event -> {
             UUID player = event.getPlayer().getUuid();
-            display.runOnDisplayThread(() -> forget(player));
+            board.execute(() -> forget(player));
         });
         task = MinecraftServer.getSchedulerManager().buildTask(this::startRefresh)
                 .repeat(TaskSchedule.tick(STEP_TICKS))
                 .schedule();
     }
 
-    /** Called on the tick thread: hands one refresh to the display thread, unless one is still running. */
+    /** Called on the tick thread: hands one refresh to the board thread, unless one is still running. */
     private void startRefresh() {
         ticks += STEP_TICKS;
         if (!running.compareAndSet(false, true)) {
@@ -93,7 +94,7 @@ public final class DisplayService {
             return;
         }
         long now = ticks;
-        display.runOnDisplayThread(() -> {
+        board.execute(() -> {
             try {
                 refresh(MinecraftServer.getConnectionManager().getOnlinePlayers(), now);
             } finally {
@@ -102,7 +103,7 @@ public final class DisplayService {
         });
     }
 
-    /** One refresh of everything that is due. Display thread only. */
+    /** One refresh of everything that is due. Board thread only. */
     void refresh(Collection<Player> online, long now) {
         DisplayConfig current = config.current().display();
         if (current != applied) {
@@ -144,12 +145,12 @@ public final class DisplayService {
         bars.forget(player);
     }
 
-    /** Runs one refresh now on the display thread and waits for it, as if {@code advance} ticks passed. For tests. */
+    /** Runs one refresh now on the board thread and waits for it, as if {@code advance} ticks passed. For tests. */
     public void refreshNow(int advance) {
         ticks += advance;
         long now = ticks;
         CompletableFuture<Void> done = new CompletableFuture<>();
-        display.runOnDisplayThread(() -> {
+        board.execute(() -> {
             try {
                 refresh(MinecraftServer.getConnectionManager().getOnlinePlayers(), now);
                 done.complete(null);
@@ -164,7 +165,12 @@ public final class DisplayService {
         }
     }
 
-    /** Refreshes skipped because the display thread was still busy, for /lobby info and tests. */
+    /** How busy the board thread was over the last minute, for {@code /lobby info}. */
+    public DisplayLoad.Snapshot load() {
+        return board.load();
+    }
+
+    /** Refreshes skipped because the board thread was still busy, for /lobby info and tests. */
     public int skippedRefreshes() {
         return skipped.get();
     }
@@ -178,5 +184,6 @@ public final class DisplayService {
         if (task != null) {
             task.cancel();
         }
+        board.shutdown();
     }
 }

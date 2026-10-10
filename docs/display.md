@@ -118,8 +118,10 @@ join-title:
 
 ## Performance
 
-All of this runs on the display thread, next to holograms and NPCs, never on the server tick. Its
-utilization is shown in `/lobby info`.
+All of this runs on its own thread, `lobby-board`, never on the server tick, and apart from the
+holograms and NPCs (thread `lobby-display`): a busy moment there, such as many players walking past many
+NPCs, never makes the scoreboard late. `/lobby info` shows how busy each of the two threads is, and how
+many scoreboard refreshes were skipped because the previous one was still running.
 
 Players take turns within each interval: with a one-second line, a tenth of the players are updated in
 each of the second's ten refreshes, instead of all of them at once. Holograms and NPCs with the same
@@ -142,7 +144,17 @@ the bundled scoreboard, tab list, nametags and boss bar, hotbar, visibility, reg
 
 | | |
 |---|---|
-| Server tick (MSPT) | average 1.49 ms, p99 7.3 ms, max 27.8 ms; no tick over 50 ms; no growth (1.70, 1.62, 1.41, 1.49, 1.23 ms per minute) |
-| Display thread | 27-29% busy; longest single cycle 180-270 ms |
-| Joining one player per tick up to 200 | longest tick 80-97 ms |
+| Server tick (MSPT) | average 1.70 ms, p99 5.4 ms, max 28.3 ms; no tick over 50 ms; no growth (1.81, 2.01, 1.39, 1.56, 1.74 ms per minute) |
+| Holograms/NPCs thread (`lobby-display`) | 25-26% busy; longest single cycle 210-590 ms |
+| Scoreboard/tab thread (`lobby-board`) | 3.5-4.6% busy; longest single cycle 32-43 ms |
+| Scoreboard refreshes skipped | 0 in the five minutes (19 while 200 players joined one per tick); 173 when both shared one thread |
 | Allocation (whole JVM) | about 228 MB/s; GC 2.4% of the time with a 512 MB heap |
+
+What one join costs the server tick in a full lobby (`JoinCostTest`: the real lobby wiring, 199 players
+walking, 40 joins two seconds apart, each player leaving again):
+
+| | |
+|---|---|
+| Join tick (Minestom letting the player in, plus the rest of that tick) | median 3.8 ms, max 17 ms |
+| With a join every 0.45 s (400 joins) | median 5.7 ms, max 36 ms |
+| First join after a start | about 140 ms (one-time class loading and compiling) |

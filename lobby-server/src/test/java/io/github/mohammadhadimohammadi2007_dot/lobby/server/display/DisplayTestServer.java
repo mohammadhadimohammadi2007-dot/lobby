@@ -67,7 +67,7 @@ final class DisplayTestServer {
         text = new LobbyText(config, placeholders);
         renderer = new ClientObjectRenderer();
         teams = new TeamManager(DisplayTestServer::protocolOf, false);
-        displays = new DisplayService(config, text, permissions, renderer, teams, DisplayTestServer::protocolOf);
+        displays = new DisplayService(config, text, permissions, teams, DisplayTestServer::protocolOf);
         EventNode<PlayerEvent> node = EventNode.type("display-test-" + UUID.randomUUID(), EventFilter.PLAYER);
         env.process().eventHandler().addChild(node);
         teams.register(node);

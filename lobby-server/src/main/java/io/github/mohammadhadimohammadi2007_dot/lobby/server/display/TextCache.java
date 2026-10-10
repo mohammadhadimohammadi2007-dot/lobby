@@ -17,7 +17,7 @@ import java.util.UUID;
  * {@code %player_name%} once per player. Viewers are grouped by client tier (1.8-1.12 get the legacy text
  * with 16 colours) and by whether their Persian fix is on.
  *
- * <p>Only used on the display thread. {@link #clear()} at the start of each refresh, so placeholders are
+ * <p>Only used on the board thread. {@link #clear()} at the start of each refresh, so placeholders are
  * read again.
  */
 final class TextCache {

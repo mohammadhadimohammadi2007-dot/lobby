@@ -19,7 +19,7 @@ import java.util.UUID;
  * per second. Players take turns within each interval ({@link Stagger}), so a second's work is spread
  * over its ten refreshes.
  *
- * <p>Only used on the display thread.
+ * <p>Only used on the board thread.
  */
 final class SidebarService {
 

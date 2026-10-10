@@ -6,15 +6,16 @@ import net.minestom.server.inventory.Inventory;
 import net.minestom.server.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** One menu a player has open: the chest they see and which item sits in each slot for them. */
 final class OpenMenu {
 
     private final MenuDefinition definition;
     private final Inventory inventory;
-    private final Map<Integer, MenuItem> itemsBySlot = new HashMap<>();
+    private volatile Map<Integer, MenuItem> itemsBySlot = Map.of();
+    private final AtomicBoolean building = new AtomicBoolean();
     private long nextRefreshTick;
 
     OpenMenu(MenuDefinition definition, Inventory inventory, long tick) {
@@ -46,22 +47,28 @@ final class OpenMenu {
         return true;
     }
 
-    /** True if an item was already placed in {@code slot} by an earlier (higher priority) entry. */
-    boolean filled(int slot) {
-        return itemsBySlot.containsKey(slot);
+    /** True if no rebuild is on its way; the caller then owns the next one until {@link #built()}. */
+    boolean startBuilding() {
+        return building.compareAndSet(false, true);
     }
 
-    /** Remembers which item ended up in which slot, so clicks know what was clicked. */
-    void slotFilled(int slot, MenuItem item) {
-        itemsBySlot.put(slot, item);
+    /** The rebuild started with {@link #startBuilding()} is done (shown or dropped). */
+    void built() {
+        building.set(false);
     }
 
-    void clearSlots() {
-        itemsBySlot.clear();
-    }
-
-    void setItem(int slot, ItemStack stack) {
-        inventory.setItemStack(slot, stack);
+    /**
+     * Puts the contents in the chest and remembers which item is in which slot, so clicks know what was
+     * clicked. Only slots whose item changed are sent again. Tick thread (or before the menu is opened).
+     */
+    void show(MenuContents contents) {
+        ItemStack[] items = contents.items();
+        for (int slot = 0; slot < items.length; slot++) {
+            if (!inventory.getItemStack(slot).equals(items[slot])) {
+                inventory.setItemStack(slot, items[slot]);
+            }
+        }
+        itemsBySlot = contents.itemsBySlot();
     }
 
     boolean isOpen(Player player) {

@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.MenuHandler;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventNode;
@@ -19,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +34,8 @@ import java.util.function.Supplier;
  *
  * <p>Menus are read-only: every click is cancelled before anything moves, so players cannot take items out,
  * drop them, shift-click them into their inventory or swap them with the cursor. Only the slot's actions
- * run. Items are rebuilt while the menu is open, so a server list shows live player counts.
+ * run. Items are rebuilt while the menu is open, so a server list shows live player counts; the rebuilding
+ * (placeholders, MiniMessage, conditions) runs on a virtual thread, and only changed slots are sent.
  *
  * <p>Besides the menus in the file, the lobby itself can add menus whose contents are only known while
  * running (the lobby selector) with {@link #addBuiltIn}.
@@ -84,7 +88,7 @@ public final class MenuService implements MenuHandler {
         }
         Inventory inventory = new Inventory(definition.inventoryType(), text.render(definition.title(), player));
         OpenMenu menu = new OpenMenu(definition, inventory, ticks);
-        fill(player, menu);
+        menu.show(contents(player, definition));
         open.put(player.getUuid(), menu);
         player.openInventory(inventory);
     }
@@ -111,26 +115,25 @@ public final class MenuService implements MenuHandler {
         return menu == null ? null : menu.definition().name();
     }
 
-    /** Fills every slot with the first item whose conditions hold for this player. */
-    private void fill(Player player, OpenMenu menu) {
-        MenuDefinition definition = menu.definition();
+    /** Every slot with the first item whose conditions hold for this player. Safe on any thread. */
+    private MenuContents contents(Player player, MenuDefinition definition) {
         boolean legacy = bridge.capabilities(player).legacy();
-        menu.clearSlots();
         ItemStack filler = definition.fill() == null ? ItemStack.AIR : MenuItems.filler(definition.fill());
-        for (int slot = 0; slot < definition.size(); slot++) {
-            menu.setItem(slot, filler);
-        }
+        ItemStack[] items = new ItemStack[definition.size()];
+        Arrays.fill(items, filler);
+        Map<Integer, MenuItem> itemsBySlot = new HashMap<>();
         for (MenuItem item : definition.items()) {
             if (!shown(item, player)) {
                 continue;
             }
             for (int slot : item.slots()) {
-                if (!menu.filled(slot)) {
-                    menu.setItem(slot, MenuItems.build(item, player, text, legacy));
-                    menu.slotFilled(slot, item);
+                if (!itemsBySlot.containsKey(slot)) {
+                    items[slot] = MenuItems.build(item, player, text, legacy);
+                    itemsBySlot.put(slot, item);
                 }
             }
         }
+        return new MenuContents(items, Map.copyOf(itemsBySlot));
     }
 
     /** True if every {@code show-if} condition of the item holds for this player. */
@@ -168,9 +171,29 @@ public final class MenuService implements MenuHandler {
                 open.remove(entry.getKey());
                 continue;
             }
-            if (menu.dueForRefresh(ticks)) {
-                fill(player, menu);
+            if (menu.dueForRefresh(ticks) && menu.startBuilding()) {
+                rebuild(player, menu);
             }
         }
+    }
+
+    /** Builds the menu again on a virtual thread and shows it on the next tick, if it is still open. */
+    private void rebuild(Player player, OpenMenu menu) {
+        Async.supply(() -> contents(player, menu.definition())).whenComplete((contents, error) -> {
+            if (error != null) {
+                menu.built();
+                LOGGER.error("Could not refresh the menu '{}' of {}", menu.definition().name(), player.getUsername(), error);
+                return;
+            }
+            Async.onTickThread(() -> {
+                try {
+                    if (open.get(player.getUuid()) == menu && menu.isOpen(player)) {
+                        menu.show(contents);
+                    }
+                } finally {
+                    menu.built();
+                }
+            });
+        });
     }
 }

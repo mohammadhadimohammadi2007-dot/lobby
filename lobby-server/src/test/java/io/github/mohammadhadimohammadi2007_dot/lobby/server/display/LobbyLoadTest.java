@@ -167,11 +167,13 @@ class LobbyLoadTest {
         System.out.println(String.format(Locale.ROOT, "warm-up (%d s after the joins): longest tick %.1f ms (tick %d);"
                 + " first ticks %s ms", warmupTicks / 20, warmupMax / 1e6, warmupMaxAt, String.join(", ", firstTicks)));
         List<String> spikes = new ArrayList<>();
+        int skippedBefore = server.displays.skippedRefreshes();
         long gcBefore = gcMillis();
         long allocatedBefore = allocated();
         long start = System.nanoTime();
         List<Long> ticks = new ArrayList<>();
         List<DisplayLoad.Snapshot> displayPerMinute = new ArrayList<>();
+        List<DisplayLoad.Snapshot> boardPerMinute = new ArrayList<>();
         long nextTick = System.nanoTime();
         long end = start + TimeUnit.SECONDS.toNanos(seconds);
         int tick = 0;
@@ -189,6 +191,7 @@ class LobbyLoadTest {
             tick++;
             if (tick % TICKS_PER_MINUTE == 0) {
                 displayPerMinute.add(server.renderer.load());
+                boardPerMinute.add(server.displays.load());
             }
             nextTick += TICK_NANOS;
             long sleep = nextTick - System.nanoTime();
@@ -200,8 +203,8 @@ class LobbyLoadTest {
         long gc = gcMillis() - gcBefore;
         double allocatedMb = (allocated() - allocatedBefore) / (1024.0 * 1024.0);
 
-        String report = report(ticks, displayPerMinute, server.renderer.load(), wallSeconds, gc, allocatedMb,
-                server.displays.skippedRefreshes());
+        String report = report(ticks, displayPerMinute, boardPerMinute, server.renderer.load(), server.displays.load(),
+                wallSeconds, gc, allocatedMb, server.displays.skippedRefreshes() - skippedBefore, skippedBefore);
         System.out.println(report);
         System.out.println("  ticks over 50 ms: " + spikes.size() + (spikes.isEmpty() ? "" : " - " + String.join("; ",
                 spikes.subList(0, Math.min(10, spikes.size())))));
@@ -223,8 +226,10 @@ class LobbyLoadTest {
         }
     }
 
-    private static String report(List<Long> ticks, List<DisplayLoad.Snapshot> perMinute, DisplayLoad.Snapshot last,
-                                 double wallSeconds, long gcMillis, double allocatedMb, int skipped) {
+    private static String report(List<Long> ticks, List<DisplayLoad.Snapshot> perMinute,
+                                 List<DisplayLoad.Snapshot> boardPerMinute, DisplayLoad.Snapshot last,
+                                 DisplayLoad.Snapshot boardLast, double wallSeconds, long gcMillis, double allocatedMb,
+                                 int skipped, int skippedFilling) {
         StringBuilder text = new StringBuilder(String.format(Locale.ROOT,
                 "lobby load test: %d players walking, %d holograms, %d NPCs, bundled scoreboard/tab/nametags/boss bar,"
                         + " hotbar, visibility, regions, pads, portals; %.0f s%n", PLAYERS, HOLOGRAMS, NPCS, wallSeconds));
@@ -236,13 +241,18 @@ class LobbyLoadTest {
             List<Long> slice = ticks.subList(minute * TICKS_PER_MINUTE, Math.min(ticks.size(), (minute + 1) * TICKS_PER_MINUTE));
             double average = slice.stream().mapToLong(Long::longValue).average().orElse(0) / 1e6;
             long max = slice.stream().mapToLong(Long::longValue).max().orElse(0);
-            String display = minute < perMinute.size() ? String.format(Locale.ROOT, "display thread %.1f%% busy, longest %.1f ms",
-                    perMinute.get(minute).busyPercent(), perMinute.get(minute).longestCycleMillis()) : "";
+            String display = minute < perMinute.size() ? String.format(Locale.ROOT,
+                    "holograms/NPCs thread %.1f%% busy, longest %.1f ms; scoreboard/tab thread %.1f%% busy, longest %.1f ms",
+                    perMinute.get(minute).busyPercent(), perMinute.get(minute).longestCycleMillis(),
+                    boardPerMinute.get(minute).busyPercent(), boardPerMinute.get(minute).longestCycleMillis()) : "";
             text.append(String.format(Locale.ROOT, "  minute %d: tick average %.2f ms, max %.2f ms; %s%n", minute + 1,
                     average, max / 1e6, display));
         }
-        text.append(String.format(Locale.ROOT, "  display thread (last minute): %.1f%% busy, longest cycle %.1f ms;"
-                + " scoreboard refreshes skipped: %d%n", last.busyPercent(), last.longestCycleMillis(), skipped));
+        text.append(String.format(Locale.ROOT, "  last minute: holograms/NPCs thread %.1f%% busy, longest cycle %.1f ms;"
+                        + " scoreboard/tab thread %.1f%% busy, longest cycle %.1f ms%n", last.busyPercent(),
+                last.longestCycleMillis(), boardLast.busyPercent(), boardLast.longestCycleMillis()));
+        text.append(String.format(Locale.ROOT, "  scoreboard refreshes skipped: %d in the measured %.0f s (%d while filling"
+                + " up and warming up)%n", skipped, wallSeconds, skippedFilling));
         text.append(String.format(Locale.ROOT, "  allocation (all threads): %.1f MB/s; GC: %d ms in %.0f s (%.2f%%), heap max %d MB%n",
                 allocatedMb / wallSeconds, gcMillis, wallSeconds, gcMillis / (wallSeconds * 10),
                 Runtime.getRuntime().maxMemory() / (1024 * 1024)));

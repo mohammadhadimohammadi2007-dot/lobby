@@ -197,23 +197,6 @@ public final class ClientObjectRenderer {
         return load.snapshot();
     }
 
-    /**
-     * Runs other display work on this same thread and counts it in {@link #load()}, so one number
-     * covers everything the display thread does (the scoreboard and tab list use this).
-     */
-    public void runOnDisplayThread(Runnable task) {
-        worker.execute(() -> {
-            long start = System.nanoTime();
-            try {
-                task.run();
-            } catch (RuntimeException e) {
-                LOGGER.error("Display task failed", e);
-            } finally {
-                load.record(start, System.nanoTime() - start);
-            }
-        });
-    }
-
     /** How many objects there are, for tests. */
     public int objectCount() {
         return onWorker(tracked::size);
