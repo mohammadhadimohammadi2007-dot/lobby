@@ -80,3 +80,25 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 - [ ] A hologram with several lines: armor-stand lines on 1.8, text displays on the latest client,
       at the same height.
 - [ ] Persian text reads right to left on both.
+- [ ] A hologram with `%server_online%` updates on both when someone joins; one with `%player_name%`
+      shows each player their own name.
+- [ ] Clicking a hologram with actions runs them once (left and right click), on both clients.
+
+## 8. Menus
+
+- [ ] Every bundled menu (`/lobby`, game selector, lobby selector) opens on both clients with the right
+      items; nothing can be taken, dropped, shift-clicked or swapped with a number key.
+- [ ] A menu with `refresh: 20` updates its player counts while open on 1.8.
+
+## 9. Skins and lobby instances
+
+- [ ] `/skin <name>` (SkinsRestorer on the proxy): the new skin shows for you and for the players around
+      you without rejoining, on both clients.
+- [ ] `/lobby 2` and back: players, NPCs and holograms of the other instance are gone, then back; your
+      own skin and the hotbar stay.
+
+## 10. Startup and mistakes
+
+- [ ] A fresh server folder boots with no warnings, standalone and offline, with every file created.
+- [ ] A typo in `display.yml`, `hotbar.yml` or `movement.yml` (e.g. `particle: clowd`) gives one clear
+      warning naming the option on `/lobby reload`, and the rest keeps working.

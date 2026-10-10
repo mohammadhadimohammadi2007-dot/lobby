@@ -136,3 +136,13 @@ tab list, nametags and boss bar, with values that change every second:
 | One player joining 200 | about 50 ms of display-thread work |
 | Allocation on the display thread | about 85 MB per second of work (baseline for later tuning) |
 | Garbage collection | about 150-160 ms over 20 seconds, 27-30 collections, 512 MB test heap |
+
+And the whole lobby for five minutes (`LobbyLoadTest`): 200 players walking, the same holograms and NPCs,
+the bundled scoreboard, tab list, nametags and boss bar, hotbar, visibility, regions, pads and portals:
+
+| | |
+|---|---|
+| Server tick (MSPT) | average 1.49 ms, p99 7.3 ms, max 27.8 ms; no tick over 50 ms; no growth (1.70, 1.62, 1.41, 1.49, 1.23 ms per minute) |
+| Display thread | 27-29% busy; longest single cycle 180-270 ms |
+| Joining one player per tick up to 200 | longest tick 80-97 ms |
+| Allocation (whole JVM) | about 228 MB/s; GC 2.4% of the time with a 512 MB heap |

@@ -1,5 +1,6 @@
-# The chat load test: 200 fake players chatting for a minute. Too slow for every push, so it runs once a
-# week and whenever started by hand (Actions > Load test > Run workflow).
+# The load tests: 200 fake players chatting for a minute, and 200 players walking for five minutes with
+# everything on. Too slow for every push, so they run once a week and whenever started by hand
+# (Actions > Load test > Run workflow).
 name: Load test
 
 on:
@@ -28,3 +29,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Chat load test
         run: ./gradlew :lobby-server:test --tests '*ChatLoadTest' -i
+  lobby-load:
+    runs-on: ubuntu-latest
+    env:
+      LOBBY_LOAD_TEST: 1
+      LOBBY_LOAD_TEST_SECONDS: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Lobby load test (200 players, everything on, 5 minutes)
+        run: ./gradlew :lobby-server:test --tests '*LobbyLoadTest' -i
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lobby-load-test
+          path: lobby-server/build/reports/lobby-load-test.txt

@@ -62,6 +62,20 @@ LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test --tests '*ChatLoadTest'
 `LOBBY_LOAD_TEST_SECONDS` changes the duration. Run it after changing anything in the chat pipeline.
 In CI it runs every Monday and on demand (Actions > Load test > Run workflow), not on every push.
 
+### Lobby load test
+
+`LobbyLoadTest` joins 200 players one per tick, then has them walk in circles for five minutes with 50
+holograms, 30 NPCs, the bundled scoreboard, tab list, nametags, boss bar, hotbar, visibility, regions,
+pads and portals all running. It reports the tick time (MSPT) per minute, to show it does not grow, the
+display thread's load, the allocation rate and GC time (also in
+`lobby-server/build/reports/lobby-load-test.txt`):
+
+```bash
+LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test --tests '*LobbyLoadTest'
+```
+
+`LOBBY_LOAD_TEST_SECONDS` changes the duration (300 by default). It runs with the chat load test in CI.
+
 ## Commits and pull requests
 
 - One logical change per commit, with a clear message: a short summary line, a blank line, then why.
