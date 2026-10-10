@@ -37,6 +37,8 @@ tasks.test {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     // Lets Minestom's test harness create fake players on normal threads.
     systemProperty("minestom.inside-test", "true")
+    // LOBBY_JFR=filename=<file>[,settings=<file.jfc>] records the run with Java Flight Recorder (see JoinCostTest).
+    System.getenv("LOBBY_JFR")?.let { jvmArgs("-XX:StartFlightRecording=$it") }
 }
 
 // `./gradlew :lobby-server:run` starts a local server inside lobby-server/run/

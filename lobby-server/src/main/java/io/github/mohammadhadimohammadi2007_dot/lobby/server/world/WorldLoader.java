@@ -14,6 +14,8 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.LightingChunk;
 import net.minestom.server.instance.Section;
 import net.minestom.server.instance.anvil.AnvilLoader;
+import net.minestom.server.network.ConnectionState;
+import net.minestom.server.network.packet.server.SendablePacket;
 import net.minestom.server.world.DimensionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +83,10 @@ public final class WorldLoader {
         }
 
         Set<Long> chunks = new LinkedHashSet<>(loaded.mapChunks());
-        chunks.addAll(chunksAround(spawn, settings.preloadRadius()));
+        // At least every chunk a player at spawn is sent (Minestom sends one ring more than the view distance),
+        // so the first player does not have missing chunks made and lit on the tick thread. A chunk made later
+        // would also drop the light of its neighbours, which were already built.
+        chunks.addAll(chunksAround(spawn, Math.max(settings.preloadRadius(), settings.viewDistance() + 1)));
         preload(instance, chunks);
 
         boolean lightComputed = false;
@@ -94,6 +99,7 @@ public final class WorldLoader {
         }
 
         warnOutsideLegacyHeight(instance);
+        prepareChunkPackets(instance);
 
         long loadMillis = (System.nanoTime() - startNanos) / NANOS_PER_MILLI;
         long memoryMb = Math.max(0, usedMemory() - memoryBefore) / BYTES_PER_MB;
@@ -170,6 +176,20 @@ public final class WorldLoader {
             futures.add(instance.loadChunk(CoordConversion.chunkIndexGetX(key), CoordConversion.chunkIndexGetZ(key)));
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+    }
+
+    /**
+     * Builds every chunk's packet once, light included, before anyone joins. Minestom keeps each one and
+     * sends the same bytes to every player, but builds it the first time a chunk is sent, on the tick
+     * thread: without this, the first player after a start froze the server for one to two seconds. The
+     * map never changes, so the packets stay valid.
+     */
+    private static void prepareChunkPackets(InstanceContainer instance) {
+        long start = System.nanoTime();
+        for (Chunk chunk : instance.getChunks()) {
+            SendablePacket.extractServerPacket(ConnectionState.PLAY, chunk.getFullDataPacket());
+        }
+        LOGGER.debug("Chunk packets prepared in {} ms", (System.nanoTime() - start) / NANOS_PER_MILLI);
     }
 
     /** True if any chunk that has blocks has no stored sky light. */

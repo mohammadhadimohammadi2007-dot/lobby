@@ -32,7 +32,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -111,17 +113,21 @@ class PortalEnvTest {
         TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
         Player player = connection.connect(instance, OUTSIDE);
         make(portals, player, "hello", List.of("message: <green>Hello from the portal"));
-        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+        List<Collector<SystemChatPacket>> chat = new ArrayList<>(List.of(connection.trackIncoming(SystemChatPacket.class)));
 
         env.process().eventHandler().call(new PlayerMoveEvent(player, new Pos(3.5, 41, 0.5), true));
-        List<String> received = new ArrayList<>();
-        // Actions run in the background, so wait for the message to arrive.
+        Set<String> received = new LinkedHashSet<>();
+        // Actions run in the background, so wait for the message to arrive. collect() stops a collector, so
+        // the next one starts first: a message arriving in between is in one of them, perhaps both.
         env.tickWhile(() -> {
-            chat.collect().forEach(packet -> received.add(PlainTextComponentSerializer.plainText().serialize(packet.message())));
+            chat.add(connection.trackIncoming(SystemChatPacket.class));
+            chat.removeFirst().collect().forEach(packet ->
+                    received.add(PlainTextComponentSerializer.plainText().serialize(packet.message())));
             return received.isEmpty();
         }, Duration.ofSeconds(5));
+        chat.forEach(Collector::collect);
 
-        assertEquals(List.of("Hello from the portal"), received);
+        assertEquals(Set.of("Hello from the portal"), received);
     }
 
     @Test

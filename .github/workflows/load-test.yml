@@ -1,5 +1,5 @@
-# The load tests: 200 fake players chatting for a minute, and 200 players walking for five minutes with
-# everything on. Too slow for every push, so they run once a week and whenever started by hand
+# The load tests: 200 fake players chatting for a minute, 200 players walking for five minutes with
+# everything on, and what one join costs in a full lobby. Too slow for every push, so they run once a week and whenever started by hand
 # (Actions > Load test > Run workflow).
 name: Load test
 
@@ -51,3 +51,24 @@ jobs:
         with:
           name: lobby-load-test
           path: lobby-server/build/reports/lobby-load-test.txt
+  join-cost:
+    runs-on: ubuntu-latest
+    env:
+      LOBBY_LOAD_TEST: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Join cost (real lobby, 199 players walking, 40 joins)
+        run: ./gradlew :lobby-server:test --tests '*JoinCostTest' -i
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: join-cost
+          path: lobby-server/build/reports/join-cost.txt

@@ -65,6 +65,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.TickStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.LobbyWorld;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldLoader;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventFilter;
@@ -128,14 +130,32 @@ public final class LobbyServer implements ServerInfo {
     /** Boots everything in order and opens the port. Players can only join after the map is loaded. */
     public void start() {
         long startNanos = System.nanoTime();
-        ConfigSnapshot snapshot = configManager.current();
-        LobbyConfig config = snapshot.config();
+        LobbyConfig config = configManager.current().config();
 
         MinecraftServer minecraftServer = MinecraftServer.init(AuthFactory.create(config.connection()));
         MinecraftServer.setBrandName(BRAND);
         LOGGER.info("Minecraft version {} (protocol {})", MinecraftServer.VERSION_NAME, MinecraftServer.PROTOCOL_VERSION);
 
+        build();
+        MinecraftServer.getSchedulerManager().buildShutdownTask(this::shutdown);
+
+        minecraftServer.start(config.server().host(), config.server().port());
+        ConsoleInput.start();
+
+        printSummary(config, (System.nanoTime() - startNanos) / NANOS_PER_MILLI);
+    }
+
+    /**
+     * Everything between starting Minecraft and opening the port: map, integrations, features, listeners
+     * and commands. Package-private so the load tests can run the real lobby inside a test server.
+     */
+    void build() {
+        ConfigSnapshot snapshot = configManager.current();
+        LobbyConfig config = snapshot.config();
         world = WorldLoader.load(config.world(), SpawnListener.spawnPosition(config));
+        // Minestom sets up its entity classes (metadata tables, time units) when the first entity is made.
+        // Holograms and NPCs are only packets, so without this the first player paid for it during their join.
+        new LivingEntity(EntityType.PLAYER);
 
         startIntegrations(snapshot);
         // The instances need the permission service (to let staff into a full lobby) and messages.
@@ -150,12 +170,6 @@ public final class LobbyServer implements ServerInfo {
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
-        MinecraftServer.getSchedulerManager().buildShutdownTask(this::shutdown);
-
-        minecraftServer.start(config.server().host(), config.server().port());
-        ConsoleInput.start();
-
-        printSummary(config, (System.nanoTime() - startNanos) / NANOS_PER_MILLI);
     }
 
     /**
@@ -423,6 +437,13 @@ public final class LobbyServer implements ServerInfo {
     /** Runs once when the server stops (the 'stop' command, Ctrl+C or a kill signal). */
     private void shutdown() {
         LOGGER.info("Shutting down...");
+        stopFeatures();
+        Async.shutdown();
+        LOGGER.info("Goodbye!");
+    }
+
+    /** Stops and saves every feature; package-private so tests can stop a lobby without stopping {@link Async}. */
+    void stopFeatures() {
         chat.shutdown();
         holograms.shutdown();
         npcs.shutdown();
@@ -437,8 +458,6 @@ public final class LobbyServer implements ServerInfo {
             database.close();
             LOGGER.info("Database connections closed.");
         }
-        Async.shutdown();
-        LOGGER.info("Goodbye!");
     }
 
     /** Whether players are muted (LiteBans), for the chat system. */

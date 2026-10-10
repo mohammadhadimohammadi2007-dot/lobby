@@ -20,7 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>It only hides players. NPCs and holograms are drawn with packets for every viewer and are never
  * affected. Hiding works through Minestom's viewable rule of each player, which decides who is sent that
- * player at all, so a hidden player costs their viewers nothing.
+ * player at all, so a hidden player costs their viewers nothing. Every player also gets the same check as
+ * their viewer rule (what they see), and Minestom only shows a player when both agree. That way a viewer
+ * whose choice changes (when it is read on join, or on a switch) is worked out alone: one check per player
+ * near them, not one per pair of players online.
  */
 public final class VisibilityService {
 
@@ -36,6 +39,13 @@ public final class VisibilityService {
         this.permissions = permissions;
         this.settings = settings;
         this.text = text;
+        // A new rank can make a player staff, which changes who sees them in "staff only".
+        permissions.onMetaChange(id -> MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+            Player target = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(id);
+            if (target != null) {
+                target.updateViewableRule();
+            }
+        }));
     }
 
     private HotbarConfig.Visibility options() {
@@ -61,16 +71,25 @@ public final class VisibilityService {
     }
 
     /**
-     * Starts deciding who may see {@code target}. Call once, on the first spawn; when the player's saved
-     * choice has been read, what they see is worked out again.
+     * Gives {@code player} the rules for who sees them and whom they see. Call before they spawn (during
+     * configuration): a player without an instance has nobody to check, and the spawn then applies the
+     * rules once, instead of showing everyone and checking all of them again right after.
+     */
+    public void applyRules(Player player) {
+        player.updateViewableRule(viewer -> canSee(viewer, player));
+        player.updateViewerRule(entity -> !(entity instanceof Player other) || canSee(player, other));
+    }
+
+    /**
+     * Works out again what {@code target} sees once their saved choice has been read. Call once, on the
+     * first spawn.
      *
      * @param onLoaded run on the tick thread after the saved choice was applied (to update the switch item)
      */
     public void watch(Player target, Runnable onLoaded) {
-        target.updateViewableRule(viewer -> canSee(viewer, target));
         settings.whenLoaded(target.getUuid()).thenRun(() -> MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
             if (target.isOnline()) {
-                refreshViewer();
+                refresh(target);
                 onLoaded.run();
             }
         }));
@@ -94,7 +113,7 @@ public final class VisibilityService {
         lastSwitch.put(player.getUuid(), now);
         VisibilityMode next = mode(player).next();
         settings.update(player.getUuid(), current -> current.withVisibility(next.configName()));
-        refreshViewer();
+        refresh(player);
         player.sendMessage(text.message(MessageKey.VISIBILITY_CHANGED, player,
                 net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.component("mode",
                         text.message(modeName(next), player))));
@@ -102,14 +121,11 @@ public final class VisibilityService {
     }
 
     /**
-     * Works out again who is shown to whom. Every player's rule is asked again, which also covers a
-     * viewer who changed their mode; it runs on a switch (rate-limited) and when a player's saved choice
-     * arrives, never every tick.
+     * Works out again which players {@code viewer} sees, after their choice changed. Only the players near
+     * them are checked; everyone else's view stays as it is.
      */
-    public void refreshViewer() {
-        for (Player target : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
-            target.updateViewableRule();
-        }
+    public void refresh(Player viewer) {
+        viewer.updateViewerRule();
     }
 
     /** Forgets a player who left. */

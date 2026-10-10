@@ -33,6 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -91,6 +92,11 @@ class HotbarEnvTest {
         return env.createConnection(new GameProfile(id, name)).connect(instance, SPAWN);
     }
 
+    /** The items are built in the background and put in the inventory on a later tick. */
+    private static void awaitItem(Env env, Player player, int slot, Material material) {
+        env.tickWhile(() -> player.getInventory().getItemStack(slot).material() != material, Duration.ofSeconds(5));
+    }
+
     @Test
     void theBundledHotbarLoadsWithoutWarningsAndIsGivenOnJoin(Env env) throws Exception {
         Setup setup = start(env);
@@ -99,6 +105,7 @@ class HotbarEnvTest {
         Instance lobby = env.createFlatInstance();
 
         Player player = join(env, setup, lobby, "Steve");
+        awaitItem(env, player, 0, Material.COMPASS);
 
         assertEquals(Material.COMPASS, player.getInventory().getItemStack(0).material());
         assertEquals(Material.NETHER_STAR, player.getInventory().getItemStack(1).material());
@@ -113,9 +120,11 @@ class HotbarEnvTest {
         Instance first = env.createFlatInstance();
         Instance second = env.createFlatInstance();
         Player player = join(env, setup, first, "Steve");
+        awaitItem(env, player, 0, Material.COMPASS);
         player.getInventory().clear();
 
         player.setInstance(second, SPAWN).join();
+        awaitItem(env, player, 0, Material.COMPASS);
 
         assertEquals(Material.COMPASS, player.getInventory().getItemStack(0).material());
     }
@@ -124,6 +133,7 @@ class HotbarEnvTest {
     void hotbarItemsCannotBeDroppedOrMoved(Env env) throws Exception {
         Setup setup = start(env);
         Player player = join(env, setup, env.createFlatInstance(), "Steve");
+        awaitItem(env, player, 0, Material.COMPASS);
         ItemStack compass = player.getInventory().getItemStack(0);
 
         ItemDropEvent drop = new ItemDropEvent(player, compass);
@@ -144,11 +154,12 @@ class HotbarEnvTest {
     void usingAnItemRunsItsActions(Env env) throws Exception {
         Setup setup = start(env);
         Player player = join(env, setup, env.createFlatInstance(), "Steve");
+        awaitItem(env, player, 8, Material.CHEST);
 
         PlayerUseItemEvent use = new PlayerUseItemEvent(player, PlayerHand.MAIN, player.getInventory().getItemStack(8), 0);
         env.process().eventHandler().call(use);
         // Actions run in the background.
-        env.tickWhile(() -> setup.menus().openMenu(player) == null, java.time.Duration.ofSeconds(5));
+        env.tickWhile(() -> setup.menus().openMenu(player) == null, Duration.ofSeconds(5));
 
         assertTrue(use.isCancelled(), "a hotbar item is never used like a normal item");
         assertEquals("lobby", setup.menus().openMenu(player), "the chest opens the lobby menu");
@@ -178,12 +189,33 @@ class HotbarEnvTest {
     }
 
     @Test
+    void aSavedChoiceIsAppliedWhenThePlayerJoins(Env env) throws Exception {
+        Setup setup = start(env);
+        Instance lobby = env.createFlatInstance();
+        Player other = join(env, setup, lobby, "Alex");
+        Player staff = join(env, setup, lobby, "Staff");
+        UUID id = UUID.randomUUID();
+        setup.settings().load(id);
+        setup.settings().whenLoaded(id).join();
+        setup.settings().update(id, current -> current.withVisibility("staff"));
+
+        Player viewer = env.createConnection(new GameProfile(id, "Steve")).connect(lobby, SPAWN);
+        env.tick();
+        env.tick();
+
+        assertFalse(other.getViewers().contains(viewer), "hidden by the viewer's own saved choice");
+        assertTrue(staff.getViewers().contains(viewer));
+        assertTrue(viewer.getViewers().contains(other), "the others still see the new player");
+    }
+
+    @Test
     void theSwitchShowsTheCurrentMode(Env env) throws Exception {
         Setup setup = start(env);
         Player viewer = join(env, setup, env.createFlatInstance(), "Steve");
         setup.settings().update(viewer.getUuid(), current -> current.withVisibility("none"));
 
         setup.hotbar().give(viewer);
+        awaitItem(env, viewer, 7, Material.GRAY_DYE);
 
         assertEquals(Material.GRAY_DYE, viewer.getInventory().getItemStack(7).material(), "players hidden");
     }
