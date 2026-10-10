@@ -57,7 +57,25 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 - [ ] The visibility switch: all, then staff only, then nobody; NPCs and holograms stay. Rejoin: the
       choice is kept.
 
-## 5. Holograms on 1.8
+## 5. Movement and portals
+
+- [ ] Double jump in adventure mode: jump, then jump again in the air; on 1.8 and on the latest client. It
+      does not work again before landing, and not at all in creative or with `/fly` on.
+- [ ] `/fly` with and without `lobby.fly`.
+- [ ] A light weighted pressure plate on a slime block throws you forward; a heavy one straight up.
+- [ ] `/portal wand`, hit one corner, right-click the other, `/portal create test`,
+      `/portal action test add connect_group: <a real group>`: walking in connects you. With a group whose
+      servers are all down, you are put back outside and pushed away, and told why.
+- [ ] The portal works in every lobby instance (`/lobby 2`).
+
+## 6. Network names
+
+- [ ] Behind Velocity with the bridge, rename a group in the bridge's `[groups]` and restart the proxy:
+      the lobby logs one warning naming the group, where it is used and the groups the proxy has;
+      `/lobby info` shows it under "Network names". Fix it, `/lobby reload`: the line says all names are
+      known.
+
+## 7. Holograms on 1.8
 
 - [ ] A hologram with several lines: armor-stand lines on 1.8, text displays on the latest client,
       at the same height.

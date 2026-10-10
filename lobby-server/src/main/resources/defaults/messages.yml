@@ -40,6 +40,28 @@ visibility-cooldown: "<prefix><red>Wait <seconds>s before switching again."
 visibility-all: "<green>all players"
 visibility-staff: "<light_purple>only staff"
 visibility-none: "<red>no players"
+# /fly
+fly-on: "<prefix><green>Flying on."
+fly-off: "<prefix><gray>Flying off."
+# /portal. <name> is the portal, <number> 1 or 2, <x> <y> <z> a block.
+portal-usage: "<prefix><gray>/portal wand|pos1|pos2|create <name>|remove|list|info|teleport|cooldown|permission|action <name> add|remove|clear|list"
+portal-position-set: "<prefix><green>Corner <number> set to <white><x>, <y>, <z></white>."
+portal-wand-given: "<prefix><green>Hit a block for corner 1, right-click one for corner 2, then /portal create <name>."
+portal-wand-name: "<gold>Portal wand"
+portal-wand-lore: "<gray>Hit: corner 1, right-click: corner 2"
+portal-created: "<prefix><green>Made the portal <white><name></white>. Add what it does with /portal action <name> add <action>."
+portal-bad-name: "<prefix><red>Portal names may only use a-z, 0-9, - and _ (at most 32)."
+portal-exists: "<prefix><red>There is already a portal called <white><name></white>."
+portal-no-selection: "<prefix><red>Choose both corners first: /portal pos1 and pos2, or the wand (/portal wand)."
+portal-too-big: "<prefix><red>That is more than <max> blocks. Check the corners."
+portal-unknown: "<prefix><red>There is no portal called <white><name></white>."
+portal-deleted: "<prefix><green>Removed the portal <white><name></white>."
+portal-list: "<prefix><gray><count> portal(s): <white><names>"
+portal-list-empty: "<prefix><gray>There are no portals yet. /portal wand to make one."
+portal-info: "<prefix><gray>Portal <white><name></white> from <white><from></white> to <white><to></white><newline><gray>Cooldown: <white><cooldown></white>, for <white><permission></white><newline><gray>Actions: <white><actions>"
+portal-set: "<prefix><green><name></green><gray>: <property> is now <white><value>"
+portal-action-invalid: "<prefix><red><error>. Actions: <gray><types>"
+portal-no-permission: "<prefix><red>You may not use this portal."
 
 # ---------------- Holograms (/hologram, see docs/holograms.md) ----------------
 hologram-usage: "<prefix><gray>Usage: <white>/hologram list | near | create <name> | delete <name> | info <name> | addline <name> <text> | set <name> <property> <value> | action add <name> <action> | teleport <name> | goto <name> | copy <name> <new> | import"
@@ -147,6 +169,7 @@ info: |-
   <gray>Integrations: <white><integrations>
   <gray>Bridge: <white><bridge>
   <gray>Display thread: <white><display>
+  <gray>Network names: <white><network>
 
 # Shown when a player cannot join.
 kick-server-full: "<red>The lobby is full. Please try again in a moment."

@@ -174,7 +174,8 @@ public final class LobbyCommand extends Command {
                 Messages.text("chunks", info.world().chunkCount()),
                 Messages.text("integrations", integrations.isEmpty() ? "none" : integrations),
                 Messages.text("bridge", info.bridgeStatus()),
-                Messages.text("display", info.displayLoad()));
+                Messages.text("display", info.displayLoad()),
+                Messages.text("network", info.networkCheck()));
     }
 
     private static String format(double value, int decimals) {

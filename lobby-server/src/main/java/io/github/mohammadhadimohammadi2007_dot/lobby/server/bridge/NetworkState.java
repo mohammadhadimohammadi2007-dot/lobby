@@ -5,6 +5,9 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The latest network data from the proxy bridge: player counts per server, server groups and whether
@@ -17,10 +20,44 @@ public final class NetworkState {
     private volatile Map<String, BridgeMessage.ServerStatus.Status> statuses = Map.of();
     private volatile long lastUpdateMillis;
 
+    /** The group names and the server names, as last reported. */
+    private record Names(Set<String> groups, Set<String> servers) {
+    }
+
+    private final List<Runnable> namesChanged = new CopyOnWriteArrayList<>();
+    private volatile Names lastNames = new Names(Set.of(), Set.of());
+
     /** Replaces the snapshot. Called by the bridge listener (and by tests). */
     public void update(BridgeMessage.NetworkSnapshot newSnapshot) {
         snapshot = newSnapshot;
         lastUpdateMillis = System.currentTimeMillis();
+        // Group and server names rarely change; only then do the listeners need to look again.
+        Names names = new Names(Set.copyOf(newSnapshot.groups().keySet()), servers());
+        if (!names.equals(lastNames)) {
+            lastNames = names;
+            namesChanged.forEach(Runnable::run);
+        }
+    }
+
+    /**
+     * Runs {@code listener} when the first snapshot arrives and whenever the names of the groups or servers
+     * change, on the thread that received the snapshot.
+     */
+    public void onNamesChanged(Runnable listener) {
+        namesChanged.add(listener);
+    }
+
+    /** True once the bridge has sent anything; before that, no name can be checked. */
+    public boolean hasSnapshot() {
+        return lastUpdateMillis != 0;
+    }
+
+    /** Every server name the bridge has mentioned: in a group, with a player count or with a status. */
+    public Set<String> servers() {
+        Set<String> servers = new TreeSet<>(snapshot.serverCounts().keySet());
+        snapshot.groups().values().forEach(servers::addAll);
+        servers.addAll(statuses.keySet());
+        return servers;
     }
 
     /** Replaces the server statuses. Called by the bridge listener (and by tests). */

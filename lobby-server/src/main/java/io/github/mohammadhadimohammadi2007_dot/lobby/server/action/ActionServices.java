@@ -8,6 +8,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionSer
 import net.minestom.server.entity.Player;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * What actions need from the rest of the lobby. Features that start later (server switching, menus, lobby
@@ -40,13 +41,15 @@ public final class ActionServices {
         this.bridge = bridge;
         this.connector = new Connector() {
             @Override
-            public void connect(Player player, String server) {
+            public CompletableFuture<Boolean> connect(Player player, String server) {
                 player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+                return CompletableFuture.completedFuture(false);
             }
 
             @Override
-            public void connectGroup(Player player, String group) {
+            public CompletableFuture<Boolean> connectGroup(Player player, String group) {
                 player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+                return CompletableFuture.completedFuture(false);
             }
         };
     }

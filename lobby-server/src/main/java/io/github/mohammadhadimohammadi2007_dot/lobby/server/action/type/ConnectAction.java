@@ -12,11 +12,13 @@ public record ConnectAction(String target, boolean group) implements Action {
     @Override
     public Step run(ActionContext context) {
         String filled = context.services().text().placeholders().plainText(target, context.player()).strip();
-        if (group) {
-            context.services().connector().connectGroup(context.player(), filled);
-        } else {
-            context.services().connector().connect(context.player(), filled);
-        }
+        var connector = context.services().connector();
+        var sent = group ? connector.connectGroup(context.player(), filled) : connector.connect(context.player(), filled);
+        sent.whenComplete((ok, error) -> {
+            if (error != null || !Boolean.TRUE.equals(ok)) {
+                context.onConnectFailed().run();
+            }
+        });
         return Step.CONTINUE;
     }
 

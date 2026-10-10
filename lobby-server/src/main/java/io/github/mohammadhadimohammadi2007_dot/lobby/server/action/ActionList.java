@@ -60,10 +60,15 @@ public final class ActionList {
      * @return false if nothing ran because the player is still on cooldown (or there is nothing to run)
      */
     public boolean run(Player player, ActionServices services, String source) {
+        return run(player, services, source, () -> { });
+    }
+
+    /** Like {@link #run(Player, ActionServices, String)}, with what to do when a {@code connect} fails. */
+    public boolean run(Player player, ActionServices services, String source, Runnable onConnectFailed) {
         if (actions.isEmpty() || !passCooldown(player.getUuid(), System.currentTimeMillis())) {
             return false;
         }
-        ActionContext context = new ActionContext(player, services, source);
+        ActionContext context = new ActionContext(player, services, source, onConnectFailed);
         Async.run(() -> runFrom(0, context));
         return true;
     }

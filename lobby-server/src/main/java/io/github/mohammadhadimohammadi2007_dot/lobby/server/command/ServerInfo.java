@@ -27,6 +27,14 @@ public interface ServerInfo {
     String bridgeStatus();
 
     /**
+     * Whether the group and server names used in menus, NPCs, portals... are known to the proxy, in words,
+     * for {@code /lobby info}.
+     */
+    default String networkCheck() {
+        return "not checked";
+    }
+
+    /**
      * How busy the display thread (holograms, NPCs, scoreboard, tab list) was over the last minute, in
      * words, e.g. "3.2% busy, longest cycle 4.1 ms".
      */

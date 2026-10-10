@@ -1,0 +1,57 @@
+# =====================================================================
+#  Movement - double jump, /fly, jump pads and launch pads.
+#  Changes apply with /lobby reload. Portals are made in game with /portal (data/portals.yml).
+#  Guide: docs/movement-and-portals.md
+# =====================================================================
+
+# Sounds are Minecraft sound names (e.g. "entity.bat.takeoff"), particles particle names (e.g. "cloud").
+# Leave one empty ("") for none. Velocities are in blocks per second.
+
+# ---------------- Double jump ----------------
+# Press jump again in the air to jump a second time, in the direction you are looking.
+double-jump:
+  enabled: true
+  # Only players with this permission can double jump ("" = everyone).
+  permission: ""
+  # Milliseconds before the next double jump. Players must also land in between.
+  cooldown: 1000
+  # How far forward and how high it throws you.
+  forward: 18
+  up: 12
+  sound: "entity.bat.takeoff"
+  particle: "cloud"
+
+# ---------------- /fly ----------------
+fly:
+  # Players with this permission can use /fly. Double jump is off while flying.
+  permission: "lobby.fly"
+
+# ---------------- Jump pads ----------------
+# A pressure plate on top of a certain block throws players forward, in the direction they walk.
+jump-pads:
+  enabled: true
+  pads:
+    - plate: "light_weighted_pressure_plate"
+      # The block under the plate. "any" for any block.
+      below: "slime_block"
+      forward: 30
+      up: 16
+      sound: "entity.firework_rocket.launch"
+      particle: "firework"
+    - plate: "heavy_weighted_pressure_plate"
+      below: "any"
+      forward: 0
+      up: 25
+      sound: "entity.slime.jump"
+      particle: ""
+
+# ---------------- Launch pads ----------------
+# A box of blocks that throws everyone who walks in in a fixed direction, wherever they look.
+# Corners are block coordinates, in any order.
+launch-pads: []
+#  - name: tower
+#    from: [10, 64, 10]
+#    to: [12, 64, 12]
+#    velocity: [0, 30, -20]     # x, y, z
+#    sound: "entity.firework_rocket.launch"
+#    particle: "firework"

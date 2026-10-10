@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.io.UncheckedIOException;
 
 /**
@@ -36,19 +37,22 @@ public final class BungeeConnector implements Connector {
     }
 
     @Override
-    public void connect(Player player, String server) {
+    public CompletableFuture<Boolean> connect(Player player, String server) {
         player.sendMessage(text.message(MessageKey.CONNECTING, player, Messages.text("server", server)));
         player.sendPluginMessage(CHANNEL, message(server));
+        // BungeeCord never answers, so a failure cannot be seen here.
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public void connectGroup(Player player, String group) {
+    public CompletableFuture<Boolean> connectGroup(Player player, String group) {
         if (!warnedAboutGroups) {
             warnedAboutGroups = true;
             LOGGER.warn("A 'connect_group: {}' action needs Velocity with the lobby-bridge plugin, because"
                     + " BungeeCord does not tell the lobby about its servers. Use 'connect: <server>' instead.", group);
         }
         player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+        return CompletableFuture.completedFuture(false);
     }
 
     /** The {@code Connect} message: the word, then the server name, as BungeeCord expects. */

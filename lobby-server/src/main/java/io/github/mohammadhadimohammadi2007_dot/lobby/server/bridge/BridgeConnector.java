@@ -9,6 +9,8 @@ import net.minestom.server.entity.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Sends players to other servers by asking the proxy through the bridge, and tells them what happened:
  * the server was full, offline, or does not exist.
@@ -26,24 +28,27 @@ public final class BridgeConnector implements Connector {
     }
 
     @Override
-    public void connect(Player player, String server) {
-        request(player, server, false);
+    public CompletableFuture<Boolean> connect(Player player, String server) {
+        return request(player, server, false);
     }
 
     @Override
-    public void connectGroup(Player player, String group) {
-        request(player, group, true);
+    public CompletableFuture<Boolean> connectGroup(Player player, String group) {
+        return request(player, group, true);
     }
 
-    private void request(Player player, String target, boolean group) {
+    private CompletableFuture<Boolean> request(Player player, String target, boolean group) {
         player.sendMessage(text.message(MessageKey.CONNECTING, player, Messages.text("server", target)));
+        CompletableFuture<Boolean> sent = new CompletableFuture<>();
         bridge.requestConnect(player, target, group).whenComplete((result, error) -> {
             if (error != null) {
                 LOGGER.warn("The proxy did not answer the request to send {} to '{}': {}",
                         player.getUsername(), target, error.getMessage());
                 tell(player, MessageKey.CONNECT_FAILED, target);
+                sent.complete(false);
                 return;
             }
+            sent.complete(result.outcome() == BridgeMessage.ConnectResult.Outcome.CONNECTED);
             switch (result.outcome()) {
                 // The player is already on their way; nothing more to say.
                 case CONNECTED -> {
@@ -58,6 +63,7 @@ public final class BridgeConnector implements Connector {
                 case REFUSED -> tell(player, MessageKey.CONNECT_FAILED, target);
             }
         });
+        return sent;
     }
 
     private void tell(Player player, MessageKey key, String target) {

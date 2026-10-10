@@ -15,6 +15,8 @@ public final class Permissions {
     public static final String COMMAND_NPC = "lobby.command.npc";
     /** Create, edit and delete holograms with {@code /hologram}. */
     public static final String COMMAND_HOLOGRAM = "lobby.command.hologram";
+    /** Create, edit and delete portals with {@code /portal}. */
+    public static final String COMMAND_PORTAL = "lobby.command.portal";
     /** Join a lobby instance that already holds {@code lobbies.players-per-instance} players. */
     public static final String LOBBY_JOIN_FULL = "lobby.lobbies.join-full";
     /** Ignore the protection settings in config.yml (break and place blocks, drop items...). */

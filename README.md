@@ -16,7 +16,7 @@ network, and it also runs completely on its own for testing or small servers.
 - Players on **1.8.9 through the latest version** can join through ViaVersion on your proxy.
 - A complete **chat system** with a filter that sees through spelling tricks and proper **Persian/Arabic** display.
 
-> Status: **Phase 2 of 5** (placeholders and chat) done. See the [roadmap](#roadmap).
+> Status: **Phase 3 of 5** (the lobby experience) done. See the [roadmap](#roadmap).
 
 ## Features
 
@@ -33,6 +33,7 @@ network, and it also runs completely on its own for testing or small servers.
 | NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin including image uploads with an API key, mirror) that load on 1.8 too, a multi-line name hologram, scale, poses and sitting, coloured glow, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
 | Scoreboard and tab | Per-player sidebar with animated titles and per-line intervals (only changed lines are sent, red numbers hidden on 1.20.3+, 32-character lines on 1.8), tab header/footer and rank names sorted by LuckPerms weight, nametags, rotating boss bar and action bar, join title ([guide](docs/display.md)) |
 | Hotbar and selectors | Locked hotbar items with actions, a game selector that shows each game's status (online, full, offline), a lobby selector with this server's instances and the network's other lobbies, and a saved player-visibility switch (all, staff, none) ([hotbar](docs/hotbar.md), [menus](docs/menus.md)) |
+| Movement and portals | Double jump, `/fly`, jump pads (a plate on a block) and launch pads (a box with a fixed velocity), and portals made in game with a wand that run any action and push players back when a connect fails ([guide](docs/movement-and-portals.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
@@ -64,6 +65,8 @@ Type `stop` in the console to shut the server down.
 | `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/lobby reload` |
 | `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/lobby reload` |
 | `hotbar.yml` | Hotbar items and player visibility ([guide](docs/hotbar.md)) | `/lobby reload` |
+| `movement.yml` | Double jump, `/fly`, jump pads, launch pads ([guide](docs/movement-and-portals.md)) | `/lobby reload` |
+| `data/portals.yml` | Portals, normally written by `/portal` ([guide](docs/movement-and-portals.md)) | `/lobby reload` |
 | `display.yml` | Scoreboard, tab list, nametags, boss bar, join title, action bar ([guide](docs/display.md)) | `/lobby reload` |
 | `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/lobby reload` |
 
@@ -81,6 +84,9 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.lobby` | `/lobby <number>` and `/lobbies` (everyone has it when LuckPerms is off) |
 | `lobby.command.hologram` | `/hologram` (create, edit and delete holograms) |
 | `lobby.command.npc` | `/npc` (create, edit and delete NPCs) |
+| `lobby.command.portal` | `/portal` (create, edit and delete portals) |
+| `lobby.fly` | `/fly` (set in `movement.yml`) |
+| `lobby.visibility.staff` | Shown to players whose visibility switch is on "staff" (set in `hotbar.yml`) |
 | `lobby.hologram.see.<name>` | See a hologram whose `visibility` is `permission` and that has no permission of its own |
 | `lobby.lobbies.join-full` | Join a lobby instance that is already at `players-per-instance` |
 | `lobby.bypass.protection` | Ignore the protection settings |
@@ -101,8 +107,9 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 - [Scoreboard, tab list, nametags, boss bar](docs/display.md)
 - [Hotbar items and player visibility](docs/hotbar.md)
 - [Menus and the server selector](docs/menus.md)
-- [Supported client versions](docs/client-versions.md)
+- [Movement and portals](docs/movement-and-portals.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
+- [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)
 - Integrations: [Database](docs/integrations/database.md) ·
@@ -116,7 +123,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 1. **Foundation** - core, config, connection modes, world loading, integrations, lobby basics, bridge v1
 2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, Persian/RTL support, channels) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
-   server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads
+   server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads ← *done*
 4. **Fun, social and staff tools** - parkour, PvP area, cosmetics, daily rewards, vanish, in-game editors
 5. **Production** - load testing (250-300 bots, mixed versions), Prometheus metrics, graceful shutdown, CI and Docker
 

@@ -60,6 +60,25 @@ scoreboards and holograms.
    ```
 4. Restart the lobby. `/lobby info` shows `Bridge: connected (last update 1s ago)` once a player is on it.
 
+### Checking the group names
+
+The bundled menus use groups called `bedwars`, `skywars` and `duels`. If your `[groups]` use other names,
+those items would show "offline" forever. So when the bridge first reports the network, whenever its group
+or server names change, and after every `/lobby reload`, the lobby checks every group and server name it
+uses: in menus, hotbar items, NPC names and actions, portals, holograms and `display.yml`. If any are
+unknown, it logs one warning:
+
+```
+These names are not known to the proxy, so what uses them will show offline or fail to connect. ...
+  - group 'bedwars', used in menus.yml: servers > slot 11
+  - group 'duels', used in menus.yml: servers > slot 15
+  The proxy has the groups: bw, lobbies, sw
+  and the servers: bw-1, bw-2, lobby-1, sw-1
+```
+
+`/lobby info` shows the same under "Network names". Rename the groups in `[groups]`, or the names in the
+lobby's files, so they match.
+
 If ViaVersion is installed on the proxy, the bridge asks it for the real client version; otherwise it
 uses Velocity's. Without the bridge, every player counts as a modern client, all counts are 0, every
 server shows as offline, global and staff chat stay on the local lobby, and chat auto-mute falls back to a

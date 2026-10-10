@@ -13,35 +13,38 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.LobbyConfig;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.AuthFactory;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.PlayerLimitListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ServerListListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.NetworkCheckService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectClicks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.VisibilityService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Hologram;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.AuthFactory;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.PlayerLimitListener;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ServerListListener;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.VisibilityService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstances;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbySelectorMenu;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.LiteBansService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.luckperms.LuckPermsIntegration;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.litebans.MuteService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.luckperms.LuckPermsIntegration;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.signedvelocity.SignedVelocityReceiver;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.LiveSkinUpdater;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.MojangSkinFetcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.OfflineSkinListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.skins.SkinsRestorerReader;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.movement.FlyCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.movement.MovementService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcSkins;
@@ -52,7 +55,10 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.protection.ProtectionListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionTracker;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.TickStats;
@@ -107,6 +113,10 @@ public final class LobbyServer implements ServerInfo {
     private TeamManager teams;
     private DisplayService displays;
     private HotbarService hotbar;
+    private final RegionTracker regions = new RegionTracker();
+    private MovementService movement;
+    private PortalService portals;
+    private NetworkCheckService networkCheck;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -135,6 +145,8 @@ public final class LobbyServer implements ServerInfo {
         startChat(snapshot);
         startDisplays();
         startHotbar();
+        startMovement();
+        startNetworkCheck();
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
@@ -295,6 +307,22 @@ public final class LobbyServer implements ServerInfo {
         hotbar = new HotbarService(configManager, text, actions, bridge, visibility);
     }
 
+    /** Double jump, /fly, jump pads, launch pads and portals; the pads and portals are regions of the map. */
+    private void startMovement() {
+        movement = new MovementService(configManager, permissions, regions);
+        portals = PortalService.start(configManager.dataDir(), regions, actions, text);
+    }
+
+    /**
+     * Checks the group and server names used anywhere against what the proxy bridge reports, when it first
+     * reports and after every reload.
+     */
+    private void startNetworkCheck() {
+        networkCheck = new NetworkCheckService(configManager, bridge.networkState(),
+                new NetworkCheckService.Sources(holograms::all, npcs::all, portals::all));
+        networkCheck.start();
+    }
+
     /** The chat system; SignedVelocity verdicts are only trusted behind Velocity. */
     private void startChat(ConfigSnapshot snapshot) {
         SignedVelocityReceiver signedVelocity = null;
@@ -324,6 +352,9 @@ public final class LobbyServer implements ServerInfo {
         teams.register(playerEvents);
         displays.register(playerEvents);
         hotbar.register(playerEvents);
+        regions.register(playerEvents);
+        movement.register(playerEvents);
+        portals.register(playerEvents);
         clicks.register(playerEvents);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
@@ -338,6 +369,8 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new LobbiesCommand(text, permissions, menus));
         commands.register(new HologramCommand(holograms, text, permissions, configManager.dataDir(), npcs));
         commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
+        commands.register(new FlyCommand(configManager, text, permissions, movement));
+        commands.register(new PortalCommand(portals, text, permissions));
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
@@ -347,6 +380,10 @@ public final class LobbyServer implements ServerInfo {
         chat.reload(reloaded);
         holograms.reload();
         npcs.reload();
+        portals.reload();
+        movement.reload();
+        // Async: it reads every hologram, NPC and portal, which can take a moment on a big lobby.
+        Async.run(networkCheck::run);
         // Messages and placeholders may have changed, so every hologram is built again.
         display.invalidateAll();
         Async.onTickThread(() -> {
@@ -389,6 +426,7 @@ public final class LobbyServer implements ServerInfo {
         chat.shutdown();
         holograms.shutdown();
         npcs.shutdown();
+        portals.shutdown();
         displays.shutdown();
         display.shutdown();
         permissions.shutdown();
@@ -451,6 +489,14 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public String bridgeStatus() {
         return bridge.status();
+    }
+
+    @Override
+    public String networkCheck() {
+        if (!bridge.enabled()) {
+            return "not checked (no proxy bridge in this mode)";
+        }
+        return networkCheck.last().summary();
     }
 
     @Override
