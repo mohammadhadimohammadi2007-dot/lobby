@@ -42,6 +42,7 @@ messages live.
 | `/chat delete <id>` | `lobby.command.chat.delete` | Remove one recent message from everyone's screen |
 | `/chat spy` | `lobby.command.chat.spy` | See messages that were blocked, and why |
 | `/slowmode <seconds\|off>` | `lobby.command.slowmode` | One message per player every N seconds |
+| `/announce <message>` | `lobby.command.announce` | One message to every player on this lobby server; also from the console |
 
 `/chat delete` needs the message id. Staff with `lobby.chat.staff` see it when hovering over a name.
 Minecraft cannot remove a single line, so the lobby clears everyone's chat and sends the recent messages
@@ -170,6 +171,24 @@ network-wide and visible in LiteBans. The first word of that command must be in 
 - **Emojis:** `:heart:` becomes `❤`. Clients older than 1.19.4 get the `legacy` text (`<3`).
 - **Ignore:** `/ignore <player>` hides their messages.
   Up to 200 players per person.
+
+## Announcements
+
+`/announce <message>` sends one message to every player on this lobby server, in every lobby instance,
+also to players who hid the chat. It works from the console too.
+
+1. Give staff `lobby.command.announce`, and add `announce` to their group in `commands.yml`.
+2. Run `/announce <red>Restart in 5 minutes`.
+
+**Check it worked:** every player sees `ANNOUNCEMENT » Restart in 5 minutes` with a short sound.
+
+- The look is `announce` in `messages.yml` (`<message>` and `<sender>`); `announce-legacy` is an optional
+  shorter version for clients older than 1.19.4.
+- Staff may use colors and decorations (`<red>`, `<bold>`, `&c`). Click, hover and every other MiniMessage
+  tag need `lobby.command.announce.advanced`; the console always has it.
+- `announce:` in `chat.yml` sets the sound and can also show the text as a title.
+- Every announcement is written to the chat log with the channel `announce`.
+- Announcements stay on this lobby server. For the whole network, use a proxy plugin.
 
 ## Join, quit and broadcasts
 

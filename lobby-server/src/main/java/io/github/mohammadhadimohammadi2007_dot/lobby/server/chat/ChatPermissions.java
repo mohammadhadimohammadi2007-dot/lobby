@@ -33,6 +33,10 @@ public final class ChatPermissions {
     public static final String COMMAND_DELETE = "lobby.command.chat.delete";
     public static final String COMMAND_SPY = "lobby.command.chat.spy";
     public static final String COMMAND_SLOWMODE = "lobby.command.slowmode";
+    /** {@code /announce} with colors and decorations. */
+    public static final String COMMAND_ANNOUNCE = "lobby.command.announce";
+    /** {@code /announce} with every MiniMessage tag, including click and hover. */
+    public static final String ANNOUNCE_ADVANCED = "lobby.command.announce.advanced";
 
     private ChatPermissions() {
     }

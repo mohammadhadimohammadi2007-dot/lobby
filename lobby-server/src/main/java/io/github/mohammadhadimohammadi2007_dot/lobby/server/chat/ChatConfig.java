@@ -38,6 +38,7 @@ public record ChatConfig(
         boolean quitMessage,
         List<JoinAnnouncement> joinAnnouncements,
         Broadcasts broadcasts,
+        Announce announce,
         Storage storage
 ) {
 
@@ -98,6 +99,16 @@ public record ChatConfig(
                              List<String> legacyMessages) {
     }
 
+    /**
+     * {@code announce:} section, for {@code /announce}.
+     *
+     * @param sound        played to everyone, or empty for none
+     * @param title        also show the announcement as a title
+     * @param titleSeconds how long the title stays
+     */
+    public record Announce(String sound, boolean title, int titleSeconds) {
+    }
+
     /** {@code storage:} section. */
     public record Storage(String tablePrefix, boolean logToDatabase, int retentionDays, boolean logToFile) {
     }
@@ -144,6 +155,8 @@ public record ChatConfig(
                 new Broadcasts(reader.bool("broadcasts.enabled"), reader.integer("broadcasts.interval", 1, 1440),
                         reader.bool("broadcasts.random"), reader.stringList("broadcasts.messages"),
                         reader.stringList("broadcasts.legacy-messages")),
+                new Announce(reader.string("announce.sound").strip(), reader.bool("announce.title"),
+                        reader.integer("announce.title-seconds", 1, 30)),
                 new Storage(tablePrefix, reader.bool("storage.log-to-database"),
                         reader.integer("storage.log-retention-days", 1, 3650), reader.bool("storage.log-to-file")));
     }

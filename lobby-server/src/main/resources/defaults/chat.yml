@@ -213,6 +213,18 @@ broadcasts:
   # Optional shorter versions for clients older than 1.19.4, in the same order. [] = use the ones above.
   legacy-messages: []
 
+# ---------------- /announce ----------------
+# /announce <message> sends one message to every player on this lobby server (also to players who hid
+# the chat). Permission "lobby.command.announce"; colors and decorations are allowed, click and hover
+# need "lobby.command.announce.advanced". Works from the console. The look is "announce" in messages.yml.
+announce:
+  # Sound played to everyone, e.g. "minecraft:block.note_block.pling". "" = no sound.
+  sound: "minecraft:block.note_block.pling"
+  # Also show the message as a title in the middle of the screen. true or false.
+  title: false
+  # How long the title stays, in seconds (1-30).
+  title-seconds: 4
+
 # ---------------- Storage ----------------
 storage:
   # Table prefix for the lobby's own tables (player chat settings and chat log) in the shared database.

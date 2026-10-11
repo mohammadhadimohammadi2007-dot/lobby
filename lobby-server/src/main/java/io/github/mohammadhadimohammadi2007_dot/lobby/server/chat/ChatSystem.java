@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.AnnounceCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.ChatCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.IgnoreCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.SlowmodeCommand;
@@ -82,6 +83,7 @@ public final class ChatSystem {
         commands.register(new ChatCommand(service));
         commands.register(new IgnoreCommand(services));
         commands.register(new SlowmodeCommand(services));
+        commands.register(new AnnounceCommand(services));
         broadcaster.restart();
     }
 

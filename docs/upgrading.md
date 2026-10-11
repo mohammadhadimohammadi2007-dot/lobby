@@ -4,6 +4,9 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **New `/announce <message>`** (permission `lobby.command.announce`, click and hover with
+  `lobby.command.announce.advanced`) replaces the old `announce` channel. Its look is `announce` in
+  messages.yml, its sound and title are `announce:` in chat.yml.
 - **One chat, no channels, no private messages.** `channels:`, `default-channel:` and
   `private-messages-enabled:` in chat.yml, `/ch`, the `!`/`#` prefixes and `/msg`/`/r` are gone; chat
   between lobbies and private messages belong to proxy plugins. New option `instance-only` (default

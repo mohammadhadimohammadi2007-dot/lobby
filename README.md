@@ -25,7 +25,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Connection | Standalone (online or offline mode), Velocity modern forwarding, BungeeCord legacy forwarding (+ BungeeGuard) |
 | World | Loads `.polar` files and Anvil worlds (old and 26.1+ layouts), converts Anvil to Polar once, preloads everything, computes lighting if missing, never crashes on a missing map (flat platform fallback) |
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
-| Commands | `/spawn`, `/lobbies [number]`, `/hologram`, `/npc`, `/setup-lobby reload`, `/setup-lobby setspawn`, `/setup-lobby info` |
+| Commands | `/spawn`, `/lobbies [number]`, `/announce`, `/hologram`, `/npc`, `/setup-lobby reload`, `/setup-lobby setspawn`, `/setup-lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
 | Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |

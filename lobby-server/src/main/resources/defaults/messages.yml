@@ -246,6 +246,13 @@ slowmode-off: "<prefix><gray>Slow mode is off."
 slowmode-usage: "<prefix><gray>Usage: <white>/slowmode <seconds|off>"
 message-deleted: "<prefix><gray>Message deleted."
 message-not-found: "<prefix><red>No recent message with id <white><id></white>."
+# /announce. <message> = what staff typed, <sender> = who sent it ("Console" from the console).
+announce: "<gold><bold>ANNOUNCEMENT</bold></gold> <dark_gray>»</dark_gray> <white><message>"
+# For clients older than 1.19.4 (16 colors). "" = made from "announce" automatically.
+announce-legacy: ""
+# Title shown above the message when "announce.title" is true in chat.yml.
+announce-title: "<gold><bold>Announcement"
+announce-usage: "<prefix><gray>Usage: <white>/announce <message>"
 spy-on: "<prefix><gray>Chat spy <green>on</green>: you see blocked messages."
 spy-off: "<prefix><gray>Chat spy <red>off</red>."
 
