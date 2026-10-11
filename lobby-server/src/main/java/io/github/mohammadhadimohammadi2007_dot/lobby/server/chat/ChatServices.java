@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Everything the chat stages and commands share. Built once at startup.
  *
- * @param filter the current chat filter; replaced on {@code /lobby reload}
+ * @param filter the current chat filter; replaced on {@code /setup-lobby reload}
  */
 public record ChatServices(
         ConfigManager config,

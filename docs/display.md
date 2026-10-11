@@ -1,6 +1,6 @@
 # Scoreboard, tab list, nametags, boss bar and titles
 
-Everything here is set in `display.yml` and applies with `/lobby reload`. Texts are MiniMessage
+Everything here is set in `display.yml` and applies with `/setup-lobby reload`. Texts are MiniMessage
 (`<gold>`, `<gradient:...>`, `<#ff8800>`) or `&` colour codes, with [placeholders](placeholders.md).
 
 ## Old clients (1.8-1.12)
@@ -98,7 +98,7 @@ action-bar:
   enabled: false
   interval: 100
   messages:
-    - text: "<gray>Use <yellow>/lobby</yellow> to change lobby"
+    - text: "<gray>Use <yellow>/lobbies</yellow> to change lobby"
 ```
 
 Each player rotates through the messages they have the permission for.
@@ -120,7 +120,7 @@ join-title:
 
 All of this runs on its own thread, `lobby-board`, never on the server tick, and apart from the
 holograms and NPCs (thread `lobby-display`): a busy moment there, such as many players walking past many
-NPCs, never makes the scoreboard late. `/lobby info` shows how busy each of the two threads is, and how
+NPCs, never makes the scoreboard late. `/setup-lobby info` shows how busy each of the two threads is, and how
 many scoreboard refreshes were skipped because the previous one was still running.
 
 Players take turns within each interval: with a one-second line, a tenth of the players are updated in

@@ -9,7 +9,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabil
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbiesCommand;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -296,7 +296,7 @@ public final class LobbyServer implements ServerInfo {
      */
     private void startDisplays() {
         display = new ClientObjectRenderer();
-        // Read on every spawn, so /lobby reload changes it for the next NPC that appears.
+        // Read on every spawn, so /setup-lobby reload changes it for the next NPC that appears.
         display.temporaryListingDelay(() -> configManager.current().config().npcs().legacyTabRemovalDelayMillis());
         clicks = new ClientObjectClicks(display);
         // The one place teams are made; NPCs use it to hide the player-list name above their heads.
@@ -380,8 +380,8 @@ public final class LobbyServer implements ServerInfo {
     private void registerCommands() {
         var commands = MinecraftServer.getCommandManager();
         commands.register(new SpawnCommand(configManager, text, permissions));
-        commands.register(new LobbyCommand(configManager, text, permissions, this, lobbies));
-        commands.register(new LobbiesCommand(text, permissions, menus));
+        commands.register(new SetupLobbyCommand(configManager, text, permissions, this));
+        commands.register(new LobbiesCommand(text, permissions, menus, lobbies));
         commands.register(new HologramCommand(holograms, text, permissions, configManager.dataDir(), npcs));
         commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
         commands.register(new FlyCommand(configManager, text, permissions, movement));

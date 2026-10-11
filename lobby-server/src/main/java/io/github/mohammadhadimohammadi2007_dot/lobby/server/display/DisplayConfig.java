@@ -4,7 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigReader;
 
 /**
  * Everything in {@code display.yml}: the scoreboard, tab list, nametags, boss bar, join title and action
- * bar. Read with the other config files and replaced as a whole by {@code /lobby reload}.
+ * bar. Read with the other config files and replaced as a whole by {@code /setup-lobby reload}.
  */
 public record DisplayConfig(SidebarConfig sidebar, TabConfig tab, BarsConfig bars) {
 

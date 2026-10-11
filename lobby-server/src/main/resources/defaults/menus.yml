@@ -1,6 +1,6 @@
 # =====================================================================
 #  Menus - the chest windows players open from NPCs, items and commands.
-#  After editing, run /lobby reload. Full guide with examples: docs/menus.md
+#  After editing, run /setup-lobby reload. Full guide with examples: docs/menus.md
 # =====================================================================
 #
 # Every menu is one entry below "menus:". Open one with the action "open_menu: <name>",
@@ -125,7 +125,7 @@ menus:
         name: "<yellow><bold>Duels"
         lore:
           - "<red>Offline"
-  # Opened with /lobby or from a hotbar item. Replace these items with your own.
+  # Opened from a hotbar item (open_menu: lobby). Replace these items with your own.
   lobby:
     title: "<dark_gray>Lobby"
     rows: 3

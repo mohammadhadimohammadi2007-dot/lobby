@@ -1,7 +1,7 @@
 # =====================================================================
 #  Lobby server - main configuration
-#  After editing, run /lobby reload in game (or restart the server).
-#  /lobby reload tells you which changes need a full restart.
+#  After editing, run /setup-lobby reload in game (or restart the server).
+#  /setup-lobby reload tells you which changes need a full restart.
 # =====================================================================
 
 # ---------------- Server ----------------
@@ -72,7 +72,7 @@ lobbies:
   #   auto   - one instance per "players-per-instance" of server.max-players
   instances: 1
   # How many players one instance should hold. Used for "auto", for choosing where a joining player
-  # goes, and for /lobby <number> (players with "lobby.lobbies.join-full" may still join a full one).
+  # goes, and for /lobbies <number> (players with "lobby.lobbies.join-full" may still join a full one).
   players-per-instance: 50
   # Which instance a joining player is put in:
   #   least-players - the emptiest one, so the load is spread (the default)
@@ -88,7 +88,7 @@ npcs:
   # milliseconds (0-30000). Raise it if 1.8 players still see Steve; 0 removes it right away.
   legacy-tab-removal-delay: 3000
 
-# Where players appear when they join or use /spawn. Set it in game with /lobby setspawn.
+# Where players appear when they join or use /spawn. Set it in game with /setup-lobby setspawn.
 spawn:
   x: 0.5
   y: 65

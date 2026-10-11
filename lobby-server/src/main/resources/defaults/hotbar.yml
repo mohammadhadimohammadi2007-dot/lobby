@@ -1,6 +1,6 @@
 # =====================================================================
 #  Hotbar - the items players get in their hotbar when they join and whenever they change lobby.
-#  Players can never move, drop or swap them. Changes apply with /lobby reload.
+#  Players can never move, drop or swap them. Changes apply with /setup-lobby reload.
 #  Guide: docs/hotbar.md
 # =====================================================================
 

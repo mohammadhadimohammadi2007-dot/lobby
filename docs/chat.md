@@ -6,7 +6,7 @@ Arabic** text, on every client from 1.8.9 to the latest version.
 
 Everything is configured in `chat.yml` (created on first start, every option commented). Texts that players
 see (warnings, command replies) are in `messages.yml`. Word lists are in the `filters/` folder.
-Apply changes with `/lobby reload`. Only `storage:` and `private-messages-enabled` need a restart.
+Apply changes with `/setup-lobby reload`. Only `storage:` and `private-messages-enabled` need a restart.
 
 To turn the whole system off and get plain Minecraft chat, set `enabled: false`.
 

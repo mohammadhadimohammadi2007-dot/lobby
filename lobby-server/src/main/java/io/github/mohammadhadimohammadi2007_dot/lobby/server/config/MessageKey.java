@@ -6,7 +6,7 @@ public enum MessageKey {
     NO_PERMISSION("no-permission"),
     PLAYERS_ONLY("players-only"),
     SPAWN_TELEPORTED("spawn-teleported"),
-    LOBBY_USAGE("lobby-usage"),
+    SETUP_LOBBY_USAGE("setup-lobby-usage"),
     RELOAD_DONE("reload-done"),
     RELOAD_RESTART_NEEDED("reload-restart-needed"),
     RELOAD_FAILED("reload-failed"),

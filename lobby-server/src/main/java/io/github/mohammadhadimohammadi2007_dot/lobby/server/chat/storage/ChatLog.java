@@ -40,7 +40,7 @@ public interface ChatLog {
     /** Queues an entry. Never blocks. */
     void log(Entry entry);
 
-    /** Short description for logs and {@code /lobby info}. */
+    /** Short description for logs and {@code /setup-lobby info}. */
     String describe();
 
     /** Writes what is still queued and stops. */

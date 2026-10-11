@@ -16,7 +16,7 @@ import java.util.Set;
 
 /**
  * The chat filter: word lists from the {@code filters/} folder plus link and IP detection.
- * Thread-safe and immutable; {@code /lobby reload} builds a new one.
+ * Thread-safe and immutable; {@code /setup-lobby reload} builds a new one.
  *
  * <p>Files: every {@code blocked*.txt} blocks the message, every {@code censored*.txt} is replaced with
  * stars, every {@code allowed*.txt} lists exceptions. See {@link WordList} for the line format.

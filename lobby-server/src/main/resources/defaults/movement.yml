@@ -1,6 +1,6 @@
 # =====================================================================
 #  Movement - double jump, /fly, jump pads and launch pads.
-#  Changes apply with /lobby reload. Portals are made in game with /portal (data/portals.yml).
+#  Changes apply with /setup-lobby reload. Portals are made in game with /portal (data/portals.yml).
 #  Guide: docs/movement-and-portals.md
 # =====================================================================
 

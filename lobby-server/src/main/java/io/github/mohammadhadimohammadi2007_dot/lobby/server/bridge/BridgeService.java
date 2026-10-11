@@ -220,7 +220,7 @@ public final class BridgeService {
         return listening;
     }
 
-    /** Bridge state in words, for {@code /lobby info}. */
+    /** Bridge state in words, for {@code /setup-lobby info}. */
     public String status() {
         if (!listening) {
             return "disabled";

@@ -171,7 +171,7 @@ clock, not from a counter per player.
 
 ## The file
 
-`data/holograms.yml`, written by the commands and safe to edit by hand (then `/lobby reload`).
+`data/holograms.yml`, written by the commands and safe to edit by hand (then `/setup-lobby reload`).
 
 ```yaml
 welcome:
@@ -254,7 +254,7 @@ text is only ever built on that thread.
 | What | Measured | Thread |
 |---|---|---|
 | One player joining, 50 holograms, 200 players online | 11 ms more than an idle refresh (about 0.2 ms per hologram, for 100 packets) | `lobby-display` |
-| `/lobby reload` with 50 holograms and 200 players | 65 ms (reads the file, despawns and shows everything again) | the reload's own thread and `lobby-display` |
+| `/setup-lobby reload` with 50 holograms and 200 players | 65 ms (reads the file, despawns and shows everything again) | the reload's own thread and `lobby-display` |
 | A refresh with nothing changed | 5 - 12 ms | `lobby-display` |
 
 Those numbers come from the test harness, which serializes every packet into a list per fake player;

@@ -1,6 +1,6 @@
 # Movement and portals
 
-Double jump, `/fly`, jump pads and launch pads are set in `movement.yml` and apply with `/lobby reload`.
+Double jump, `/fly`, jump pads and launch pads are set in `movement.yml` and apply with `/setup-lobby reload`.
 Portals are made in game with `/portal` and stored in `data/portals.yml`.
 
 Speeds are in blocks per second. Sounds are Minecraft sound names (`entity.bat.takeoff`), particles
@@ -87,7 +87,7 @@ happens to a player without the portal's permission.
 
 Behind BungeeCord the lobby never hears whether a connect worked, so there players are not pushed back.
 
-`data/portals.yml` can also be edited by hand (then `/lobby reload`):
+`data/portals.yml` can also be edited by hand (then `/setup-lobby reload`):
 
 ```yaml
 bedwars:

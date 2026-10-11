@@ -1,7 +1,7 @@
 # Hotbar items and player visibility
 
 `hotbar.yml` sets the items players get in their hotbar. They are given when a player joins and every
-time they change lobby instance. Changes apply with `/lobby reload`, which gives everyone their items
+time they change lobby instance. Changes apply with `/setup-lobby reload`, which gives everyone their items
 again.
 
 ## Items

@@ -6,7 +6,7 @@ import net.minestom.server.entity.Player;
 /**
  * Simple permissions used when LuckPerms is disabled: players listed under {@code operators:} in
  * config.yml have every permission; everybody else only has {@link Permissions#EVERYONE}.
- * Changes to the list apply after {@code /lobby reload}.
+ * Changes to the list apply after {@code /setup-lobby reload}.
  */
 public final class OperatorPermissionService implements PermissionService {
 

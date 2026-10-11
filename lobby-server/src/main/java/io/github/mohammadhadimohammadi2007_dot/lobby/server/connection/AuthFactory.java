@@ -27,7 +27,7 @@ public final class AuthFactory {
         };
     }
 
-    /** Short human description of the mode, used in logs and /lobby info. */
+    /** Short human description of the mode, used in logs and /setup-lobby info. */
     public static String describe(LobbyConfig.Connection connection) {
         return switch (connection.mode()) {
             case STANDALONE -> connection.onlineMode() ? "standalone (online mode)" : "standalone (offline mode)";

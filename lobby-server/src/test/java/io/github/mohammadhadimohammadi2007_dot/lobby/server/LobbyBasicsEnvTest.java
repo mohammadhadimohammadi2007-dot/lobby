@@ -1,6 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -82,8 +82,7 @@ class LobbyBasicsEnvTest {
                 LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
         env.process().command().register(new SpawnCommand(config, text, permissions));
-        env.process().command().register(new LobbyCommand(config, text, permissions, fakeInfo(instance),
-                LobbyInstances.create((InstanceContainer) instance, config, text, permissions)));
+        env.process().command().register(new SetupLobbyCommand(config, text, permissions, fakeInfo(instance)));
         new ProtectionListener(config, permissions).register(env.process().eventHandler());
         EventNode<PlayerEvent> players = EventNode.type("test", EventFilter.PLAYER);
         env.process().eventHandler().addChild(players);
@@ -116,7 +115,7 @@ class LobbyBasicsEnvTest {
         Player player = connection.connect(instance, SPAWN);
         Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
 
-        env.process().command().execute(player, "lobby info");
+        env.process().command().execute(player, "setup-lobby info");
 
         assertEquals(List.of("[Lobby] You don't have permission to do that."), texts(chat));
     }
@@ -130,7 +129,7 @@ class LobbyBasicsEnvTest {
         Player player = connection.connect(instance, SPAWN);
         Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
 
-        env.process().command().execute(player, "lobby info");
+        env.process().command().execute(player, "setup-lobby info");
 
         List<String> lines = texts(chat);
         assertEquals(1, lines.size());

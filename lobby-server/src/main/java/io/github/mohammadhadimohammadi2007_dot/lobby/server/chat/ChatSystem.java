@@ -91,7 +91,7 @@ public final class ChatSystem {
         broadcaster.restart();
     }
 
-    /** Applies chat.yml changes after {@code /lobby reload}: new filter lists, cooldowns and broadcasts. */
+    /** Applies chat.yml changes after {@code /setup-lobby reload}: new filter lists, cooldowns and broadcasts. */
     public void reload(ConfigSnapshot reloaded) {
         ChatServices services = service.services();
         services.filter().set(loadFilter(config, reloaded.chat()));

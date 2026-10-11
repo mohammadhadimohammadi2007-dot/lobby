@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 
 /**
  * Runs the {@link NetworkCheck} when the proxy bridge first reports the network (and whenever its group or
- * server names change) and after every {@code /lobby reload}, logs one warning if names are unknown, and
- * keeps the result for {@code /lobby info}.
+ * server names change) and after every {@code /setup-lobby reload}, logs one warning if names are unknown, and
+ * keeps the result for {@code /setup-lobby info}.
  */
 public final class NetworkCheckService {
 
@@ -57,7 +57,7 @@ public final class NetworkCheckService {
         return report;
     }
 
-    /** The last result, for {@code /lobby info}. */
+    /** The last result, for {@code /setup-lobby info}. */
     public NetworkCheck.Report last() {
         return last;
     }

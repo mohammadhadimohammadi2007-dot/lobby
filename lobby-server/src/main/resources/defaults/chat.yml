@@ -1,6 +1,6 @@
 # =====================================================================
 #  Chat - formats, channels, filter, anti-spam and more.
-#  After editing, run /lobby reload. Full guide with examples: docs/chat.md
+#  After editing, run /setup-lobby reload. Full guide with examples: docs/chat.md
 #  Player-facing texts (warnings, mute message...) are in messages.yml.
 # =====================================================================
 

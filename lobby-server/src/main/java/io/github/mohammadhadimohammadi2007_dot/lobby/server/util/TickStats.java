@@ -3,7 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.util;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.server.ServerTickMonitorEvent;
 
-/** Measures ticks per second (TPS) and milliseconds per tick (MSPT) for {@code /lobby info}. */
+/** Measures ticks per second (TPS) and milliseconds per tick (MSPT) for {@code /setup-lobby info}. */
 public final class TickStats {
 
     /** Number of recent ticks the averages cover (5 seconds at 20 TPS). */

@@ -22,7 +22,7 @@ public final class DisplayLoad {
     }
 
     /**
-     * The numbers for {@code /lobby info}.
+     * The numbers for {@code /setup-lobby info}.
      *
      * @param busyPercent       share of the window spent working, 0 to 100
      * @param longestCycleMillis the longest single cycle in the window

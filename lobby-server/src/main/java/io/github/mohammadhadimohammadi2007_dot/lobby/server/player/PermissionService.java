@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public interface PermissionService {
 
-    /** Short name for logs and {@code /lobby info}. */
+    /** Short name for logs and {@code /setup-lobby info}. */
     String name();
 
     /** True if {@code player} has {@code permission}. */
@@ -35,7 +35,7 @@ public interface PermissionService {
      * use this to stay fresh. The listener may be called on any thread.
      */
     default void onMetaChange(Consumer<UUID> listener) {
-        // The operators list only changes on /lobby reload, which rebuilds everything anyway.
+        // The operators list only changes on /setup-lobby reload, which rebuilds everything anyway.
     }
 
     /** Releases resources. Called once on shutdown. */

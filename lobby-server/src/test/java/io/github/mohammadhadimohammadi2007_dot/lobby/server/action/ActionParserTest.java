@@ -32,7 +32,7 @@ class ActionParserTest {
         assertEquals(new MessageAction("<gold>Hi %player_name%"), ActionParser.parse("message: <gold>Hi %player_name%"));
         assertEquals(new ConnectAction("bedwars", true), ActionParser.parse("connect_group: bedwars"));
         assertEquals(new ConnectAction("lobby-2", false), ActionParser.parse("CONNECT : lobby-2"));
-        assertEquals(new ConsoleCommandAction("lobby info"), ActionParser.parse("console_command: /lobby info"));
+        assertEquals(new ConsoleCommandAction("setup-lobby info"), ActionParser.parse("console_command: /setup-lobby info"));
         assertEquals(new WaitAction(20), ActionParser.parse("wait: 20"));
         assertEquals(new TeleportAction(null), ActionParser.parse("teleport: spawn"));
         assertEquals(new TeleportAction(new Pos(1, 2.5, 3, 90, 0)), ActionParser.parse("teleport: 1 2.5 3 90 0"));

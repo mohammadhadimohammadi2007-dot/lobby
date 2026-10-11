@@ -24,11 +24,11 @@ lobbies:
 |---|---|
 | `instances: <number>` | Always that many instances |
 | `instances: auto` | `server.max-players` divided by `players-per-instance`, rounded up (at least 1, at most 50) |
-| `players-per-instance` | How many players one instance should hold. Used by `auto`, when choosing where a joining player goes, and by `/lobby <number>` |
+| `players-per-instance` | How many players one instance should hold. Used by `auto`, when choosing where a joining player goes, and by `/lobbies <number>` |
 | `join: least-players` | A joining player gets the emptiest instance. With one limit for all of them that is also the one with the most free space |
 | `join: fill-first` | A joining player gets the first instance that still has room |
 
-The number of instances is read at startup: changing it needs a restart, and `/lobby reload` says so.
+The number of instances is read at startup: changing it needs a restart, and `/setup-lobby reload` says so.
 `join` and `players-per-instance` are read live.
 
 `server.max-players` is still the limit for the **whole server**; `players-per-instance` only decides
@@ -38,7 +38,7 @@ how players are spread over the lobbies.
 
 | | |
 |---|---|
-| `/lobby <number>` | Moves the player to that lobby. Permission: `lobby.command.lobby` (everyone by default) |
+| `/lobbies <number>` | Moves the player to that lobby. Permission: `lobby.command.lobbies` (everyone by default) |
 | `/lobbies` | Opens the lobby selector: one item per lobby, with its player count; the player's own lobby glows |
 | `lobby: <number>` | The action for NPCs, menu items, hotbar items and portals |
 | `open-menu: lobbies` | Opens the same selector from any action list |

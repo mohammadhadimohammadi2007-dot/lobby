@@ -49,7 +49,7 @@ public final class ClientObjectRenderer {
     private static final int DEFAULT_REFRESH_TICKS = 5;
     /**
      * How long one refresh may spend on objects that changed or are new before the rest wait for the next
-     * refresh. After {@code /lobby reload} every object is new at once; without this, the first refresh
+     * refresh. After {@code /setup-lobby reload} every object is new at once; without this, the first refresh
      * would show all of them to every player in one go.
      */
     private static final long BUDGET_NANOS = 50_000_000L;
@@ -192,7 +192,7 @@ public final class ClientObjectRenderer {
         }
     }
 
-    /** How busy the display thread was over the last minute, for {@code /lobby info}. */
+    /** How busy the display thread was over the last minute, for {@code /setup-lobby info}. */
     public DisplayLoad.Snapshot load() {
         return load.snapshot();
     }

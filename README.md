@@ -25,7 +25,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Connection | Standalone (online or offline mode), Velocity modern forwarding, BungeeCord legacy forwarding (+ BungeeGuard) |
 | World | Loads `.polar` files and Anvil worlds (old and 26.1+ layouts), converts Anvil to Polar once, preloads everything, computes lighting if missing, never crashes on a missing map (flat platform fallback) |
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
-| Commands | `/spawn`, `/lobby <number>`, `/lobbies`, `/hologram`, `/npc`, `/lobby reload`, `/lobby setspawn`, `/lobby info` |
+| Commands | `/spawn`, `/lobbies [number]`, `/hologram`, `/npc`, `/setup-lobby reload`, `/setup-lobby setspawn`, `/setup-lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
 | Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
@@ -34,7 +34,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Scoreboard and tab | Per-player sidebar with animated titles and per-line intervals (only changed lines are sent, red numbers hidden on 1.20.3+, 32-character lines on 1.8), tab header/footer and rank names sorted by LuckPerms weight, nametags, rotating boss bar and action bar, join title ([guide](docs/display.md)) |
 | Hotbar and selectors | Locked hotbar items with actions, a game selector that shows each game's status (online, full, offline), a lobby selector with this server's instances and the network's other lobbies, and a saved player-visibility switch (all, staff, none) ([hotbar](docs/hotbar.md), [menus](docs/menus.md)) |
 | Movement and portals | Double jump, `/fly`, jump pads (a plate on a block) and launch pads (a box with a fixed velocity), and portals made in game with a wand that run any action and push players back when a connect fails ([guide](docs/movement-and-portals.md)) |
-| Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobby <number>` and a selector menu ([guide](docs/instances.md)) |
+| Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobbies <number>` and a selector menu ([guide](docs/instances.md)) |
 | Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
 ## Quick start (standalone, about a minute)
@@ -58,17 +58,17 @@ Type `stop` in the console to shut the server down.
 
 | File | What it controls | Reload |
 |---|---|---|
-| `config.yml` | Port, MOTD, max players, connection mode, world, lobby instances, spawn, protections, operators | `/lobby reload` (it tells you if something needs a restart) |
+| `config.yml` | Port, MOTD, max players, connection mode, world, lobby instances, spawn, protections, operators | `/setup-lobby reload` (it tells you if something needs a restart) |
 | `integrations.yml` | Database, LuckPerms, LiteBans, SkinsRestorer, bridge | Restart |
-| `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/lobby reload` |
-| `filters/` | Blocked, censored and allowed word lists | `/lobby reload` |
-| `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/lobby reload` |
-| `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/lobby reload` |
-| `hotbar.yml` | Hotbar items and player visibility ([guide](docs/hotbar.md)) | `/lobby reload` |
-| `movement.yml` | Double jump, `/fly`, jump pads, launch pads ([guide](docs/movement-and-portals.md)) | `/lobby reload` |
-| `data/portals.yml` | Portals, normally written by `/portal` ([guide](docs/movement-and-portals.md)) | `/lobby reload` |
-| `display.yml` | Scoreboard, tab list, nametags, boss bar, join title, action bar ([guide](docs/display.md)) | `/lobby reload` |
-| `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/lobby reload` |
+| `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/setup-lobby reload` |
+| `filters/` | Blocked, censored and allowed word lists | `/setup-lobby reload` |
+| `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/setup-lobby reload` |
+| `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/setup-lobby reload` |
+| `hotbar.yml` | Hotbar items and player visibility ([guide](docs/hotbar.md)) | `/setup-lobby reload` |
+| `movement.yml` | Double jump, `/fly`, jump pads, launch pads ([guide](docs/movement-and-portals.md)) | `/setup-lobby reload` |
+| `data/portals.yml` | Portals, normally written by `/portal` ([guide](docs/movement-and-portals.md)) | `/setup-lobby reload` |
+| `display.yml` | Scoreboard, tab list, nametags, boss bar, join title, action bar ([guide](docs/display.md)) | `/setup-lobby reload` |
+| `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/setup-lobby reload` |
 
 Every option has a comment above it. Missing options use the default (with a warning in the console),
 and invalid values are reported with the option name and the allowed values.
@@ -78,10 +78,10 @@ and invalid values are reported with the option name and the allowed values.
 | Permission | Allows |
 |---|---|
 | `lobby.command.spawn` | `/spawn` (everyone has it when LuckPerms is off) |
-| `lobby.command.reload` | `/lobby reload` |
-| `lobby.command.setspawn` | `/lobby setspawn` |
-| `lobby.command.info` | `/lobby info` |
-| `lobby.command.lobby` | `/lobby <number>` and `/lobbies` (everyone has it when LuckPerms is off) |
+| `lobby.command.reload` | `/setup-lobby reload` |
+| `lobby.command.setspawn` | `/setup-lobby setspawn` |
+| `lobby.command.info` | `/setup-lobby info` |
+| `lobby.command.lobbies` | `/lobbies` and `/lobbies <number>` (everyone has it when LuckPerms is off) |
 | `lobby.command.hologram` | `/hologram` (create, edit and delete holograms) |
 | `lobby.command.npc` | `/npc` (create, edit and delete NPCs) |
 | `lobby.command.portal` | `/portal` (create, edit and delete portals) |

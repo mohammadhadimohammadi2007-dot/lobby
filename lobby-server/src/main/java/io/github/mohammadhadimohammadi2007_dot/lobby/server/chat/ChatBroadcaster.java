@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 /**
  * Sends the {@code broadcasts:} messages from chat.yml every few minutes, rendered per player (placeholders,
- * Persian fixing) and with the shorter legacy version for old clients. Rebuilt on {@code /lobby reload}.
+ * Persian fixing) and with the shorter legacy version for old clients. Rebuilt on {@code /setup-lobby reload}.
  */
 public final class ChatBroadcaster {
 

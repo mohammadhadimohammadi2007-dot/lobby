@@ -68,7 +68,7 @@ public final class HologramService implements ClientObjectClicks.Handler {
         return service;
     }
 
-    /** Reads the file again and replaces every hologram. Used by {@code /lobby reload}. */
+    /** Reads the file again and replaces every hologram. Used by {@code /setup-lobby reload}. */
     public synchronized void reload() {
         for (String name : holograms.keySet()) {
             renderer.remove(name);

@@ -1,6 +1,6 @@
 # =====================================================================
 #  Display - the scoreboard, tab list, nametags, boss bar, join title and action bar.
-#  Changes apply with /lobby reload.
+#  Changes apply with /setup-lobby reload.
 #
 #  Text is MiniMessage (<gold>, <bold>, <gradient:...>, <#ff8800>) with placeholders such as
 #  %player_name% or %server_online% (docs/placeholders.md).
@@ -122,4 +122,4 @@ action-bar:
   enabled: false
   interval: 100
   messages:
-    - text: "<gray>Use <yellow>/lobby</yellow> to change lobby"
+    - text: "<gray>Use <yellow>/lobbies</yellow> to change lobby"

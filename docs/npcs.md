@@ -150,7 +150,7 @@ hand counts, so one click is one click, and clicks are rate-limited per player o
 
 ## The file
 
-`data/npcs.yml`, written by the commands and safe to edit by hand (then `/lobby reload`):
+`data/npcs.yml`, written by the commands and safe to edit by hand (then `/setup-lobby reload`):
 
 ```yaml
 bedwars:

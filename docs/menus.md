@@ -1,7 +1,7 @@
 # Menus
 
 Menus are chest windows, set in `menus.yml` and opened with the action `open_menu: <name>`: from a hotbar
-item, an NPC, a hologram, a portal or a command. They apply with `/lobby reload`.
+item, an NPC, a hologram, a portal or a command. They apply with `/setup-lobby reload`.
 
 Menus are read-only. Every click is cancelled before anything moves, so players can never take, drop,
 shift-click or swap the items. Only the clicked item's actions run.

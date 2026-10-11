@@ -1,7 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.integration;
 
 /**
- * State of one optional integration, shown at startup and in {@code /lobby info}.
+ * State of one optional integration, shown at startup and in {@code /setup-lobby info}.
  *
  * @param name   display name, e.g. {@code LiteBans}
  * @param state  whether it is running

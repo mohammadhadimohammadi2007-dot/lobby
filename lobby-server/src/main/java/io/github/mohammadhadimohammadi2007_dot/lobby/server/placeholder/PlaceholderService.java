@@ -190,7 +190,7 @@ public final class PlaceholderService {
         playerValues.remove(playerId);
     }
 
-    /** Drops every cached value, e.g. after {@code /lobby reload}. */
+    /** Drops every cached value, e.g. after {@code /setup-lobby reload}. */
     public void invalidateAll() {
         playerValues.clear();
         globalValues.clear();

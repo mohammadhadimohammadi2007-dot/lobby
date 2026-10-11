@@ -223,7 +223,7 @@ public final class MovementService implements RegionListener {
         return a.blockX() == b.blockX() && a.blockY() == b.blockY() && a.blockZ() == b.blockZ();
     }
 
-    /** Pads in the file, for /lobby info and tests. */
+    /** Pads in the file, for /setup-lobby info and tests. */
     public List<MovementConfig.LaunchPad> launchPads() {
         return settings().launchPads();
     }

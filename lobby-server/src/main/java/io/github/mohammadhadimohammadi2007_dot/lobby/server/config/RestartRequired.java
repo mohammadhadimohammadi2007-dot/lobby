@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * Finds options that changed between two loads but only take effect after a restart.
  *
- * <p>Everything not listed here is applied live by {@code /lobby reload}: MOTD, max players,
+ * <p>Everything not listed here is applied live by {@code /setup-lobby reload}: MOTD, max players,
  * spawn, protections, time of day, void Y, operators, all messages, and chat.yml except storage and private-messages-enabled.
  */
 public final class RestartRequired {

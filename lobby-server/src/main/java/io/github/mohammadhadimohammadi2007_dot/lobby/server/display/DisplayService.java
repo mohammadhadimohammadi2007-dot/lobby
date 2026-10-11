@@ -165,12 +165,12 @@ public final class DisplayService {
         }
     }
 
-    /** How busy the board thread was over the last minute, for {@code /lobby info}. */
+    /** How busy the board thread was over the last minute, for {@code /setup-lobby info}. */
     public DisplayLoad.Snapshot load() {
         return board.load();
     }
 
-    /** Refreshes skipped because the board thread was still busy, for /lobby info and tests. */
+    /** Refreshes skipped because the board thread was still busy, for /setup-lobby info and tests. */
     public int skippedRefreshes() {
         return skipped.get();
     }

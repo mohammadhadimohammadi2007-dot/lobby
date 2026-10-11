@@ -152,7 +152,7 @@ class DisplayScaleTest {
             connection.connect(map, spot(i));
         }
 
-        // Everything appearing at once for 200 players who are already there (as after /lobby reload): the
+        // Everything appearing at once for 200 players who are already there (as after /setup-lobby reload): the
         // renderer spreads it over refreshes of about 50 ms each instead of one long one.
         long appearLongest = 0;
         long appearTotal = 0;

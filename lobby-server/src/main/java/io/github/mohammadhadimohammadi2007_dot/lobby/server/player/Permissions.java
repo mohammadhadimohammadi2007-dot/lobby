@@ -9,8 +9,8 @@ public final class Permissions {
     public static final String COMMAND_RELOAD = "lobby.command.reload";
     public static final String COMMAND_SETSPAWN = "lobby.command.setspawn";
     public static final String COMMAND_INFO = "lobby.command.info";
-    /** Use {@code /lobby <number>} and the lobby selector to move between the lobbies of this server. */
-    public static final String COMMAND_LOBBY = "lobby.command.lobby";
+    /** Use {@code /lobbies [number]} and the lobby selector to move between the lobbies of this server. */
+    public static final String COMMAND_LOBBIES = "lobby.command.lobbies";
     /** Create, edit and delete NPCs with {@code /npc}. */
     public static final String COMMAND_NPC = "lobby.command.npc";
     /** Create, edit and delete holograms with {@code /hologram}. */
@@ -26,7 +26,7 @@ public final class Permissions {
      * Permissions every player has when LuckPerms is disabled. With LuckPerms, give these to your
      * default group instead.
      */
-    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBY,
+    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBIES,
             "lobby.command.chat", "lobby.command.ch", "lobby.command.ignore", "lobby.command.msg", "lobby.chat.emoji");
 
     private Permissions() {

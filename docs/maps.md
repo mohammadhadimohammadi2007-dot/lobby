@@ -40,7 +40,7 @@ Build the lobby inside that range. The server warns at startup if blocks exist o
 
 ## Spawn and preloading
 
-- `spawn:` is where players appear. Stand somewhere in game and run `/lobby setspawn` to save it.
+- `spawn:` is where players appear. Stand somewhere in game and run `/setup-lobby setspawn` to save it.
 - `preload-radius` chunks around spawn (and at least `view-distance` + 1, which is what a player at spawn
   is sent) are always loaded before players can join, even for Anvil. Their chunk packets, light included,
   are built at the same time, so the first player after a start does not wait for them.

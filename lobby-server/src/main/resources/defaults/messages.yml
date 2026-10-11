@@ -4,7 +4,7 @@
 #  Words in <angle-brackets> that are listed under a message are filled in by the server.
 #  Every message can also use placeholders such as %player_name% or %luckperms_prefix%
 #  (full list: docs/placeholders.md). They describe the player who receives the message.
-#  Reload with /lobby reload.
+#  Reload with /setup-lobby reload.
 # =====================================================================
 
 # Added in front of command replies with <prefix>.
@@ -16,8 +16,8 @@ players-only: "<prefix><red>Only players can use this command."
 # /spawn
 spawn-teleported: "<prefix><gray>Welcome back to spawn, <white>%player_name%</white>."
 
-# /lobby
-lobby-usage: "<prefix><gray>Usage: <white>/lobby <number></white>, <white>/lobby reload</white>, <white>/lobby setspawn</white> or <white>/lobby info"
+# /setup-lobby (the admin command; /lobby is left to the proxy's hub command)
+setup-lobby-usage: "<prefix><gray>Usage: <white>/setup-lobby reload</white>, <white>/setup-lobby setspawn</white> or <white>/setup-lobby info"
 # Moving between the lobby instances of this server (see "lobbies" in config.yml).
 # <number> = the lobby number, <count> = how many lobbies this server has
 lobby-switched: "<prefix><gray>You are now in lobby <white><number></white>."
@@ -156,7 +156,7 @@ reload-warnings: "<prefix><yellow><warnings> problem(s) found in the config file
 setspawn-done: "<prefix><green>Spawn set to <white><x>, <y>, <z></white> (yaw <yaw>, pitch <pitch>)."
 setspawn-failed: "<prefix><red>Could not save the spawn: <error>"
 
-# /lobby info
+# /setup-lobby info
 # <mode> <players> <max-players> <tps> <mspt> <memory-used> <memory-max>
 # <world> <world-format> <chunks> <integrations> <bridge> <display> <network>
 # <client> = the version the lobby uses for you, and whether the proxy reported it

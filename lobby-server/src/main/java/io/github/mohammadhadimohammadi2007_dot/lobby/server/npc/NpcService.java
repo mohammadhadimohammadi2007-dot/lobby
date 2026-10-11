@@ -79,7 +79,7 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
         return service;
     }
 
-    /** Reads the file again and replaces every NPC. Used by {@code /lobby reload}. */
+    /** Reads the file again and replaces every NPC. Used by {@code /setup-lobby reload}. */
     public synchronized void reload() {
         for (Npc npc : npcs.values()) {
             renderer.remove(npc.name());

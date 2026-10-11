@@ -107,7 +107,7 @@ public final class PortalService implements RegionListener {
         node.addListener(PlayerDisconnectEvent.class, event -> selections.remove(event.getPlayer().getUuid()));
     }
 
-    /** Reads the file again. Used by {@code /lobby reload}. */
+    /** Reads the file again. Used by {@code /setup-lobby reload}. */
     public synchronized void reload() {
         portals.clear();
         loadAll();

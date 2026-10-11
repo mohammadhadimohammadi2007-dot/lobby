@@ -35,7 +35,7 @@ world folder or a `.polar` file. See [maps.md](maps.md). Restart the server.
 
 ## 4. Give yourself permissions
 
-Add your name to `operators:` in `config.yml` and run `/lobby reload` from the console:
+Add your name to `operators:` in `config.yml` and run `/setup-lobby reload` from the console:
 
 ```yaml
 operators: ["YourName"]

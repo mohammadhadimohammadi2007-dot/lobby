@@ -74,7 +74,7 @@ public final class YamlDataStore<T> {
 
     /**
      * Reads every entry, in file order. A missing file means no entries. Blocking: call it at startup or on
-     * {@code /lobby reload}, never from a player event.
+     * {@code /setup-lobby reload}, never from a player event.
      */
     public synchronized Map<String, T> load() {
         Map<String, T> entries = new LinkedHashMap<>();

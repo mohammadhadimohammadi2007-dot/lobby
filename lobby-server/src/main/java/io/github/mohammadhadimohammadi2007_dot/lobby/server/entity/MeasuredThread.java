@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 
 /**
  * One daemon thread that runs tasks in order and counts how busy it is ({@link DisplayLoad}), for work
- * that must stay off the tick thread and needs its own number in {@code /lobby info}.
+ * that must stay off the tick thread and needs its own number in {@code /setup-lobby info}.
  */
 public final class MeasuredThread {
 

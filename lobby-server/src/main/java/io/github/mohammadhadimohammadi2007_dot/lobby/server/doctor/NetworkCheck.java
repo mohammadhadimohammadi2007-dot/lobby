@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * the bridge does not know makes a menu item show "offline" forever, or a portal push everyone back,
  * with no other hint why; this says which name, where it is used, and what the bridge does know.
  *
- * <p>Pure: it only looks at what it is given, so {@code /lobby doctor} can run it any time.
+ * <p>Pure: it only looks at what it is given, so {@code /setup-lobby doctor} can run it any time.
  */
 public final class NetworkCheck {
 
@@ -45,7 +45,7 @@ public final class NetworkCheck {
             return checked && unknown.isEmpty();
         }
 
-        /** One line for {@code /lobby info}. */
+        /** One line for {@code /setup-lobby info}. */
         public String summary() {
             if (!checked) {
                 return "not checked yet (no network information from the proxy bridge)";

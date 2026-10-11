@@ -6,7 +6,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandManager;
 
-/** {@code console_command: <command>} runs a lobby command as the console, e.g. {@code "lobby info"}. */
+/** {@code console_command: <command>} runs a lobby command as the console, e.g. {@code "setup-lobby info"}. */
 public record ConsoleCommandAction(String command) implements Action {
 
     @Override
