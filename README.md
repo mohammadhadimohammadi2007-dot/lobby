@@ -52,7 +52,7 @@ On the first start the server creates `config.yml`, `integrations.yml` and `mess
 No map yet? It generates a small platform so you can still join. Copy your world folder to `worlds/lobby`
 (or point `world.path` at another world folder or a `.polar` file) and restart.
 
-Type `stop` in the console to shut the server down.
+Type `stop` in the console to shut the server down (or press Ctrl+C). The console has tab completion and history: see [console-and-ops.md](docs/console-and-ops.md).
 
 ## Configuration overview
 

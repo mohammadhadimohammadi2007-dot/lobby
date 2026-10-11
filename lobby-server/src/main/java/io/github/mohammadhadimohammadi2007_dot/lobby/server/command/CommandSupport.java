@@ -3,7 +3,9 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.command;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.condition.CommandCondition;
+import net.minestom.server.entity.Player;
 
 import java.util.Arrays;
 
@@ -11,6 +13,11 @@ import java.util.Arrays;
 final class CommandSupport {
 
     private CommandSupport() {
+    }
+
+    /** Who ran a command, for logs: the player's name or "the console". */
+    static String name(CommandSender sender) {
+        return sender instanceof Player player ? player.getUsername() : "the console";
     }
 
     /**

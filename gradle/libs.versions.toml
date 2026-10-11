@@ -10,6 +10,8 @@ logback = "1.6.5"
 hikaricp = "7.1.0"
 mariadb = "3.5.10"
 gson = "2.14.0"
+# Console: tab completion, history, colors (BSD-3-Clause).
+jline = "4.4.7"
 fastutil = "8.5.19"
 # 3.5.x API with Java 21 bytecode: the same bridge jar runs on Velocity 3.5 (Java 21) and 4.x (Java 25).
 velocity = "3.5.1"
@@ -30,6 +32,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+jline = { module = "org.jline:jline", version.ref = "jline" }
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 viaversion-api = { module = "com.viaversion:viaversion-api", version.ref = "viaversion" }

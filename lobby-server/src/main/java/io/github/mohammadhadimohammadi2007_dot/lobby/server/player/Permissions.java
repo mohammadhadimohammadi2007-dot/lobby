@@ -9,6 +9,8 @@ public final class Permissions {
     public static final String COMMAND_RELOAD = "lobby.command.reload";
     public static final String COMMAND_SETSPAWN = "lobby.command.setspawn";
     public static final String COMMAND_INFO = "lobby.command.info";
+    /** {@code /stop}. */
+    public static final String COMMAND_STOP = "lobby.command.stop";
     /** Use {@code /lobbies [number]} and the lobby selector to move between the lobbies of this server. */
     public static final String COMMAND_LOBBIES = "lobby.command.lobbies";
     /** Create, edit and delete NPCs with {@code /npc}. */

@@ -8,11 +8,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnect
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabilities;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandWhitelist;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbyConsole;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbiesCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.StopCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
@@ -33,6 +34,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramSer
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.VisibilityService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbyInstances;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.LogFiles;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.LobbySelectorMenu;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.database.DatabasePool;
@@ -74,6 +76,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.trait.PlayerEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +125,7 @@ public final class LobbyServer implements ServerInfo {
     private PortalService portals;
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
+    private @Nullable LobbyConsole console;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -143,7 +147,8 @@ public final class LobbyServer implements ServerInfo {
         MinecraftServer.getSchedulerManager().buildShutdownTask(this::shutdown);
 
         minecraftServer.start(config.server().host(), config.server().port());
-        ConsoleInput.start();
+        console = new LobbyConsole(MinecraftServer.getCommandManager(), configManager.dataDir(), config.console().colors());
+        console.start();
 
         printSummary(config, (System.nanoTime() - startNanos) / NANOS_PER_MILLI);
     }
@@ -155,6 +160,7 @@ public final class LobbyServer implements ServerInfo {
     void build() {
         ConfigSnapshot snapshot = configManager.current();
         LobbyConfig config = snapshot.config();
+        LogFiles.keepDays(configManager.dataDir().resolve("logs"), config.console().logKeepDays());
         world = WorldLoader.load(config.world(), SpawnListener.spawnPosition(config));
         // Minestom sets up its entity classes (metadata tables, time units) when the first entity is made.
         // Holograms and NPCs are only packets, so without this the first player paid for it during their join.
@@ -388,6 +394,7 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
+        commands.register(new StopCommand(text, permissions));
         // Last, so it covers every command above (and the chat commands registered with the listeners).
         EventNode<PlayerEvent> commandEvents = EventNode.type("lobby-commands", EventFilter.PLAYER);
         MinecraftServer.getGlobalEventHandler().addChild(commandEvents);
@@ -397,6 +404,10 @@ public final class LobbyServer implements ServerInfo {
 
     /** Applies the options that can change while running. Called after every successful reload. */
     private void applyReload(ConfigSnapshot reloaded) {
+        LogFiles.keepDays(configManager.dataDir().resolve("logs"), reloaded.config().console().logKeepDays());
+        if (console != null) {
+            console.colors(reloaded.config().console().colors());
+        }
         // Config values used by placeholders (operators, server name...) may have changed.
         placeholders.invalidateAll();
         chat.reload(reloaded);
@@ -448,6 +459,9 @@ public final class LobbyServer implements ServerInfo {
         stopFeatures();
         Async.shutdown();
         LOGGER.info("Goodbye!");
+        if (console != null) {
+            console.stop();
+        }
     }
 
     /** Stops and saves every feature; package-private so tests can stop a lobby without stopping {@link Async}. */

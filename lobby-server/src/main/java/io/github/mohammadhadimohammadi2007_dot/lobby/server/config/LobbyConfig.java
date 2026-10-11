@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.ConsoleAppender;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.JoinStrategy;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
  * @param spawn      where players appear
  * @param protection what players may do in the lobby
  * @param npcs       NPC settings
+ * @param console    console colors and log file retention
  * @param operators  lower-case usernames with every permission (used when LuckPerms is disabled)
  */
 public record LobbyConfig(
@@ -29,6 +31,7 @@ public record LobbyConfig(
         SpawnPoint spawn,
         Protection protection,
         Npcs npcs,
+        Console console,
         Set<String> operators
 ) {
 
@@ -51,6 +54,8 @@ public record LobbyConfig(
     /** Longest an old client keeps an NPC in its tab list; longer than this is only clutter. */
     private static final int MAX_TAB_REMOVAL_DELAY_MILLIS = 30_000;
     private static final int DEFAULT_TAB_REMOVAL_DELAY_MILLIS = 3000;
+    /** Longest log retention; a year of daily logs. */
+    private static final int MAX_LOG_KEEP_DAYS = 365;
     /** Allowed characters for the lobby name. */
     private static final Pattern SERVER_NAME = Pattern.compile("[A-Za-z0-9_-]{1,32}");
 
@@ -116,6 +121,15 @@ public record LobbyConfig(
      *                                    skin loads
      */
     public record Npcs(int legacyTabRemovalDelayMillis) {
+    }
+
+    /**
+     * {@code console:} and {@code logging:} sections.
+     *
+     * @param colors       colored warnings and errors on the console
+     * @param logKeepDays  how many days of archived logs ({@code logs/<date>-<n>.log.gz}) to keep
+     */
+    public record Console(ConsoleAppender.Colors colors, int logKeepDays) {
     }
 
     /** {@code spawn:} section. */
@@ -192,11 +206,19 @@ public record LobbyConfig(
         Npcs npcs = new Npcs(reader.integer("npcs.legacy-tab-removal-delay", 0, MAX_TAB_REMOVAL_DELAY_MILLIS,
                 DEFAULT_TAB_REMOVAL_DELAY_MILLIS));
 
+        String colorsText = reader.string("console.colors", "auto");
+        ConsoleAppender.Colors colors = ConsoleAppender.parseColors(colorsText);
+        if (colors == null) {
+            reader.reportInvalid("console.colors", colorsText, "auto, on or off");
+            colors = ConsoleAppender.Colors.AUTO;
+        }
+        Console console = new Console(colors, reader.integer("logging.keep-days", 1, MAX_LOG_KEEP_DAYS, 14));
+
         Set<String> operators = reader.stringList("operators").stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toUnmodifiableSet());
 
-        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, npcs, operators);
+        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, npcs, console, operators);
     }
 
     /** Reads the {@code lobbies:} section. {@code instances} is a number or the word {@code auto}. */

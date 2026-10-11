@@ -111,6 +111,17 @@ protection:
   # Dropping items from the inventory.
   item-drop: false
 
+# ---------------- Console and logs ----------------
+console:
+  # Colored warnings and errors in the console. auto = only in a real terminal (never in Pterodactyl,
+  # Docker or log files, which would show the color codes as text), on, or off.
+  colors: auto
+
+logging:
+  # The log is logs/latest.log. At every start and at midnight it is archived as
+  # logs/<date>-<n>.log.gz. How many days of archives to keep (1-365).
+  keep-days: 14
+
 # ---------------- Operators ----------------
 # Only used when LuckPerms is disabled (see integrations.yml).
 # Usernames listed here get every permission. Example: ["Notch", "jeb_"]

@@ -4,6 +4,10 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **New console.** Tab completion, history and colors (`console.colors`), Ctrl+C stops cleanly. `stop` is
+  now a normal command (permission `lobby.command.stop`). Old log archives were named
+  `logs/<date>.log.gz`; new ones are `logs/<date>-<n>.log.gz`, made at every start and at midnight.
+  `logging.keep-days` (default 14) applies to both. See [console-and-ops.md](console-and-ops.md).
 - **New `/announce <message>`** (permission `lobby.command.announce`, click and hover with
   `lobby.command.announce.advanced`) replaces the old `announce` channel. Its look is `announce` in
   messages.yml, its sound and title are `announce:` in chat.yml.

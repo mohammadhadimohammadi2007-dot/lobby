@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.mariadb)
     implementation(libs.gson)
+    implementation(libs.jline)
     // LuckPerms support, found at runtime through ServiceLoader (see LuckPermsIntegration).
     runtimeOnly(project(":lobby-luckperms"))
     // Polar's class files reference fastutil types; Minestom only ships it at runtime.

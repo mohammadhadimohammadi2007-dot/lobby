@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Logging setup: short lines on the console, full logs in logs/latest.log (kept for 14 days). -->
+<!--
+  Logging setup: short lines on the console, full lines in logs/latest.log.
+  latest.log is archived as logs/<date>-<n>.log.gz at every start and when the day changes; how many
+  days of archives are kept is "logging.keep-days" in config.yml. Console colors: "console.colors".
+-->
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
+    <!-- %plainmsg: the message without color codes, for the log file. -->
+    <conversionRule conversionWord="plainmsg"
+                    class="io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.PlainMessageConverter"/>
+
+    <appender name="CONSOLE" class="io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>[%d{HH:mm:ss} %-5level] %msg%n%ex{short}</pattern>
-        </encoder>
+        </layout>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/latest.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-            <maxHistory>14</maxHistory>
-        </rollingPolicy>
+        <rollingPolicy class="io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.LatestLogPolicy"/>
         <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss} %-5level] [%thread/%logger{0}] %msg%n</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss} %-5level] [%thread/%logger{0}] %plainmsg%n</pattern>
         </encoder>
     </appender>
 
     <!-- Hikari and the MariaDB driver are very chatty at INFO. -->
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="org.mariadb.jdbc" level="WARN"/>
+    <!-- JLine reports which terminal it picked at INFO. -->
+    <logger name="org.jline" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

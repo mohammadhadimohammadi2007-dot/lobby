@@ -14,6 +14,17 @@ Everything 1.8-specific below depends on the lobby knowing that a client is 1.8.
       the 1.8 handling is off for everyone; fix that before testing anything else.
 - [ ] Join with the latest client: "Your client" names the latest version, `modern, reported by the proxy`.
 
+## 0b. Console (in a real terminal, then in Pterodactyl or Docker)
+
+- [ ] In a terminal: Tab completes `setup-` to `setup-lobby`, and offers `reload`, `info`, `setspawn` after it.
+- [ ] Arrow up shows the last command, also after a restart.
+- [ ] A warning prints yellow above the prompt while you are typing; your typed text stays intact.
+- [ ] Ctrl+C: "Ctrl+C: stopping the server...", everything saved, the terminal works normally afterwards.
+- [ ] In Pterodactyl (or `docker logs`): no color codes like `[38;5;7m` anywhere; commands typed in the
+      panel console run.
+- [ ] Restart twice: `logs/` has `<today>-1.log.gz` and `<today>-2.log.gz`; `latest.log` holds only the
+      current run.
+
 ## 1. NPC skins on 1.8 (most important)
 
 The lobby lists a player NPC in a 1.8 client's tab list while it appears, then removes it after
