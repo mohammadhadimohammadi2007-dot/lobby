@@ -5,6 +5,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import net.minestom.server.command.builder.Command;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.command.builder.arguments.ArgumentType;
+import net.minestom.server.command.builder.arguments.ArgumentWord;
+import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.minestom.server.entity.Player;
 
 /**
@@ -30,5 +36,24 @@ public final class FlyCommand extends Command {
             boolean on = movement.toggleFly(player);
             player.sendMessage(text.message(on ? MessageKey.FLY_ON : MessageKey.FLY_OFF, player));
         });
+        // /fly <player>: for someone else (staff and the console).
+        ArgumentWord target = ArgumentType.Word("player");
+        target.setSuggestionCallback((sender, context, suggestion) -> MinecraftServer.getConnectionManager()
+                .getOnlinePlayers().forEach(player -> suggestion.addEntry(new SuggestionEntry(player.getUsername()))));
+        addConditionalSyntax((sender, commandString) -> permissions.hasPermission(sender, Permissions.COMMAND_FLY_OTHERS),
+                (sender, context) -> {
+                    Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(context.get(target));
+                    if (player == null) {
+                        sender.sendMessage(text.message(MessageKey.PLAYER_NOT_ONLINE, sender,
+                                Messages.text("player", context.get(target))));
+                        return;
+                    }
+                    boolean on = movement.toggleFly(player);
+                    player.sendMessage(text.message(on ? MessageKey.FLY_ON : MessageKey.FLY_OFF, player));
+                    if (sender != player) {
+                        sender.sendMessage(text.message(on ? MessageKey.FLY_OTHER_ON : MessageKey.FLY_OTHER_OFF, sender,
+                                Messages.text("player", player.getUsername())));
+                    }
+                }, target);
     }
 }

@@ -63,7 +63,7 @@ public final class NpcCommand extends Command {
         addSubcommand(list());
         addSubcommand(nearby());
         addSubcommand(support.withNpc("info", npc, this::info));
-        addSubcommand(support.withNpc("teleport", npc, NpcCommand::teleport, "tp", "goto"));
+        addSubcommand(support.withNpc("teleport", npc, this::teleport, "tp", "goto"));
         addSubcommand(support.withNpc("move_here", npc, this::moveHere, "movehere"));
         addSubcommand(moveTo(npc));
         addSubcommand(type(npc));
@@ -86,22 +86,32 @@ public final class NpcCommand extends Command {
         ArgumentWord name = ArgumentType.Word("name");
         command.addSyntax((sender, context) -> {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(support.text.message(MessageKey.PLAYERS_ONLY, sender));
+                sender.sendMessage(support.text.message(MessageKey.NPC_CONSOLE_CREATE, sender));
                 return;
             }
-            String wanted = context.get(name).toLowerCase(Locale.ROOT);
-            if (!NpcService.validName(wanted)) {
-                sender.sendMessage(support.text.message(MessageKey.NPC_INVALID_NAME, sender,
-                        Messages.text("name", context.get(name))));
-                return;
-            }
-            if (support.npcs.create(wanted, player.getPosition()) == null) {
-                sender.sendMessage(support.text.message(MessageKey.NPC_EXISTS, sender, Messages.text("name", wanted)));
-                return;
-            }
-            sender.sendMessage(support.text.message(MessageKey.NPC_CREATED, sender, Messages.text("name", wanted)));
+            create(sender, context.get(name), player.getPosition());
         }, name);
+        // From the console (or anywhere): at these coordinates.
+        var x = ArgumentType.Double("x");
+        var y = ArgumentType.Double("y");
+        var z = ArgumentType.Double("z");
+        command.addSyntax((sender, context) -> create(sender, context.get(name),
+                new Pos(context.get(x), context.get(y), context.get(z))), name, x, y, z);
         return command;
+    }
+
+    private void create(CommandSender sender, String rawName, Pos where) {
+        String wanted = rawName.toLowerCase(Locale.ROOT);
+        if (!NpcService.validName(wanted)) {
+            sender.sendMessage(support.text.message(MessageKey.NPC_INVALID_NAME, sender,
+                    Messages.text("name", rawName)));
+            return;
+        }
+        if (support.npcs.create(wanted, where) == null) {
+            sender.sendMessage(support.text.message(MessageKey.NPC_EXISTS, sender, Messages.text("name", wanted)));
+            return;
+        }
+        sender.sendMessage(support.text.message(MessageKey.NPC_CREATED, sender, Messages.text("name", wanted)));
     }
 
     private void remove(CommandSender sender, NpcData npc) {
@@ -191,9 +201,11 @@ public final class NpcCommand extends Command {
                 Messages.text("actions", actions)));
     }
 
-    private static void teleport(CommandSender sender, NpcData npc) {
+    private void teleport(CommandSender sender, NpcData npc) {
         if (sender instanceof Player player) {
             player.teleport(npc.position());
+        } else {
+            sender.sendMessage(support.text.message(MessageKey.PLAYERS_ONLY, sender));
         }
     }
 

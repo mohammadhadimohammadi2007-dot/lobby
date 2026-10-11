@@ -15,6 +15,7 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.Command;
+import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import org.slf4j.Logger;
@@ -58,6 +59,15 @@ public final class SetupLobbyCommand extends Command {
         Command setSpawn = new Command("setspawn");
         setSpawn.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_SETSPAWN));
         setSpawn.setDefaultExecutor((sender, context) -> setSpawn(sender));
+        var x = ArgumentType.Double("x");
+        var y = ArgumentType.Double("y");
+        var z = ArgumentType.Double("z");
+        var yaw = ArgumentType.Float("yaw");
+        var pitch = ArgumentType.Float("pitch");
+        setSpawn.addSyntax((sender, context) -> setSpawn(sender,
+                new Pos(context.get(x), context.get(y), context.get(z))), x, y, z);
+        setSpawn.addSyntax((sender, context) -> setSpawn(sender, new Pos(context.get(x), context.get(y), context.get(z),
+                context.get(yaw), context.get(pitch))), x, y, z, yaw, pitch);
         addSubcommand(setSpawn);
 
         Command info = new Command("info");
@@ -100,13 +110,17 @@ public final class SetupLobbyCommand extends Command {
         }
     }
 
-    /** Saves the player's position as the spawn in config.yml (keeping comments), then reloads. */
+    /** Saves the player's position as the spawn; from the console the coordinates must be given. */
     private void setSpawn(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(text.message(MessageKey.PLAYERS_ONLY, sender));
+            sender.sendMessage(text.message(MessageKey.SETSPAWN_CONSOLE, sender));
             return;
         }
-        Pos position = player.getPosition();
+        setSpawn(sender, player.getPosition());
+    }
+
+    /** Saves {@code position} as the spawn in config.yml (keeping comments), then reloads. */
+    private void setSpawn(CommandSender sender, Pos position) {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("x", format(position.x(), 2));
         values.put("y", format(position.y(), 2));
@@ -126,11 +140,11 @@ public final class SetupLobbyCommand extends Command {
                 Throwable cause = error instanceof CompletionException ? error.getCause() : error;
                 MessageKey key = cause instanceof ConfigException ? MessageKey.RELOAD_FAILED : MessageKey.SETSPAWN_FAILED;
                 LOGGER.error("Setting spawn failed: {}", cause.getMessage());
-                player.sendMessage(text.message(key, player, Messages.text("error", cause.getMessage())));
+                sender.sendMessage(text.message(key, sender, Messages.text("error", cause.getMessage())));
                 return;
             }
-            LOGGER.info("{} set the spawn to {}", player.getUsername(), values);
-            player.sendMessage(text.message(MessageKey.SETSPAWN_DONE, player,
+            LOGGER.info("{} set the spawn to {}", CommandSupport.name(sender), values);
+            sender.sendMessage(text.message(MessageKey.SETSPAWN_DONE, sender,
                     Messages.text("x", values.get("x")), Messages.text("y", values.get("y")),
                     Messages.text("z", values.get("z")), Messages.text("yaw", values.get("yaw")),
                     Messages.text("pitch", values.get("pitch"))));

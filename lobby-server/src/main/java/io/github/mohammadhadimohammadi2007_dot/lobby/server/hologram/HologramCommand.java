@@ -96,7 +96,8 @@ public final class HologramCommand extends Command {
         addSubcommand(copy(name, newName));
         // The names FancyHolograms uses: "teleport" brings you to the hologram, "movehere" the hologram to you.
         addSubcommand(withName("movehere", name, this::moveHere, "here", "position"));
-        addSubcommand(withName("teleport", name, HologramCommand::goTo, "goto", "tp"));
+        addSubcommand(withName("teleport", name, this::goTo, "goto", "tp"));
+        addSubcommand(moveTo(name));
         addSubcommand(addLine(name, lineText));
         addSubcommand(lineAt("setline", name, lineNumber, lineText, Insert.REPLACE));
         addSubcommand(lineAt("insertline", name, lineNumber, lineText, Insert.BEFORE, "insertbefore"));
@@ -148,6 +149,12 @@ public final class HologramCommand extends Command {
         Command command = new Command("create", "add");
         command.setDefaultExecutor((sender, context) -> usage(sender));
         command.addSyntax((sender, context) -> create(sender, context.get(name), HologramType.TEXT, null), name);
+        // From the console (or anywhere): a text hologram at these coordinates.
+        var x = ArgumentType.Double("x");
+        var y = ArgumentType.Double("y");
+        var z = ArgumentType.Double("z");
+        command.addSyntax((sender, context) -> create(sender, context.get(name), HologramType.TEXT, null,
+                new Pos(context.get(x), context.get(y), context.get(z))), name, x, y, z);
         command.addSyntax((sender, context) ->
                 create(sender, context.get(name), HologramType.fromConfigName(context.get(type)), null), name, type);
         command.addSyntax((sender, context) -> create(sender, context.get(name),
@@ -399,16 +406,21 @@ public final class HologramCommand extends Command {
 
     private void create(CommandSender sender, String rawName, @Nullable HologramType type, @Nullable String material) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(text.message(MessageKey.PLAYERS_ONLY, sender));
+            sender.sendMessage(text.message(MessageKey.HOLOGRAM_CONSOLE_CREATE, sender));
             return;
         }
+        create(sender, rawName, type, material, player.getPosition());
+    }
+
+    private void create(CommandSender sender, String rawName, @Nullable HologramType type, @Nullable String material,
+                        Pos where) {
         String name = rawName.toLowerCase(Locale.ROOT);
         if (!HologramService.validName(name)) {
             sender.sendMessage(text.message(MessageKey.HOLOGRAM_INVALID_NAME, sender, Messages.text("name", rawName)));
             return;
         }
         HologramType wanted = type == null ? HologramType.TEXT : type;
-        HologramData data = holograms.create(name, wanted, player.getPosition(),
+        HologramData data = holograms.create(name, wanted, where,
                 wanted == HologramType.TEXT ? List.of("<yellow>" + name) : List.of());
         if (data == null) {
             sender.sendMessage(text.message(MessageKey.HOLOGRAM_EXISTS, sender, Messages.text("name", name)));
@@ -480,10 +492,32 @@ public final class HologramCommand extends Command {
         sender.sendMessage(text.message(MessageKey.HOLOGRAM_MOVED, sender, Messages.text("name", data.name())));
     }
 
-    private static void goTo(CommandSender sender, HologramData data) {
+    private void goTo(CommandSender sender, HologramData data) {
         if (sender instanceof Player player) {
             player.teleport(data.position());
+        } else {
+            sender.sendMessage(text.message(MessageKey.PLAYERS_ONLY, sender));
         }
+    }
+
+    /** {@code /hologram moveto <name> <x> <y> <z>}: from the console too. */
+    private Command moveTo(ArgumentWord name) {
+        Command command = new Command("moveto", "move_to");
+        command.setDefaultExecutor((sender, context) -> usage(sender));
+        var x = ArgumentType.Double("x");
+        var y = ArgumentType.Double("y");
+        var z = ArgumentType.Double("z");
+        command.addSyntax((sender, context) -> {
+            HologramData data = found(sender, context.get(name));
+            if (data == null) {
+                return;
+            }
+            Pos current = data.position();
+            data.position(new Pos(context.get(x), context.get(y), context.get(z), current.yaw(), current.pitch()));
+            holograms.changed(data);
+            sender.sendMessage(text.message(MessageKey.HOLOGRAM_MOVED, sender, Messages.text("name", data.name())));
+        }, name, x, y, z);
+        return command;
     }
 
     private void list(CommandSender sender) {

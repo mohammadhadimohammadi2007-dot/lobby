@@ -43,8 +43,13 @@ public final class ChatCommand extends Command {
 
         Command clear = new Command("clear");
         clear.setCondition(ChatCommandSupport.require(services, ChatPermissions.COMMAND_CLEAR));
-        clear.setDefaultExecutor((sender, context) ->
-                chat.clearChat(services.text().message(MessageKey.CHAT_CLEARED, Messages.text("staff", name(sender)))));
+        clear.setDefaultExecutor((sender, context) -> {
+            var notice = services.text().message(MessageKey.CHAT_CLEARED, Messages.text("staff", name(sender)));
+            chat.clearChat(notice);
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(notice);
+            }
+        });
         addSubcommand(clear);
 
         Command lock = new Command("lock");
@@ -52,8 +57,12 @@ public final class ChatCommand extends Command {
         lock.setDefaultExecutor((sender, context) -> {
             boolean locked = !services.moderation().locked();
             services.moderation().locked(locked);
-            services.tellStaff("", services.text().message(locked ? MessageKey.CHAT_LOCKED_ON : MessageKey.CHAT_LOCKED_OFF,
-                    Messages.text("staff", name(sender))));
+            var notice = services.text().message(locked ? MessageKey.CHAT_LOCKED_ON : MessageKey.CHAT_LOCKED_OFF,
+                    Messages.text("staff", name(sender)));
+            services.tellStaff("", notice);
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(notice);
+            }
         });
         addSubcommand(lock);
 
@@ -74,6 +83,9 @@ public final class ChatCommand extends Command {
             if (sender instanceof Player player) {
                 boolean on = services.moderation().toggleSpy(player.getUuid());
                 player.sendMessage(services.text().message(on ? MessageKey.SPY_ON : MessageKey.SPY_OFF, player));
+            } else {
+                // The console already sees blocked messages in the log.
+                sender.sendMessage(services.text().message(MessageKey.PLAYERS_ONLY, sender));
             }
         });
         addSubcommand(spy);

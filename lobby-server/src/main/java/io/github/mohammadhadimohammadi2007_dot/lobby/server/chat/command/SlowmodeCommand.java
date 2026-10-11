@@ -36,9 +36,13 @@ public final class SlowmodeCommand extends Command {
                 }
             }
             services.moderation().slowmodeSeconds(seconds);
-            services.tellStaff("", seconds == 0
+            var notice = seconds == 0
                     ? services.text().message(MessageKey.SLOWMODE_OFF)
-                    : services.text().message(MessageKey.SLOWMODE_ON, Messages.text("seconds", seconds)));
+                    : services.text().message(MessageKey.SLOWMODE_ON, Messages.text("seconds", seconds));
+            services.tellStaff("", notice);
+            if (!(sender instanceof net.minestom.server.entity.Player)) {
+                sender.sendMessage(notice);
+            }
         }, value);
     }
 }

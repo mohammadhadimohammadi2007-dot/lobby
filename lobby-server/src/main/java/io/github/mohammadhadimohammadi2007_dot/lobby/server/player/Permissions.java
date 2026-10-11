@@ -11,6 +11,16 @@ public final class Permissions {
     public static final String COMMAND_INFO = "lobby.command.info";
     /** {@code /op}, {@code /deop} and {@code /ops}. Operators have it like every permission. */
     public static final String COMMAND_OP = "lobby.command.op";
+    /** {@code /list}: who is online. Everyone has it (players see it if commands.yml lists it). */
+    public static final String COMMAND_LIST = "lobby.command.list";
+    public static final String COMMAND_SAY = "lobby.command.say";
+    public static final String COMMAND_TP = "lobby.command.tp";
+    public static final String COMMAND_GAMEMODE = "lobby.command.gamemode";
+    public static final String COMMAND_CLEAR = "lobby.command.clear";
+    public static final String COMMAND_VERSION = "lobby.command.version";
+    public static final String COMMAND_TPS = "lobby.command.tps";
+    /** {@code /fly <player>}: switch flying for someone else. */
+    public static final String COMMAND_FLY_OTHERS = "lobby.command.fly.others";
     /** {@code /stop}. */
     public static final String COMMAND_STOP = "lobby.command.stop";
     /** Use {@code /lobbies [number]} and the lobby selector to move between the lobbies of this server. */
@@ -30,7 +40,7 @@ public final class Permissions {
      * Permissions every player has when LuckPerms is disabled. With LuckPerms, give these to your
      * default group instead.
      */
-    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBIES,
+    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBIES, COMMAND_LIST,
             "lobby.command.chat", "lobby.command.ignore", "lobby.chat.emoji");
 
     private Permissions() {

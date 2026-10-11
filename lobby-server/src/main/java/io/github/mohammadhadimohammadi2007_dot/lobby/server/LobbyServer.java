@@ -14,6 +14,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCo
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.StopCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.VanillaCommands;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapshot;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.IntegrationsConfig;
@@ -415,6 +416,8 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
         commands.register(new StopCommand(text, permissions));
+        new VanillaCommands(text, permissions, tickStats, StartupBanner.version(), hotbar::give).commands()
+                .forEach(commands::register);
         new OpCommands(configManager, text, permissions, ops, mojangProfiles).commands().forEach(commands::register);
         // Last, so it covers every command above (and the chat commands registered with the listeners).
         EventNode<PlayerEvent> commandEvents = EventNode.type("lobby-commands", EventFilter.PLAYER);

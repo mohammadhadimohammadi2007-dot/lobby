@@ -197,7 +197,24 @@ public enum MessageKey {
     DEOP_UNKNOWN("deop-unknown"),
     DEOP_NOW("deop-now"),
     OPS_HEADER("ops-header"),
-    OPS_ENTRY("ops-entry");
+    OPS_ENTRY("ops-entry"),
+    LIST("list"),
+    SAY("say"),
+    SAY_USAGE("say-usage"),
+    TP_USAGE("tp-usage"),
+    TP_DONE("tp-done"),
+    GAMEMODE_USAGE("gamemode-usage"),
+    GAMEMODE_DONE("gamemode-done"),
+    CLEAR_DONE("clear-done"),
+    VERSION("version"),
+    TPS("tps"),
+    NAME_A_PLAYER("name-a-player"),
+    PLAYER_NOT_ONLINE("player-not-online"),
+    FLY_OTHER_ON("fly-other-on"),
+    FLY_OTHER_OFF("fly-other-off"),
+    NPC_CONSOLE_CREATE("npc-console-create"),
+    HOLOGRAM_CONSOLE_CREATE("hologram-console-create"),
+    SETSPAWN_CONSOLE("setspawn-console");
 
     private final String path;
 

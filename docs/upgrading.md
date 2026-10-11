@@ -4,6 +4,10 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **New server commands:** `list`, `say`, `tp`, `gamemode`, `clear`, `version`, `tps` (see
+  [console-and-ops.md](console-and-ops.md)). `/fly <player>` needs `lobby.command.fly.others`. Admin
+  commands that used your position also take coordinates (for the console). The messages `npc-created`,
+  `hologram-created` and `hologram-moved` no longer say "where you are standing".
 - **Operators are stored by UUID in `data/ops.yml`.** The `operators:` list of config.yml is moved there on
   the first start (the log says what was moved) and replaced by a comment. Manage operators with `/op`,
   `/deop` and `/ops`. In standalone offline mode an operator has to confirm with a one-time code from the

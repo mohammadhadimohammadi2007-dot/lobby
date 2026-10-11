@@ -56,7 +56,7 @@ class CommandTreeTest {
         try {
             var commands = env.process().command();
             var console = new net.minestom.server.command.ConsoleSender();
-            commands.execute(console, "npc create guide");
+            commands.execute(console, "npc create guide 0 65 0");
             // The command from the bug report: "type" was both the subcommand and its argument.
             var result = commands.execute(console, "npc type guide villager");
             assertEquals(net.minestom.server.command.builder.CommandResult.Type.SUCCESS, result.getType());

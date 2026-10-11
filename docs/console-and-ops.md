@@ -99,6 +99,32 @@ Older versions kept operators as names in `config.yml` (`operators: [...]`). On 
 moves them to `data/ops.yml`, replaces the list with a comment and logs what it did. In offline mode each
 moved operator confirms once with a code on their first join.
 
+## Server commands
+
+Every command works from the console. Commands that use your position or act on you take explicit
+arguments from the console, or say "This command can only be used in game".
+
+| Command | Permission | From the console |
+|---|---|---|
+| `list` | `lobby.command.list` (everyone) | yes |
+| `say <message>` | `lobby.command.say` | shown as `[Server] ...` |
+| `tp <player>` | `lobby.command.tp` | name both: `tp <player> <target>` |
+| `tp <x> <y> <z>`, `tp <player> <x> <y> <z>` | `lobby.command.tp` | the second form |
+| `gamemode <mode> [player]` (`gm`) | `lobby.command.gamemode` | name a player |
+| `clear [player]` | `lobby.command.clear` | name a player; the lobby's hotbar items come back |
+| `fly [player]` | the `fly.permission` of movement.yml; others need `lobby.command.fly.others` | name a player |
+| `version` (`ver`) | `lobby.command.version` | yes |
+| `tps` | `lobby.command.tps` | yes (TPS, MSPT, memory) |
+| `stop` | `lobby.command.stop` | yes |
+| `op`, `deop`, `ops` | `lobby.command.op` | yes |
+| `setup-lobby setspawn [x y z [yaw pitch]]` | `lobby.command.setspawn` | give the coordinates |
+| `npc create <name> [x y z]`, `npc move_to <name> <x y z>` | `lobby.command.npc` | give the coordinates |
+| `hologram create <name> [x y z]`, `hologram moveto <name> <x y z>` | `lobby.command.hologram` | give the coordinates |
+| `npc teleport`, `hologram teleport`, `npc nearby`, `chat spy` | | in game only |
+
+Operators and the console have every permission. Players only see the commands `commands.yml` lists for
+their group ([commands.md](commands.md)).
+
 ## Which command belongs to whom
 
 Behind a proxy, a command typed in game first reaches the proxy. Commands of proxy plugins never reach the

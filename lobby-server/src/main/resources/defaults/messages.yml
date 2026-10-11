@@ -11,7 +11,29 @@
 prefix: "<dark_gray>[<gold>Lobby</gold>]</dark_gray> "
 
 no-permission: "<prefix><red>You don't have permission to do that."
-players-only: "<prefix><red>Only players can use this command."
+players-only: "<prefix><red>This command can only be used in game."
+# From the console, a command that needs a player asks for one. <player>
+name-a-player: "<prefix><red>From the console, name a player: for example <white>/gamemode creative Steve</white> or <white>/tp Steve 0 65 0</white>."
+player-not-online: "<prefix><red><player> is not online."
+
+# Vanilla-style commands. <count> <names> <sender> <message> <player> <target> <mode> <version> <minecraft>
+# <protocol> <java> <tps> <mspt> <memory-used> <memory-max>
+list: "<prefix><gray>Online (<white><count></white>): <white><names>"
+say: "<light_purple>[<sender>] <message>"
+say-usage: "<prefix><gray>Usage: <white>/say <message>"
+tp-usage: "<prefix><gray>Usage: <white>/tp <player></white>, <white>/tp <player> <target></white>, <white>/tp <x> <y> <z></white> or <white>/tp <player> <x> <y> <z>"
+tp-done: "<prefix><gray>Teleported <white><player></white> to <white><target></white>."
+gamemode-usage: "<prefix><gray>Usage: <white>/gamemode <survival|creative|adventure|spectator> [player]"
+gamemode-done: "<prefix><gray>Game mode of <white><player></white>: <white><mode></white>."
+clear-done: "<prefix><gray>Cleared the inventory of <white><player></white> (the lobby items stay)."
+version: "<prefix><gray>Lobby <white><version></white> on Minestom for Minecraft <white><minecraft></white> (protocol <protocol>), Java <java>."
+tps: "<prefix><gray>TPS: <white><tps></white>  MSPT: <white><mspt></white>  Memory: <white><memory-used> MB</white> of <white><memory-max> MB</white>"
+fly-other-on: "<prefix><gray>Flying is now <green>on</green> for <white><player></white>."
+fly-other-off: "<prefix><gray>Flying is now <red>off</red> for <white><player></white>."
+# From the console, commands that use your position need coordinates.
+npc-console-create: "<prefix><red>From the console, give the position: <white>/npc create <name> <x> <y> <z>"
+hologram-console-create: "<prefix><red>From the console, give the position: <white>/hologram create <name> <x> <y> <z>"
+setspawn-console: "<prefix><red>From the console, give the position: <white>/setup-lobby setspawn <x> <y> <z> [yaw] [pitch]"
 
 # /op, /deop, /ops. <player> <error> <count> <name> <status>
 op-usage: "<prefix><gray>Usage: <white>/op <player></white>, <white>/deop <player></white>, <white>/ops</white>"
@@ -87,7 +109,7 @@ portal-no-permission: "<prefix><red>You may not use this portal."
 # ---------------- Holograms (/hologram, see docs/holograms.md) ----------------
 hologram-usage: "<prefix><gray>Usage: <white>/hologram list | near | create <name> | delete <name> | info <name> | addline <name> <text> | set <name> <property> <value> | action add <name> <action> | teleport <name> | goto <name> | copy <name> <new> | import"
 # <name> = the hologram's name, <type> = text, item or block
-hologram-created: "<prefix><green>Created the <type> hologram <white><name></white> where you are standing."
+hologram-created: "<prefix><green>Created the <type> hologram <white><name></white>."
 hologram-exists: "<prefix><red>There is already a hologram called <name>."
 hologram-deleted: "<prefix><green>Deleted the hologram <white><name></white>."
 hologram-unknown: "<prefix><red>There is no hologram called <name>."
@@ -96,7 +118,7 @@ hologram-invalid-name: "<prefix><red>'<name>' cannot be a hologram name. Use let
 hologram-list: "<prefix><gray>Holograms (<white><count></white>): <names>"
 hologram-list-empty: "<prefix><gray>No holograms here. Create one with /hologram create <name>."
 hologram-info: "<prefix><gray>Hologram <white><name></white> (<type>) at <x>, <y>, <z><newline><gray>Lines: <white><lines></white>, frames: <white><frames></white>, scale: <white><scale></white>, billboard: <white><billboard></white>, alignment: <white><alignment></white><newline><gray>Shown within <white><view-distance></white> blocks, rebuilt every <white><update-interval></white> ticks, visible to <white><permission></white><newline><gray>Click: <white><actions>"
-hologram-moved: "<prefix><green>Moved <white><name></white> to where you are standing."
+hologram-moved: "<prefix><green>Moved <white><name></white>."
 hologram-copied: "<prefix><green>Copied <white><name></white> to <white><new-name></white>."
 # <line> = the line number
 hologram-line-added: "<prefix><green>Added line <white><line></white> to <white><name></white>."
@@ -130,7 +152,7 @@ hologram-import-nothing: "<prefix><yellow>Nothing to import. Put FancyHolograms'
 # ---------------- NPCs (/npc, see docs/npcs.md) ----------------
 npc-usage: "<prefix><gray>Usage: <white>/npc create <name> | remove | copy | list | nearby | info | teleport | move_here | move_to | type | skin | displayname | name | equipment | glowing | turn_to_player | turn_to_player_distance | visibility_distance | interaction_cooldown | permission | action | import"
 # <name> = the NPC's name
-npc-created: "<prefix><green>Created the NPC <white><name></white> where you are standing."
+npc-created: "<prefix><green>Created the NPC <white><name></white>."
 npc-exists: "<prefix><red>There is already an NPC called <name>."
 npc-deleted: "<prefix><green>Removed the NPC <white><name></white>."
 npc-unknown: "<prefix><red>There is no NPC called <name>."
