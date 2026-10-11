@@ -66,6 +66,18 @@ setup-lobby-usage: "<prefix><gray>Usage: <white>/setup-lobby setup</white>, <whi
 setup-header: "<gold><bold>Lobby setup</bold></gold> <gray>(<summary>)"
 doctor-header: "<gold><bold>Lobby doctor</bold></gold> <gray>(<summary>)"
 setup-unavailable: "<prefix><red>The setup checks are not available on this server."
+
+# The setup wand (/setup-lobby wand). <number> <other> <x> <y> <z> <blocks> <name> <kind>
+wand-name: "<gold>Setup wand"
+wand-lore-1: "<gray>Hit a block: corner 1. Right-click a block: corner 2."
+wand-lore-2: "<gray>Click an NPC or hologram: select it."
+wand-lore-3: "<gray>Sneak and hit a block in a portal: select the portal."
+wand-given: "<prefix><green>Setup wand: hit a block for corner 1, right-click one for corner 2. Click an NPC or hologram to select it. Only you see the outline."
+wand-corner-set: "<prefix><green>Corner <number> set to <white><x>, <y>, <z></white>. <gray>Now corner <other>."
+wand-corner-done: "<prefix><green>Corner <number> set to <white><x>, <y>, <z></white>. <gray>Selection: <white><blocks></white> blocks. Use it with <white>/portal create <name></white>."
+wand-selected-npc: "<prefix><green>Selected the NPC <white><name></white>. <gray>Edit it with <white>/npc ... <name></white>, e.g. <white>/npc info <name></white>."
+wand-selected-hologram: "<prefix><green>Selected the hologram <white><name></white>. <gray>Edit it with <white>/hologram ... <name></white>, e.g. <white>/hologram info <name></white>."
+wand-selected-region: "<prefix><green>Selected the <kind> <white><name></white>."
 # Moving between the lobby instances of this server (see "lobbies" in config.yml).
 # <number> = the lobby number, <count> = how many lobbies this server has
 lobby-switched: "<prefix><gray>You are now in lobby <white><number></white>."
@@ -93,10 +105,6 @@ fly-on: "<prefix><green>Flying on."
 fly-off: "<prefix><gray>Flying off."
 # /portal. <name> is the portal, <number> 1 or 2, <x> <y> <z> a block.
 portal-usage: "<prefix><gray>/portal wand|pos1|pos2|create <name>|remove|list|info|teleport|cooldown|permission|action <name> add|remove|clear|list"
-portal-position-set: "<prefix><green>Corner <number> set to <white><x>, <y>, <z></white>."
-portal-wand-given: "<prefix><green>Hit a block for corner 1, right-click one for corner 2, then /portal create <name>."
-portal-wand-name: "<gold>Portal wand"
-portal-wand-lore: "<gray>Hit: corner 1, right-click: corner 2"
 portal-created: "<prefix><green>Made the portal <white><name></white>. Add what it does with /portal action <name> add <action>."
 portal-bad-name: "<prefix><red>Portal names may only use a-z, 0-9, - and _ (at most 32)."
 portal-exists: "<prefix><red>There is already a portal called <white><name></white>."

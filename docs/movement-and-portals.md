@@ -67,7 +67,7 @@ NPCs, menus and hotbar items. It exists in every lobby instance.
 
 | Command | What it does |
 |---|---|
-| `/portal wand` | Gives the wand: hit a block for corner 1, right-click one for corner 2 |
+| `/portal wand` | Gives the setup wand (the same as `/setup-lobby wand`): hit a block for corner 1, right-click one for corner 2. The selection is outlined with particles only you see |
 | `/portal pos1`, `/portal pos2` | Sets a corner where you stand |
 | `/portal create <name>` | Makes a portal from the two corners (at most 50 000 blocks) |
 | `/portal action <name> add <action>` | Adds an action, e.g. `connect_group: bedwars` |

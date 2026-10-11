@@ -35,10 +35,6 @@ public enum MessageKey {
     FLY_ON("fly-on"),
     FLY_OFF("fly-off"),
     PORTAL_USAGE("portal-usage"),
-    PORTAL_POSITION_SET("portal-position-set"),
-    PORTAL_WAND_GIVEN("portal-wand-given"),
-    PORTAL_WAND_NAME("portal-wand-name"),
-    PORTAL_WAND_LORE("portal-wand-lore"),
     PORTAL_CREATED("portal-created"),
     PORTAL_BAD_NAME("portal-bad-name"),
     PORTAL_EXISTS("portal-exists"),
@@ -217,7 +213,17 @@ public enum MessageKey {
     SETSPAWN_CONSOLE("setspawn-console"),
     SETUP_HEADER("setup-header"),
     DOCTOR_HEADER("doctor-header"),
-    SETUP_UNAVAILABLE("setup-unavailable");
+    SETUP_UNAVAILABLE("setup-unavailable"),
+    WAND_NAME("wand-name"),
+    WAND_LORE_1("wand-lore-1"),
+    WAND_LORE_2("wand-lore-2"),
+    WAND_LORE_3("wand-lore-3"),
+    WAND_GIVEN("wand-given"),
+    WAND_CORNER_SET("wand-corner-set"),
+    WAND_CORNER_DONE("wand-corner-done"),
+    WAND_SELECTED_NPC("wand-selected-npc"),
+    WAND_SELECTED_HOLOGRAM("wand-selected-hologram"),
+    WAND_SELECTED_REGION("wand-selected-region");
 
     private final String path;
 

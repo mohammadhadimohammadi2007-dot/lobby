@@ -8,6 +8,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyTex
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.Region;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionTracker;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.setup.SetupWand;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
@@ -33,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -43,7 +45,7 @@ import java.util.regex.Pattern;
  * down), or the player may not use it, they are pushed back out, so they are never stuck inside.
  *
  * <p>Corners are chosen with {@code /portal pos1} and {@code pos2} where the admin stands, or with the
- * wand: hitting a block sets the first corner, right-clicking one the second.
+ * setup wand ({@link SetupWand}): hitting a block sets the first corner, right-clicking one the second.
  */
 public final class PortalService implements RegionListener {
 
@@ -55,8 +57,6 @@ public final class PortalService implements RegionListener {
 
             Each portal is a box of blocks (from and to are its corners) that runs its actions for every
             player who walks in.""";
-    /** Marks the selection wand. */
-    public static final Tag<Boolean> WAND_TAG = Tag.Boolean("lobby_portal_wand");
     /** How hard a player is pushed back out, in blocks per second. */
     private static final double PUSH_SPEED = 8;
     private static final double PUSH_UP = 4;
@@ -70,41 +70,27 @@ public final class PortalService implements RegionListener {
     private final RegionTracker regions;
     private final ActionServices actions;
     private final LobbyText text;
+    private final SetupWand wand;
     private final Map<String, Portal> portals = new LinkedHashMap<>();
-    private final Map<UUID, Point[]> selections = new ConcurrentHashMap<>();
 
-    private PortalService(YamlDataStore<Portal> store, RegionTracker regions, ActionServices actions, LobbyText text) {
+    private PortalService(YamlDataStore<Portal> store, RegionTracker regions, ActionServices actions, LobbyText text,
+                          SetupWand wand) {
         this.store = store;
         this.regions = regions;
         this.actions = actions;
         this.text = text;
+        this.wand = wand;
     }
 
     /** Loads the file. Blocking (it reads a file), so call it at startup. */
-    public static PortalService start(Path dataDir, RegionTracker regions, ActionServices actions, LobbyText text) {
+    public static PortalService start(Path dataDir, RegionTracker regions, ActionServices actions, LobbyText text,
+                                      SetupWand wand) {
         YamlDataStore<Portal> store = new YamlDataStore<>(dataDir.resolve("data").resolve(FILE_NAME), HEADER,
                 new PortalCodec());
-        PortalService service = new PortalService(store, regions, actions, text);
+        PortalService service = new PortalService(store, regions, actions, text, wand);
         regions.listen(Portal.OWNER, service);
         service.loadAll();
         return service;
-    }
-
-    public void register(EventNode<PlayerEvent> node) {
-        node.addListener(PlayerStartDiggingEvent.class, event -> {
-            if (holdsWand(event.getPlayer())) {
-                event.setCancelled(true);
-                select(event.getPlayer(), 0, event.getBlockPosition());
-            }
-        });
-        node.addListener(PlayerBlockInteractEvent.class, event -> {
-            if (event.getHand() == PlayerHand.MAIN && holdsWand(event.getPlayer())) {
-                event.setCancelled(true);
-                event.setBlockingItemUse(true);
-                select(event.getPlayer(), 1, event.getBlockPosition());
-            }
-        });
-        node.addListener(PlayerDisconnectEvent.class, event -> selections.remove(event.getPlayer().getUuid()));
     }
 
     /** Reads the file again. Used by {@code /setup-lobby reload}. */
@@ -158,14 +144,6 @@ public final class PortalService implements RegionListener {
         });
     }
 
-    /** Sets corner {@code index} (0 or 1) of a player's selection and tells them. */
-    public void select(Player player, int index, Point block) {
-        Point[] corners = selections.computeIfAbsent(player.getUuid(), ignored -> new Point[2]);
-        corners[index] = new Vec(block.blockX(), block.blockY(), block.blockZ());
-        player.sendMessage(text.message(MessageKey.PORTAL_POSITION_SET, player, Messages.text("number", index + 1),
-                Messages.text("x", block.blockX()), Messages.text("y", block.blockY()), Messages.text("z", block.blockZ())));
-    }
-
     /** Makes a portal from the player's selection and saves it. */
     public synchronized CreateResult create(Player player, String name) {
         String key = name.toLowerCase(Locale.ROOT);
@@ -175,11 +153,11 @@ public final class PortalService implements RegionListener {
         if (portals.containsKey(key)) {
             return CreateResult.EXISTS;
         }
-        Point[] corners = selections.get(player.getUuid());
-        if (corners == null || corners[0] == null || corners[1] == null) {
+        Optional<Region> selection = wand.region(player, Portal.OWNER, key);
+        if (selection.isEmpty()) {
             return CreateResult.NO_SELECTION;
         }
-        Region region = Region.between(Portal.OWNER, key, corners[0], corners[1]);
+        Region region = selection.get();
         if (region.volume() > Portal.MAX_VOLUME) {
             return CreateResult.TOO_BIG;
         }
@@ -216,6 +194,11 @@ public final class PortalService implements RegionListener {
         return new java.util.ArrayList<>(store.brokenEntries());
     }
 
+    /** The setup wand, whose selection portals are made from. */
+    public SetupWand wand() {
+        return wand;
+    }
+
     public synchronized int count() {
         return portals.size();
     }
@@ -223,21 +206,6 @@ public final class PortalService implements RegionListener {
     private void changed() {
         applyRegions();
         store.save(new LinkedHashMap<>(portals));
-    }
-
-    /** The selection wand: an item that marks corners instead of breaking or using blocks. */
-    public ItemStack wand(Player player) {
-        return ItemStack.builder(Material.BLAZE_ROD)
-                .customName(text.message(MessageKey.PORTAL_WAND_NAME, player))
-                .lore(List.<Component>of(text.message(MessageKey.PORTAL_WAND_LORE, player)))
-                .glowing()
-                .build()
-                .withTag(WAND_TAG, true);
-    }
-
-    private static boolean holdsWand(Player player) {
-        ItemStack held = player.getInventory().getItemStack(player.getHeldSlot());
-        return Boolean.TRUE.equals(held.getTag(WAND_TAG));
     }
 
     /** Waits until everything is saved and stops the writer. */

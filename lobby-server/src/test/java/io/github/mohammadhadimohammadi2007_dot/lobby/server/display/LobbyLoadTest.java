@@ -110,7 +110,7 @@ class LobbyLoadTest {
         HotbarService hotbar = new HotbarService(server.config, server.text, actions, bridge, visibility);
         RegionTracker regions = new RegionTracker();
         MovementService movement = new MovementService(server.config, server.permissions, regions);
-        PortalService portals = PortalService.start(dir, regions, actions, server.text);
+        PortalService portals = PortalService.start(dir, regions, actions, server.text, new io.github.mohammadhadimohammadi2007_dot.lobby.server.setup.SetupWand(server.text, regions, name -> java.util.Optional.empty(), new io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread("test-effects")));
         cleanup.add(portals::shutdown);
         EventNode<PlayerEvent> node = EventNode.type("load-" + UUID.randomUUID(), EventFilter.PLAYER);
         env.process().eventHandler().addChild(node);
@@ -119,7 +119,6 @@ class LobbyLoadTest {
         hotbar.register(node);
         regions.register(node);
         movement.register(node);
-        portals.register(node);
 
         List<Player> players = new ArrayList<>();
         long joinLongest = 0;

@@ -56,6 +56,11 @@ public final class ClientObjectClicks {
         this.renderer = renderer;
     }
 
+    /** Adds a handler that is asked before all others (the setup wand). */
+    public void addFirstHandler(Handler handler) {
+        handlers.addFirst(handler);
+    }
+
     /** Adds a handler. Handlers are asked in order until one says the object is theirs. */
     public void addHandler(Handler handler) {
         handlers.add(handler);

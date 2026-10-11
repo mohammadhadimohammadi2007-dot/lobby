@@ -83,6 +83,12 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupFacts;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.coordinate.Pos;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.setup.SetupWand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.Npc;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcData;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramData;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventFilter;
@@ -138,6 +144,9 @@ public final class LobbyServer implements ServerInfo {
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
     private OpList ops;
+    private SetupWand wand;
+    /** Particles and other visual effects (the wand outline now; cosmetics later), never on the tick thread. */
+    private final MeasuredThread effects = new MeasuredThread("lobby-effects");
     private final SetupChecks setupChecks = new SetupChecks();
     private final java.util.concurrent.atomic.AtomicInteger playersJoined = new java.util.concurrent.atomic.AtomicInteger();
     private final long startedNanos = System.nanoTime();
@@ -362,7 +371,8 @@ public final class LobbyServer implements ServerInfo {
     /** Double jump, /fly, jump pads, launch pads and portals; the pads and portals are regions of the map. */
     private void startMovement() {
         movement = new MovementService(configManager, permissions, regions);
-        portals = PortalService.start(configManager.dataDir(), regions, actions, text);
+        wand = new SetupWand(text, regions, this::objectPosition, effects);
+        portals = PortalService.start(configManager.dataDir(), regions, actions, text, wand);
     }
 
     /**
@@ -412,8 +422,8 @@ public final class LobbyServer implements ServerInfo {
         hotbar.register(playerEvents);
         regions.register(playerEvents);
         movement.register(playerEvents);
-        portals.register(playerEvents);
         clicks.register(playerEvents);
+        wand.register(playerEvents, clicks);
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager, text).register();
@@ -519,6 +529,8 @@ public final class LobbyServer implements ServerInfo {
 
     /** Stops and saves every feature; package-private so tests can stop a lobby without stopping {@link Async}. */
     void stopFeatures() {
+        wand.shutdown();
+        effects.shutdown();
         ops.close();
         chat.shutdown();
         holograms.shutdown();
@@ -637,6 +649,26 @@ public final class LobbyServer implements ServerInfo {
                 snapshot.display().tab().enabled(), snapshot.commands().enabled(),
                 java.util.Map.of("NPCs", npcs.count(), "holograms", holograms.count(), "portals", portals.count()),
                 broken, snapshot.warnings());
+    }
+
+    /** Where an NPC or hologram is, by its renderer name, for the wand's outline. */
+    private Optional<Point> objectPosition(String objectName) {
+        if (objectName.startsWith(Npc.OBJECT_PREFIX)) {
+            NpcData npc = npcs.get(objectName.substring(Npc.OBJECT_PREFIX.length()));
+            return Optional.ofNullable(npc == null ? null : npc.position().add(0, 2.2, 0));
+        }
+        HologramData hologram = holograms.get(objectName);
+        return Optional.ofNullable(hologram == null ? null : hologram.position());
+    }
+
+    /** The portals, for tests and later features. */
+    public PortalService portals() {
+        return portals;
+    }
+
+    @Override
+    public SetupWand wand() {
+        return wand;
     }
 
     @Override

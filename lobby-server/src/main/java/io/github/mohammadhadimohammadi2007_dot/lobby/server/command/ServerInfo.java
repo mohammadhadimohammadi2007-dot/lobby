@@ -57,6 +57,11 @@ public interface ServerInfo {
         return null;
     }
 
+    /** The setup wand, or {@code null} where there is none (tests). */
+    default io.github.mohammadhadimohammadi2007_dot.lobby.server.setup.@org.jetbrains.annotations.Nullable SetupWand wand() {
+        return null;
+    }
+
     /** The setup checks, with those features added. */
     default io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks setupChecks() {
         return new io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks();

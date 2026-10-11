@@ -99,6 +99,24 @@ Older versions kept operators as names in `config.yml` (`operators: [...]`). On 
 moves them to `data/ops.yml`, replaces the list with a comment and logs what it did. In offline mode each
 moved operator confirms once with a code on their first join.
 
+## The setup wand
+
+`/setup-lobby wand` (or `/portal wand`) gives a blaze rod that sets up things in the world:
+
+| With the wand in your hand | Does |
+|---|---|
+| Hit a block | Corner 1 of the selection |
+| Right-click a block | Corner 2 |
+| Click an NPC or hologram | Selects it (its actions do not run); the chat names it and the commands to edit it |
+| Sneak and hit a block inside a portal | Selects the portal |
+
+The selection is outlined with green particles, and a selected object with a white column, which only you
+see while you hold the wand. Portals are made from the selection (`/portal create <name>`); parkour, PvP and
+elytra areas will use it too. The wand never breaks or places blocks.
+
+**Check it worked:** hit one block and right-click another: the chat says "Selection: N blocks" and the box
+is outlined.
+
 ## Server commands
 
 Every command works from the console. Commands that use your position or act on you take explicit

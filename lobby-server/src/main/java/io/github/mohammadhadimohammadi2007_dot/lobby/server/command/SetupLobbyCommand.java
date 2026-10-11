@@ -86,6 +86,18 @@ public final class SetupLobbyCommand extends Command {
         doctor.setDefaultExecutor((sender, context) -> checks(sender, serverInfo, true));
         addSubcommand(doctor);
 
+        Command wandCommand = new Command("wand");
+        wandCommand.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_SETUP,
+                Permissions.COMMAND_PORTAL));
+        wandCommand.setDefaultExecutor((sender, context) -> {
+            if (sender instanceof Player player && serverInfo.wand() != null) {
+                serverInfo.wand().give(player);
+            } else {
+                sender.sendMessage(text.message(MessageKey.PLAYERS_ONLY, sender));
+            }
+        });
+        addSubcommand(wandCommand);
+
         Command info = new Command("info");
         info.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_INFO));
         info.setDefaultExecutor((sender, context) -> sender.sendMessage(infoMessage(sender, serverInfo)));

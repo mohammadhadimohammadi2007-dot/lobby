@@ -66,18 +66,17 @@ class PortalEnvTest {
         // No proxy here, so every connect fails: just what the push-back needs.
         ActionServices actions = new ActionServices(config, text, permissions, new BridgeService(false));
         RegionTracker regions = new RegionTracker();
-        PortalService portals = PortalService.start(dir, regions, actions, text);
+        PortalService portals = PortalService.start(dir, regions, actions, text, new io.github.mohammadhadimohammadi2007_dot.lobby.server.setup.SetupWand(text, regions, name -> java.util.Optional.empty(), new io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread("test-effects")));
         started.add(portals);
         EventNode<PlayerEvent> node = EventNode.type("portal-test-" + UUID.randomUUID(), EventFilter.PLAYER);
         env.process().eventHandler().addChild(node);
         regions.register(node);
-        portals.register(node);
         return portals;
     }
 
     private static Portal make(PortalService portals, Player admin, String name, List<Object> actions) {
-        portals.select(admin, 0, new Vec(3, 41, -1));
-        portals.select(admin, 1, new Vec(4, 43, 1));
+        portals.wand().select(admin, 0, new Vec(3, 41, -1));
+        portals.wand().select(admin, 1, new Vec(4, 43, 1));
         assertEquals(PortalService.CreateResult.CREATED, portals.create(admin, name));
         Portal portal = portals.get(name);
         assertNotNull(portal);

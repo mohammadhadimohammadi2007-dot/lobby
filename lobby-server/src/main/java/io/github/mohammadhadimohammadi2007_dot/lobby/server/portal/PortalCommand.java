@@ -50,12 +50,10 @@ public final class PortalCommand extends Command {
         });
         setDefaultExecutor((sender, context) -> usage(sender));
         ArgumentWord portal = portalArgument();
-        addSubcommand(playerOnly("wand", player -> {
-            player.getInventory().addItemStack(portals.wand(player));
-            player.sendMessage(text.message(MessageKey.PORTAL_WAND_GIVEN, player));
-        }));
-        addSubcommand(playerOnly("pos1", player -> portals.select(player, 0, player.getPosition())));
-        addSubcommand(playerOnly("pos2", player -> portals.select(player, 1, player.getPosition())));
+        // The same wand as /setup-lobby wand.
+        addSubcommand(playerOnly("wand", player -> portals.wand().give(player)));
+        addSubcommand(playerOnly("pos1", player -> portals.wand().select(player, 0, player.getPosition())));
+        addSubcommand(playerOnly("pos2", player -> portals.wand().select(player, 1, player.getPosition())));
         addSubcommand(create());
         addSubcommand(withPortal("remove", portal, (sender, found) -> {
             portals.delete(found.name());
