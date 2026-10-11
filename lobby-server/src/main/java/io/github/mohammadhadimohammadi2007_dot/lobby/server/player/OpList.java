@@ -126,6 +126,13 @@ public final class OpList implements Operators {
         if (op == null) {
             Op pending = ops.get("pending-" + player.getUsername().toLowerCase(Locale.ROOT));
             if (pending == null) {
+                // Same name, other account: never an operator automatically, but say why (for example after
+                // moving from offline mode behind a proxy, where players get their real UUIDs).
+                ops.values().stream().filter(other -> other.name().equalsIgnoreCase(player.getUsername())).findFirst()
+                        .ifPresent(other -> LOGGER.warn("{} joined with UUID {}, but the operator {} in ops.yml has UUID {}."
+                                        + " They are not an operator. If this is the same person (for example after"
+                                        + " putting the lobby behind a proxy), run: op {}", player.getUsername(), uuid,
+                                other.name(), other.uuid(), player.getUsername()));
                 return Optional.empty();
             }
             ops.remove(pending.key());

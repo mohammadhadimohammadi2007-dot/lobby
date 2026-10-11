@@ -1,0 +1,29 @@
+# The parts of velocity.toml that matter for the lobby. Merge these into your own velocity.toml;
+# keep everything else as Velocity wrote it.
+
+# Players' real names, UUIDs, addresses and skins reach the lobby, signed with forwarding.secret.
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "forwarding.secret"
+
+# Mojang checks names on the proxy. Set false only for an offline (cracked) network, and then also set
+# ops.protect-behind-proxy: true in the lobby's config.yml.
+online-mode = true
+
+[servers]
+# Names on the left are what the lobby and the bridge use. The lobbies listen on their own port, reachable
+# only from the proxy (see firewall.md).
+lobby-1 = "127.0.0.1:25566"
+lobby-2 = "127.0.0.1:25567"
+bedwars-1 = "127.0.0.1:25570"
+bedwars-2 = "127.0.0.1:25571"
+skywars-1 = "127.0.0.1:25575"
+# A Paper server running ajParkour, joined from an NPC in the lobby.
+parkour = "127.0.0.1:25580"
+
+# Where players go when they join, and when the server they were on stops.
+try = ["lobby-1", "lobby-2"]
+
+[advanced]
+# The old "BungeeCord" plugin channel. The lobby does not need it (server switching goes through the
+# lobby-bridge plugin), but other servers' plugins often do, so leave it on.
+bungee-plugin-message-channel = true

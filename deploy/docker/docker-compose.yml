@@ -1,0 +1,49 @@
+# The lobby with a MariaDB database, for testing or a small network.
+#
+#   ./gradlew build
+#   docker compose -f deploy/docker/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker/docker-compose.yml logs -f lobby
+#
+# The lobby's files are in the "lobby-data" volume (or bind-mount a folder instead, see below). To use the
+# database, set in that folder's integrations.yml:
+#   database: { host: "mariadb", port: 3306, database: "minecraft", username: "lobby", password: "change-me" }
+# and turn on what should use it (luckperms, litebans, skinsrestorer). Change the passwords first.
+#
+# No console: stop with "docker compose stop lobby" (it saves first) and use commands in game, or run
+# "docker attach <container>" to type commands (detach with Ctrl+P Ctrl+Q, never Ctrl+C).
+services:
+  lobby:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    environment:
+      MEMORY: "2G"
+    ports:
+      # Behind a proxy, publish this only to the proxy (or not at all if the proxy is in the same
+      # compose project): "127.0.0.1:25566:25565".
+      - "25565:25565"
+    volumes:
+      - lobby-data:/server
+      # Or a folder next to this file, to edit the configs and copy the world in easily:
+      # - ./lobby:/server
+    stdin_open: true
+    tty: false
+    restart: unless-stopped
+    stop_grace_period: 30s
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: "minecraft"
+      MARIADB_USER: "lobby"
+      MARIADB_PASSWORD: "change-me"
+      MARIADB_ROOT_PASSWORD: "change-me-too"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  lobby-data:
+  mariadb-data:

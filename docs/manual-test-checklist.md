@@ -40,6 +40,30 @@ Everything 1.8-specific below depends on the lobby knowing that a client is 1.8.
 - [ ] With LuckPerms: an operator without any LuckPerms group can use `/npc`; after
       `ops.have-all-permissions: false` and `/setup-lobby reload` they cannot.
 
+## 0d. Setup checklist, doctor and wand
+
+- [ ] Fresh folder, standalone: `/setup-lobby setup` shows ✘ Map, ⚠ Operators, ⚠ Connection; in game the
+      `[...]` parts are clickable and put the command in the chat box.
+- [ ] Behind Velocity with the bridge and the Via plugins: ✔ Proxy forwarding, ✔ Proxy bridge (with the
+      groups), ✔ ViaVersion. Remove ViaRewind on the proxy: ViaVersion turns ⚠ "1.8 clients cannot join".
+- [ ] Wrong database password in integrations.yml: `/setup-lobby doctor` says what to check (password,
+      GRANT); a stopped database: "cannot be reached".
+- [ ] Bridge plugin removed from the proxy, a player joins: the doctor lists what to check on the proxy.
+- [ ] `/setup-lobby wand`: hit and right-click two blocks; the green outline shows only for you and only
+      while you hold the wand. Click an NPC with it: "Selected the NPC ...", its actions do not run.
+      Sneak-hit a block inside a portal: "Selected the portal ...". An old portal wand still works.
+
+## 0e. Deployment kit (do the ones you use)
+
+- [ ] `deploy/start.sh` on Linux: starts, `stop` saves, `RESTART=1` starts again after `stop`.
+- [ ] systemd: `systemctl stop lobby` shows "Goodbye!" in `journalctl -u lobby`.
+- [ ] Pterodactyl/Pelican: import the egg, create a server, upload the jar: it starts, the panel turns green,
+      the console takes commands, the stop button saves, the port follows the allocation.
+- [ ] Docker: `docker compose -f deploy/docker/docker-compose.yml up -d --build` starts lobby and MariaDB;
+      `docker compose stop lobby` saves; the files are in the volume.
+- [ ] Follow [setup-guide.md](setup-guide.md) from step 1 to 13 on a fresh machine without other help,
+      and note every place where it was unclear or wrong.
+
 ## 1. NPC skins on 1.8 (most important)
 
 The lobby lists a player NPC in a 1.8 client's tab list while it appears, then removes it after

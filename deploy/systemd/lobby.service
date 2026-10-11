@@ -1,0 +1,35 @@
+# systemd service for the lobby. Install:
+#   sudo cp lobby.service /etc/systemd/system/lobby.service
+#   (edit User, WorkingDirectory and MEMORY below)
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now lobby
+# Logs:    journalctl -u lobby -f        (also logs/latest.log in the server folder)
+# Stop:    sudo systemctl stop lobby     (saves everything first, like typing "stop")
+#
+# systemd gives the server no console to type into. Run admin commands in game, or stop the service and
+# start ./start.sh in a terminal (or inside screen/tmux) when you need the console.
+
+[Unit]
+Description=Minestom lobby
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=minecraft
+WorkingDirectory=/opt/lobby
+Environment=MEMORY=2G
+ExecStart=/bin/sh /opt/lobby/start.sh
+# SIGTERM runs the same clean shutdown as "stop"; give it time to save.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=5
+# Some hardening; the server only needs its own folder.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

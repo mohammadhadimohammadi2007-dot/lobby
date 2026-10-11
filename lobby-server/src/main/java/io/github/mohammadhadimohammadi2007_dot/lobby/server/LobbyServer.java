@@ -661,6 +661,11 @@ public final class LobbyServer implements ServerInfo {
         return Optional.ofNullable(hologram == null ? null : hologram.position());
     }
 
+    /** The hologram and NPC renderer, for tests. */
+    public ClientObjectRenderer renderer() {
+        return display;
+    }
+
     /** The portals, for tests and later features. */
     public PortalService portals() {
         return portals;

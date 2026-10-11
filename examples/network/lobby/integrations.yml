@@ -1,0 +1,36 @@
+# The lobby's integrations.yml for a network that uses LuckPerms, LiteBans and SkinsRestorer on the proxy,
+# all in one MariaDB database. See ../README.md for the settings that must match on the proxy.
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  database: "minecraft"
+  username: "lobby"
+  password: "change-me"
+  pool-size: 4
+
+luckperms:
+  enabled: true
+  # This lobby's name for server-specific permissions (/lp ... server=lobby). The same on all lobbies, so
+  # one rule covers them all.
+  server-name: "lobby"
+  # = "table-prefix" in LuckPerms' config.yml on the proxy (and every other server).
+  table-prefix: "luckperms_"
+  # = "messaging-service" there. sql works without anything else; rank changes arrive in about a second.
+  messaging-service: "sql"
+
+litebans:
+  enabled: true
+  # = "table_prefix" in LiteBans' config.yml on the proxy.
+  table-prefix: "litebans_"
+  server-name: "lobby"
+  check-interval: 3
+
+skinsrestorer:
+  enabled: true
+  # = the table prefix in SkinsRestorer's database settings on the proxy.
+  table-prefix: "sr_"
+
+bridge:
+  # The lobby-bridge plugin is on the proxy.
+  enabled: true

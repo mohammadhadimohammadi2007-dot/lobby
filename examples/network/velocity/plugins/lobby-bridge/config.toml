@@ -1,0 +1,23 @@
+# plugins/lobby-bridge/config.toml on the proxy, for the network in ../../velocity.toml.
+
+# Exactly the names of the lobby servers in velocity.toml [servers].
+lobby-servers = ["lobby-1", "lobby-2"]
+
+update-interval = 2
+status-interval = 10
+
+# Only needed for the chat filter's auto-mute (LiteBans on the proxy). [] = the lobby may run nothing.
+allowed-commands = ["tempmute", "warn"]
+
+join-full-permission = "lobby.bridge.join-full"
+
+# The groups the lobby's NPCs, menus and portals use ("connect_group: bedwars", %group_online_bedwars%).
+# A "lobbies" group with lobby-servers is added automatically.
+[groups]
+bedwars = ["bedwars-1", "bedwars-2"]
+skywars = ["skywars-1"]
+parkour = ["parkour"]
+
+[group-strategies]
+bedwars = "fill-first"
+skywars = "least-players"

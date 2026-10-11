@@ -18,6 +18,8 @@ dependencies {
     annotationProcessor(libs.velocity.api)
     compileOnly(libs.viaversion.api)
 
+    // The tests read config files the way the plugin does (Velocity's TOML reader).
+    testImplementation(libs.velocity.api)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.launcher)

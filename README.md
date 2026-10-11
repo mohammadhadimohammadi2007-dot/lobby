@@ -42,11 +42,10 @@ network, and it also runs completely on its own for testing or small servers.
 You need **Java 25**.
 
 1. Download `lobby-server.jar` from the [releases page](../../releases) (or [build it](#building-from-source)).
-2. Put it in an empty folder and run:
-   ```bash
-   java -Xms1G -Xmx1G -jar lobby-server.jar
-   ```
-3. Join `localhost` in Minecraft.
+2. Put it in an empty folder with [`deploy/start.sh`](deploy/start.sh) (or `start.bat` on Windows) and run
+   `./start.sh` (or simply `java -Xms1G -Xmx1G -jar lobby-server.jar`).
+3. Join `localhost` in Minecraft, then type `op <your name>` in the console and follow the
+   [setup guide](docs/setup-guide.md). `/setup-lobby setup` shows what is left to do.
 
 On the first start the server creates `config.yml`, `integrations.yml` and `messages.yml`.
 No map yet? It generates a small platform so you can still join. Copy your world folder to `worlds/lobby`
@@ -94,10 +93,16 @@ and invalid values are reported with the option name and the allowed values.
 
 Chat permissions are listed in the [chat guide](docs/chat.md#permissions).
 
-Without LuckPerms, players listed under `operators:` in `config.yml` have every permission.
+Operators (`/op`, stored in `data/ops.yml`) have every permission, also with LuckPerms ([console and operators](docs/console-and-ops.md)).
 
 ## Guides
 
+- **[Setup guide: from zero to a network lobby](docs/setup-guide.md)** (start here)
+- [Deployment: start scripts, systemd, Pterodactyl, Docker, hardware](docs/deployment.md)
+- [Example network: Velocity, bridge, LuckPerms, LiteBans, SkinsRestorer, firewall](examples/network/README.md)
+- [Console, operators and server commands](docs/console-and-ops.md)
+- [Which commands players see](docs/commands.md)
+- [Upgrading](docs/upgrading.md)
 - [Standalone setup](docs/standalone.md)
 - [Velocity setup](docs/velocity.md) (recommended for networks)
 - [BungeeCord / Waterfall setup](docs/bungeecord.md)

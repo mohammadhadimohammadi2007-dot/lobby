@@ -95,12 +95,14 @@ class SetupWandEnvTest {
             List<net.minestom.testing.Collector<SpawnEntityPacket>> spawns =
                     new ArrayList<>(List.of(connection.trackIncoming(SpawnEntityPacket.class)));
             admin.teleport(new Pos(0.5, 65, 0.5)).join();
+            // Refresh by hand instead of waiting for the renderer's timer, which is slow on a busy machine.
             List<SpawnEntityPacket> seen = new ArrayList<>();
-            env.tickWhile(() -> {
+            for (int refresh = 0; refresh < 5 && seen.stream().noneMatch(p -> p.type().equals(EntityType.TEXT_DISPLAY));
+                 refresh++) {
+                lobby.renderer().refreshNow();
                 spawns.add(connection.trackIncoming(SpawnEntityPacket.class));
                 seen.addAll(spawns.removeFirst().collect());
-                return seen.stream().noneMatch(p -> p.type().equals(EntityType.TEXT_DISPLAY));
-            }, Duration.ofSeconds(10));
+            }
             spawns.forEach(net.minestom.testing.Collector::collect);
             int hologramId = seen.stream().filter(p -> p.type().equals(EntityType.TEXT_DISPLAY)).findFirst()
                     .orElseThrow().entityId();

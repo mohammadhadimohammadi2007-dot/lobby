@@ -1,0 +1,52 @@
+{
+    "_comment": "Pterodactyl / Pelican egg for the Minestom lobby. Import it in the admin panel: Nests > Import Egg.",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-10-11T00:00:00+00:00",
+    "name": "Minestom Lobby",
+    "author": "mohammadhadimohammadi2007-dot@users.noreply.github.com",
+    "description": "A lobby server for Minecraft networks, built on Minestom. Runs on its own (standalone) or behind Velocity. Clients from 1.8.9 to the latest through ViaVersion on the proxy. https://github.com/mohammadhadimohammadi2007-dot/lobby",
+    "features": null,
+    "docker_images": {
+        "Java 25": "ghcr.io/pterodactyl/yolks:java_25"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=90.0 -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 --enable-native-access=ALL-UNNAMED -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\n    \"config.yml\": {\n        \"parser\": \"yaml\",\n        \"find\": {\n            \"server.host\": \"0.0.0.0\",\n            \"server.port\": \"{{server.build.default.port}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Ready in \"\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# Downloads lobby-server.jar. Leave DOWNLOAD_URL empty to upload the jar yourself in the file manager.\ncd /mnt/server\nif [ -n \"${DOWNLOAD_URL}\" ]; then\n    echo \"Downloading ${DOWNLOAD_URL}\"\n    curl -fsSL -o \"${SERVER_JARFILE}\" \"${DOWNLOAD_URL}\" || { echo \"Download failed\"; exit 1; }\nelse\n    echo \"No DOWNLOAD_URL: upload ${SERVER_JARFILE} with the file manager before starting.\"\nfi\nmkdir -p worlds\necho \"Done. Copy your world folder to worlds/lobby (it is converted to Polar on the first start).\"\n",
+            "container": "ghcr.io/pterodactyl/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Server Jar File",
+            "description": "The lobby jar file in the server folder.",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "lobby-server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "Download URL",
+            "description": "Where the installer downloads lobby-server.jar from (for example a GitHub release asset). Empty: upload the jar yourself.",
+            "env_variable": "DOWNLOAD_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|url",
+            "field_type": "text"
+        }
+    ]
+}
