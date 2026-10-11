@@ -22,17 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Builds the components players see for a chat message: channel format around rank format around the
- * player's name (with hover and click) and message (with color, emojis and mention highlight).
+ * Builds the components players see for a chat message: the rank format around the player's name (with hover and click) and message (with color, emojis and mention highlight).
  */
 public final class ChatRenderer {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private static final Pattern REMOTE_META = Pattern.compile("%luckperms_meta_([A-Za-z0-9_.-]+)%");
 
     private final LobbyText text;
     private final Supplier<ChatConfig> config;
@@ -76,9 +73,7 @@ public final class ChatRenderer {
                 Placeholder.component("suffix", suffix));
 
         boolean ownLegacy = key.legacy() && !format.legacy().isBlank();
-        Component rank = renderTemplate(message, ownLegacy ? format.legacy() : format.format(), tags);
-        Component full = renderTemplate(message, message.channel().format(),
-                TagResolver.resolver(tags, Placeholder.component("format", rank)));
+        Component full = renderTemplate(message, ownLegacy ? format.legacy() : format.format(), tags);
         return key.legacy() && !ownLegacy ? ComponentTransforms.downsampleColors(full) : full;
     }
 
@@ -143,33 +138,9 @@ public final class ChatRenderer {
         };
     }
 
-    /**
-     * Renders a format with placeholders about the sender. For messages from another lobby there is no
-     * player object here, so the rank placeholders are filled from the data that came with the message.
-     */
+    /** Renders a format with placeholders about the sender. */
     private Component renderTemplate(ChatMessage message, String template, TagResolver tags) {
-        if (message.sender() != null) {
-            return text.placeholders().render(template, message.sender(), (Player) null, tags);
-        }
-        return text.placeholders().render(remoteTemplate(template, message), null, tags);
-    }
-
-    private static String remoteTemplate(String template, ChatMessage message) {
-        PlayerMeta meta = message.senderMeta();
-        String result = template
-                .replace("%luckperms_prefix%", "<prefix>")
-                .replace("%luckperms_suffix%", "<suffix>")
-                .replace("%player_name%", MINI_MESSAGE.escapeTags(message.senderName()))
-                .replace("%player_displayname%", MINI_MESSAGE.escapeTags(message.senderName()))
-                .replace("%luckperms_primary_group_name%", MINI_MESSAGE.escapeTags(meta.primaryGroup()));
-        Matcher matcher = REMOTE_META.matcher(result);
-        StringBuilder out = new StringBuilder();
-        while (matcher.find()) {
-            String value = meta.meta().getOrDefault(matcher.group(1), "");
-            matcher.appendReplacement(out, Matcher.quoteReplacement(FormattedText.legacyToMiniMessage(value)));
-        }
-        matcher.appendTail(out);
-        return out.toString();
+        return text.placeholders().render(template, message.sender(), (Player) null, tags);
     }
 
     private PlayerTextParser parser(ChatConfig chat) {

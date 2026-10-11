@@ -1,11 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.pipeline.ChatPipeline;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.AntiSpamStage;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.ChannelStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.CooldownStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.DeliverStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.FilterStage;
@@ -14,11 +11,9 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.LogStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.MuteStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.NormalizeStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.RenderStage;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.storage.PlayerChatSettings;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.signedvelocity.SignedVelocityReceiver;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PlayerMeta;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -35,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,7 +67,6 @@ public final class ChatService {
                 new AntiSpamStage(services),
                 new NormalizeStage(),
                 new FilterStage(services),
-                new ChannelStage(services),
                 new FormatStage(services),
                 new RenderStage(services),
                 new DeliverStage(services, audience),
@@ -118,7 +111,6 @@ public final class ChatService {
             }
         });
         players.addListener(PlayerDisconnectEvent.class, event -> onQuit(event.getPlayer()));
-        services.bridge().onChatRelay(relay -> chatThread.execute(() -> handleRelay(relay)));
         services.permissions().onMetaChange(services.players()::resetCooldowns);
     }
 
@@ -142,49 +134,16 @@ public final class ChatService {
                 text = verdict.text();
             }
         }
-        ChatConfig config = services.chat();
-        ChatConfig.Channel channel = playerChannel(player.getUuid(), config);
-        if (text.length() > 1) {
-            ChatConfig.Channel prefixed = config.channelByPrefix(text.charAt(0));
-            if (prefixed != null) {
-                channel = prefixed;
-                text = text.substring(1).strip();
-            }
-        }
         if (text.isBlank()) {
             return;
         }
-        ChatMessage message = new ChatMessage(BridgeService.shortId(), player.getUuid(), player.getUsername(), player,
-                text, channel, null);
-        pipeline.run(message, config);
-    }
-
-    private void handleRelay(BridgeMessage.ChatRelay relay) {
-        ChatConfig config = services.chat();
-        ChatConfig.Channel channel = config.channels().get(relay.channel().toLowerCase(Locale.ROOT));
-        if (channel == null || !channel.network()) {
-            return;
-        }
-        ChatMessage message = new ChatMessage(relay.messageId(), relay.senderId(), relay.senderName(), null,
-                relay.message(), channel, relay.originServer());
-        message.senderMeta(new PlayerMeta(relay.prefix(), relay.suffix(), relay.primaryGroup(), relay.meta()));
-        pipeline.run(message, config);
-    }
-
-    /** The channel a player writes in: their choice if it still exists, otherwise the default. */
-    public ChatConfig.Channel playerChannel(UUID player, ChatConfig config) {
-        String chosen = services.settings().get(player).channel();
-        ChatConfig.Channel channel = chosen == null ? null : config.channels().get(chosen);
-        return channel != null ? channel : config.channels().get(config.defaultChannel());
+        pipeline.run(new ChatMessage(BridgeService.shortId(), player, text), services.chat());
     }
 
     private void onBlocked(ChatMessage message, ChatOutcome.Blocked blocked) {
-        if (message.relayed()) {
-            return;
-        }
         services.log().log(LogStage.entry(message, blocked.label(), blocked.stage() + ": " + blocked.reason(),
                 services.config().current().config().server().name()));
-        if (message.sender() == null || blocked.stage().equals("mute")) {
+        if (blocked.stage().equals("mute")) {
             return;
         }
         Component spy = services.text().message(MessageKey.CHAT_SPY, Messages.text("player", message.senderName()),

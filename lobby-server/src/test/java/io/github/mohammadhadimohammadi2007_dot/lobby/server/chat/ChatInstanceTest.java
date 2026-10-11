@@ -17,8 +17,8 @@ import java.util.function.UnaryOperator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Chat with more than one lobby instance: an {@code instance-only} channel stays inside the sender's
- * own lobby, every other channel does not.
+ * Chat with more than one lobby instance: with {@code instance-only} (the default) chat stays inside the
+ * sender's own lobby, without it every instance of this server sees it.
  */
 @EnvTest
 class ChatInstanceTest {
@@ -37,8 +37,8 @@ class ChatInstanceTest {
     }
 
     @Test
-    void instanceOnlyChannelStaysInTheSendersLobby(Env env) throws Exception {
-        // "local" ships with instance-only: true.
+    void instanceOnlyChatStaysInTheSendersLobby(Env env) throws Exception {
+        // chat.yml ships with instance-only: true.
         ChatTestServer server = ChatTestServer.start(env, dir, UnaryOperator.identity());
         Joined steve = server.join("Steve");
         Joined neighbour = server.join("Neighbour");
@@ -52,16 +52,15 @@ class ChatInstanceTest {
     }
 
     @Test
-    void otherChannelsReachEveryLobby(Env env) throws Exception {
-        // The global channel is not instance-only, so it crosses the instances of this server.
+    void withoutInstanceOnlyEveryLobbyOfThisServerSeesIt(Env env) throws Exception {
         ChatTestServer server = ChatTestServer.start(env, dir,
-                chat -> chat.replace("send-permission: \"lobby.chat.channel.global\"", "send-permission: \"\""));
+                chat -> chat.replace("instance-only: true", "instance-only: false"));
         Joined steve = server.join("Steve");
         Joined faraway = server.join("Faraway", secondLobby(server));
 
         server.say(steve, "!hello everyone");
 
-        assertEquals(List.of("[G] Steve: hello everyone"), steve.lines());
-        assertEquals(List.of("[G] Steve: hello everyone"), faraway.lines());
+        assertEquals(List.of("Steve: !hello everyone"), steve.lines(), "no channel prefixes any more");
+        assertEquals(List.of("Steve: !hello everyone"), faraway.lines());
     }
 }

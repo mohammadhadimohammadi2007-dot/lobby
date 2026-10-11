@@ -20,11 +20,6 @@ public final class RenderStage implements ChatStage {
     }
 
     @Override
-    public boolean appliesToRelayed() {
-        return true;
-    }
-
-    @Override
     public Result process(ChatMessage message, ChatConfig config) {
         message.rendered(services.renderer().prepare(message, message.styling(), message.emojis()));
         return Result.CONTINUE;

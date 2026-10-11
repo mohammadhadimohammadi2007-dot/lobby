@@ -25,8 +25,7 @@ public record ChatConfig(
         int maxLength,
         Set<String> playerFormatting,
         Set<String> mutedBlockedCommands,
-        Map<String, Channel> channels,
-        String defaultChannel,
+        boolean instanceOnly,
         List<Format> formats,
         AntiSpam antiSpam,
         Filter filter,
@@ -34,7 +33,6 @@ public record ChatConfig(
         Emojis emojis,
         boolean ignoreEnabled,
         boolean chatToggleEnabled,
-        boolean privateMessagesEnabled,
         int historySize,
         boolean joinMessage,
         boolean quitMessage,
@@ -51,17 +49,6 @@ public record ChatConfig(
     private static final Pattern SAFE_PREFIX = Pattern.compile("[A-Za-z0-9_]{0,32}");
     private static final int MIN_MESSAGE_LENGTH = 16;
     private static final int MAX_MESSAGE_LENGTH = 256;
-
-    /**
-     * One chat channel. {@code permission}/{@code sendPermission} are empty when not needed.
-     *
-     * @param network      true to share it with the other lobby servers through the bridge
-     * @param instanceOnly true if only players in the sender's own lobby instance see it
-     *                     (see {@code lobbies} in config.yml; with one instance it changes nothing)
-     */
-    public record Channel(String name, String prefix, String permission, String sendPermission, boolean network,
-                          boolean instanceOnly, String format) {
-    }
 
     /** One chat format. {@code legacy} is empty when it should be made from {@code format}. */
     public record Format(String name, int priority, Set<String> groups, String format, String legacy,
@@ -115,29 +102,12 @@ public record ChatConfig(
     public record Storage(String tablePrefix, boolean logToDatabase, int retentionDays, boolean logToFile) {
     }
 
-    /** The channel with this prefix character, if any. */
-    public Channel channelByPrefix(char prefix) {
-        for (Channel channel : channels.values()) {
-            if (channel.prefix().length() == 1 && channel.prefix().charAt(0) == prefix) {
-                return channel;
-            }
-        }
-        return null;
-    }
-
     /**
      * Reads and validates chat.yml.
      *
      * @throws ConfigException if the table prefix contains characters that are not allowed
      */
     public static ChatConfig read(ConfigReader reader) throws ConfigException {
-        Map<String, Channel> channels = readChannels(reader);
-        String defaultChannel = reader.string("default-channel").trim().toLowerCase(Locale.ROOT);
-        if (!channels.containsKey(defaultChannel)) {
-            String fallback = channels.isEmpty() ? "local" : channels.keySet().iterator().next();
-            reader.reportInvalid("default-channel", defaultChannel, "an enabled channel: " + channels.keySet());
-            defaultChannel = fallback;
-        }
         String tablePrefix = reader.string("storage.table-prefix").trim();
         if (!SAFE_PREFIX.matcher(tablePrefix).matches()) {
             throw new ConfigException("chat.yml: option 'storage.table-prefix' has an invalid value '" + tablePrefix
@@ -148,8 +118,7 @@ public record ChatConfig(
                 reader.integer("max-length", MIN_MESSAGE_LENGTH, MAX_MESSAGE_LENGTH),
                 readPlayerFormatting(reader),
                 lowerCaseSet(reader.stringList("muted-blocked-commands")),
-                channels,
-                defaultChannel,
+                reader.bool("instance-only"),
                 readFormats(reader),
                 new AntiSpam(
                         reader.integer("anti-spam.cooldown", 0, 60),
@@ -168,7 +137,6 @@ public record ChatConfig(
                 readEmojis(reader),
                 reader.bool("ignore-enabled"),
                 reader.bool("chat-toggle-enabled"),
-                reader.bool("private-messages-enabled"),
                 reader.integer("history-size", 10, 500),
                 reader.bool("join-message"),
                 reader.bool("quit-message"),
@@ -191,33 +159,6 @@ public record ChatConfig(
             }
         }
         return Set.copyOf(tags);
-    }
-
-    private static Map<String, Channel> readChannels(ConfigReader reader) {
-        Map<String, Channel> channels = new LinkedHashMap<>();
-        for (String key : reader.keys("channels")) {
-            String path = "channels." + key;
-            String name = key.toLowerCase(Locale.ROOT);
-            if (!NAME.matcher(name).matches()) {
-                reader.reportInvalid(path, key, "channel names made of a-z, 0-9, - and _");
-                continue;
-            }
-            if (!reader.bool(path + ".enabled", true)) {
-                continue;
-            }
-            String prefix = reader.string(path + ".prefix", "").strip();
-            if (prefix.length() > 1) {
-                reader.reportInvalid(path + ".prefix", prefix, "one character or \"\"");
-                prefix = "";
-            }
-            channels.put(name, new Channel(name, prefix,
-                    reader.string(path + ".permission", "").strip(),
-                    reader.string(path + ".send-permission", "").strip(),
-                    reader.bool(path + ".network", false),
-                    reader.bool(path + ".instance-only", false),
-                    reader.string(path + ".format", "<format>")));
-        }
-        return channels;
     }
 
     private static List<Format> readFormats(ConfigReader reader) {

@@ -27,7 +27,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Lobby | Spawn on join, adventure mode, void teleport, fixed time, no weather, protections (break, place, damage, hunger, drop) |
 | Commands | `/spawn`, `/lobbies [number]`, `/hologram`, `/npc`, `/setup-lobby reload`, `/setup-lobby setspawn`, `/setup-lobby info` |
 | Integrations (optional) | MariaDB pool, LuckPerms (live rank changes through SQL messaging), LiteBans (bans + mutes, read only), SkinsRestorer (read only), offline-mode skins from Mojang |
-| Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, chat between lobbies, safe proxy commands (allowlist) |
+| Bridge | Velocity plugin: each player's real client version, live player counts and online/offline status per server, safe proxy commands (allowlist) |
 | Placeholders | PlaceholderAPI-style `%player_name%`, `%luckperms_prefix%`, `%server_online%`, `%bungee_total%`... in messages and the MOTD, with an API for your own ([list](docs/placeholders.md)) |
 | Holograms | Floating text, items and blocks with full `/hologram` commands, placeholders, animations, click actions, armor-stand fallback for 1.8 clients, and an importer for FancyHolograms ([guide](docs/holograms.md)) |
 | NPCs | Players and mobs with skins (Mojang, SkinsRestorer, MineSkin including image uploads with an API key, mirror) that load on 1.8 too, a multi-line name hologram, scale, poses and sitting, coloured glow, turning towards players, left/right/any click actions, full `/npc` commands with FancyNpcs' names, and an importer for FancyNpcs ([guide](docs/npcs.md)) |
@@ -35,7 +35,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Hotbar and selectors | Locked hotbar items with actions, a game selector that shows each game's status (online, full, offline), a lobby selector with this server's instances and the network's other lobbies, and a saved player-visibility switch (all, staff, none) ([hotbar](docs/hotbar.md), [menus](docs/menus.md)) |
 | Movement and portals | Double jump, `/fly`, jump pads (a plate on a block) and launch pads (a box with a fixed velocity), and portals made in game with a wand that run any action and push players back when a connect fails ([guide](docs/movement-and-portals.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobbies <number>` and a selector menu ([guide](docs/instances.md)) |
-| Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
+| Chat | One chat with rank formats (modern + 1.8 versions), anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
 ## Quick start (standalone, about a minute)
 
@@ -60,7 +60,7 @@ Type `stop` in the console to shut the server down.
 |---|---|---|
 | `config.yml` | Port, MOTD, max players, connection mode, world, lobby instances, spawn, protections, operators | `/setup-lobby reload` (it tells you if something needs a restart) |
 | `integrations.yml` | Database, LuckPerms, LiteBans, SkinsRestorer, bridge | Restart |
-| `chat.yml` | Chat formats, channels, anti-spam, filter, mentions, broadcasts | `/setup-lobby reload` |
+| `chat.yml` | Chat formats, anti-spam, filter, mentions, broadcasts | `/setup-lobby reload` |
 | `filters/` | Blocked, censored and allowed word lists | `/setup-lobby reload` |
 | `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/setup-lobby reload` |
 | `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/setup-lobby reload` |
@@ -122,7 +122,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 ## Roadmap
 
 1. **Foundation** - core, config, connection modes, world loading, integrations, lobby basics, bridge v1
-2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, channels) ← *done*
+2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
    server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads ← *done*
 4. **Fun, social and staff tools** - parkour, PvP area, cosmetics, daily rewards, vanish, in-game editors

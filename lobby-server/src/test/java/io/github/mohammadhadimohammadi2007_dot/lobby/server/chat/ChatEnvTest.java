@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,15 +97,18 @@ class ChatEnvTest {
     }
 
     @Test
-    void staffChannelOnlyReachesStaff(Env env) throws Exception {
+    void everyoneSeesOneChatWithoutChannelPrefixes(Env env) throws Exception {
         ChatTestServer server = start(env);
         Joined admin = server.join("Admin");
         Joined steve = server.join("Steve");
 
-        server.say(admin, "#secret plan");
+        server.say(admin, "#not a staff channel");
 
-        assertEquals(List.of(), steve.lines());
-        assertEquals(List.of("[Staff] Admin » secret plan"), admin.lines());
+        assertEquals(List.of("Admin » #not a staff channel"), steve.lines());
+        assertEquals(List.of("Admin » #not a staff channel"), admin.lines());
+        assertNull(env.process().command().getCommand("ch"), "no /ch");
+        assertNull(env.process().command().getCommand("msg"), "private messages belong to the proxy");
+        assertNull(env.process().command().getCommand("r"));
     }
 
     @Test

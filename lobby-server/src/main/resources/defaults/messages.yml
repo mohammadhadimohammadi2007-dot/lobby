@@ -214,11 +214,6 @@ chat-staff-hover: "<dark_gray>Message id: <id></dark_gray>"
 # <player> <minutes>
 chat-staff-auto-muted: "<dark_gray>[<red>Filter</red>]</dark_gray> <white><player></white> <gray>was auto-muted for <minutes> minutes."
 
-# Channels. <channel> <channels>
-channel-switched: "<prefix><gray>You are now talking in <white><channel></white>."
-channel-unknown: "<prefix><red>Unknown channel. Channels: <white><channels>"
-channel-no-permission: "<prefix><red>You cannot use the <channel> channel."
-ch-usage: "<prefix><gray>Usage: <white>/ch <channel></white>. Channels: <white><channels>"
 
 # /chat
 chat-usage: "<prefix><gray>Usage: <white>/chat toggle</white> or <white>/chat mentions</white>"
@@ -241,12 +236,6 @@ ignore-usage: "<prefix><gray>Usage: <white>/ignore <player></white> or <white>/i
 # <name>
 player-not-found: "<prefix><red>Player <white><name></white> is not online."
 
-# Private messages (only if private-messages-enabled is true in chat.yml). <name> <message>
-msg-to: "<gray>[<white>me</white> → <white><name></white>] <white><message>"
-msg-from: "<gray>[<white><name></white> → <white>me</white>] <white><message>"
-msg-no-reply: "<prefix><red>Nobody to reply to."
-msg-usage: "<prefix><gray>Usage: <white>/msg <player> <message>"
-msg-ignored: "<prefix><red>That player is ignoring you."
 
 # Staff tools. <staff> <seconds> <id>
 chat-cleared: "<prefix><gray>The chat was cleared by <white><staff></white>."

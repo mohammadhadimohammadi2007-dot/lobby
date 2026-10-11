@@ -36,7 +36,7 @@ public final class ChatPipeline {
     /** Runs the message through the pipeline. Never throws; a crashing stage blocks the message. */
     public ChatOutcome run(ChatMessage message, ChatConfig config) {
         for (ChatStage stage : stages) {
-            if (!stage.enabled(config) || (message.relayed() && !stage.appliesToRelayed())) {
+            if (!stage.enabled(config)) {
                 continue;
             }
             ChatStage.Result result;

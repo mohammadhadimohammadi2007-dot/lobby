@@ -27,9 +27,7 @@ public final class ChatPermissions {
     public static final String FORMAT_PREFIX = "lobby.chat.format.";
 
     public static final String COMMAND_CHAT = "lobby.command.chat";
-    public static final String COMMAND_CHANNEL = "lobby.command.ch";
     public static final String COMMAND_IGNORE = "lobby.command.ignore";
-    public static final String COMMAND_MSG = "lobby.command.msg";
     public static final String COMMAND_CLEAR = "lobby.command.chat.clear";
     public static final String COMMAND_LOCK = "lobby.command.chat.lock";
     public static final String COMMAND_DELETE = "lobby.command.chat.delete";

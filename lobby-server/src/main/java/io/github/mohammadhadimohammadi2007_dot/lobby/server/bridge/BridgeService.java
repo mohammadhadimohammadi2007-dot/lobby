@@ -26,11 +26,10 @@ import java.util.function.Consumer;
 
 /**
  * Talks to the lobby-bridge proxy plugin: keeps {@link ClientCapabilities} and {@link NetworkState} up to
- * date, receives chat relayed from other lobbies, and sends chat and command requests to the proxy.
+ * date, and sends command and connect requests to the proxy.
  *
  * <p>Works without a bridge: capabilities default to the server's own (modern) protocol, all counts stay
- * 0, {@link #sendChat} returns false and {@link #requestCommand} fails right away, so callers fall back to
- * local behavior. Messages are only accepted when the bridge is enabled and the server is behind a proxy;
+ * 0 and {@link #requestCommand} fails right away, so callers fall back to local behavior. Messages are only accepted when the bridge is enabled and the server is behind a proxy;
  * in standalone mode a player could forge them.
  */
 public final class BridgeService {
@@ -46,7 +45,6 @@ public final class BridgeService {
     private final boolean listening;
     private final NetworkState networkState = new NetworkState();
     private final Map<UUID, ClientCapabilities> capabilities = new ConcurrentHashMap<>();
-    private final List<Consumer<BridgeMessage.ChatRelay>> chatListeners = new CopyOnWriteArrayList<>();
     private final Map<String, CompletableFuture<BridgeMessage.CommandResult>> pendingCommands = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<BridgeMessage.ConnectResult>> pendingConnects = new ConcurrentHashMap<>();
     private final List<Consumer<BridgeMessage.SkinUpdate>> skinListeners = new CopyOnWriteArrayList<>();
@@ -72,23 +70,6 @@ public final class BridgeService {
     /** True if messages can reach the proxy right now: the bridge is on and a player is online to carry them. */
     public boolean available() {
         return listening && !MinecraftServer.getConnectionManager().getOnlinePlayers().isEmpty();
-    }
-
-    /** Runs {@code listener} for every chat message relayed from another lobby. Called on a network thread. */
-    public void onChatRelay(Consumer<BridgeMessage.ChatRelay> listener) {
-        chatListeners.add(listener);
-    }
-
-    /**
-     * Sends a chat message to the other lobbies, through {@code carrier}'s connection.
-     *
-     * @return false if the bridge is not available; the caller then keeps the message local
-     */
-    public boolean sendChat(Player carrier, BridgeMessage.ChatRelay message) {
-        if (!listening) {
-            return false;
-        }
-        return send(carrier, message);
     }
 
     /**
@@ -160,7 +141,8 @@ public final class BridgeService {
                     capabilities.put(version.playerId(), new ClientCapabilities(version.protocolVersion(), true));
             case BridgeMessage.NetworkSnapshot snapshot -> networkState.update(snapshot);
             case BridgeMessage.ServerStatus status -> networkState.update(status);
-            case BridgeMessage.ChatRelay chat -> chatListeners.forEach(listener -> listener.accept(chat));
+            // The lobby has one local chat now; an older lobby may still relay chat, which is ignored.
+            case BridgeMessage.ChatRelay ignored -> LOGGER.debug("Ignored relayed chat from an older lobby");
             case BridgeMessage.CommandResult result -> completeCommand(result);
             case BridgeMessage.ConnectResult result -> completeConnect(result);
             case BridgeMessage.SkinUpdate skin -> skinListeners.forEach(listener -> listener.accept(skin));

@@ -1,6 +1,5 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatAudience;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatMessage;
@@ -10,7 +9,6 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.Rendered
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.VariantKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PlayerMeta;
 import net.kyori.adventure.key.InvalidKeyException;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -26,7 +24,7 @@ import java.util.Map;
 
 /**
  * Sends the message to everyone who should see it, each in their version, pings mentioned players,
- * remembers it for staff tools, and sends network-channel messages to the other lobbies.
+ * and remembers it for staff tools.
  */
 public final class DeliverStage implements ChatStage {
 
@@ -41,11 +39,6 @@ public final class DeliverStage implements ChatStage {
     @Override
     public String name() {
         return "deliver";
-    }
-
-    @Override
-    public boolean appliesToRelayed() {
-        return true;
     }
 
     @Override
@@ -75,9 +68,6 @@ public final class DeliverStage implements ChatStage {
             ping(viewer, message, sound);
         }
         services.history().add(message, config.historySize());
-        if (message.channel().network() && !message.relayed() && message.sender() != null) {
-            relay(message, config);
-        }
         return Result.CONTINUE;
     }
 
@@ -87,13 +77,6 @@ public final class DeliverStage implements ChatStage {
         }
         viewer.sendActionBar(services.text().message(MessageKey.MENTION_ACTIONBAR, viewer,
                 Messages.text("player", message.senderName())));
-    }
-
-    private void relay(ChatMessage message, ChatConfig config) {
-        PlayerMeta meta = message.senderMeta();
-        services.bridge().sendChat(message.sender(), new BridgeMessage.ChatRelay(message.id(), message.channel().name(),
-                services.config().current().config().server().name(), message.senderId(), message.senderName(),
-                meta.prefix(), meta.suffix(), meta.primaryGroup(), meta.meta(), message.text()));
     }
 
     /** The mention sound, or {@code null} if none or invalid. */

@@ -158,27 +158,11 @@ public final class LobbyBridgePlugin {
             return;
         }
         switch (message) {
-            case BridgeMessage.ChatRelay chat -> relayChat(origin, chat);
+            // Lobbies have one local chat now; an older lobby may still send this, which is dropped.
+            case BridgeMessage.ChatRelay ignored -> logger.debug("Dropped relayed chat from '{}'", origin);
             case BridgeMessage.CommandRequest request -> runCommand(connection, origin, request);
             case BridgeMessage.ConnectRequest request -> connectPlayer(connection, origin, request);
             default -> logger.debug("Ignored bridge message type {} from '{}'", message.typeId(), origin);
-        }
-    }
-
-    /** Forwards a chat message to every other lobby that has players. */
-    private void relayChat(String origin, BridgeMessage.ChatRelay chat) {
-        // Trust the connection, not the message, for where it came from.
-        BridgeMessage.ChatRelay checked = new BridgeMessage.ChatRelay(chat.messageId(), chat.channel(), origin,
-                chat.senderId(), chat.senderName(), chat.prefix(), chat.suffix(), chat.primaryGroup(), chat.meta(),
-                chat.message());
-        byte[] data = BridgeCodec.encode(checked);
-        for (String lobby : config.lobbyServers()) {
-            if (lobby.equals(origin)) {
-                continue;
-            }
-            proxy.getServer(lobby)
-                    .filter(server -> !server.getPlayersConnected().isEmpty())
-                    .ifPresent(server -> server.sendPluginMessage(CHANNEL, data));
         }
     }
 

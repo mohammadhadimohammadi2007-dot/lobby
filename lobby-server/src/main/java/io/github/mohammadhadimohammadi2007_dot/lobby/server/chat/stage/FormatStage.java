@@ -36,23 +36,14 @@ public final class FormatStage implements ChatStage {
     }
 
     @Override
-    public boolean appliesToRelayed() {
-        return true;
-    }
-
-    @Override
     public Result process(ChatMessage message, ChatConfig config) {
         Player sender = message.sender();
-        if (sender != null) {
-            message.senderMeta(services.permissions().meta(sender));
-            message.styling(services.has(sender, ChatPermissions.FORMATTING));
-            message.emojis(services.has(sender, ChatPermissions.EMOJI));
-        } else {
-            message.emojis(true);
-        }
+        message.senderMeta(services.permissions().meta(sender));
+        message.styling(services.has(sender, ChatPermissions.FORMATTING));
+        message.emojis(services.has(sender, ChatPermissions.EMOJI));
         String group = message.senderMeta().primaryGroup().toLowerCase(Locale.ROOT);
         message.format(select(config.formats(), group,
-                sender == null ? permission -> false : permission -> services.has(sender, permission)));
+                permission -> services.has(sender, permission)));
         if (config.mentions().enabled()) {
             findMentions(message, config, sender);
         }

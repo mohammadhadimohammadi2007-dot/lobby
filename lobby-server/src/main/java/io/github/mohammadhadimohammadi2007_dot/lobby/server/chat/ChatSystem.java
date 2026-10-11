@@ -1,10 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.ChannelCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.ChatCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.IgnoreCommand;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.PrivateMessageCommands;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.command.SlowmodeCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.filter.ChatFilter;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ChatRenderer;
@@ -82,12 +80,8 @@ public final class ChatSystem {
         service.register(players);
         ChatServices services = service.services();
         commands.register(new ChatCommand(service));
-        commands.register(new ChannelCommand(services));
         commands.register(new IgnoreCommand(services));
         commands.register(new SlowmodeCommand(services));
-        if (services.chat().privateMessagesEnabled()) {
-            new PrivateMessageCommands(services).commands().forEach(commands::register);
-        }
         broadcaster.restart();
     }
 

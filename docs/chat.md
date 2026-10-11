@@ -1,12 +1,12 @@
 # Chat
 
-The lobby has its own chat system: rank formats, channels shared between lobbies, a word/link filter that
+The lobby has its own chat system: rank formats, a word/link filter that
 sees through spelling tricks (including Persian and Arabic spellings), anti-spam, mentions, emojis and staff
 tools, on every client from 1.8.9 to the latest version.
 
 Everything is configured in `chat.yml` (created on first start, every option commented). Texts that players
 see (warnings, command replies) are in `messages.yml`. Word lists are in the `filters/` folder.
-Apply changes with `/setup-lobby reload`. Only `storage:` and `private-messages-enabled` need a restart.
+Apply changes with `/setup-lobby reload`. Only `storage:` needs a restart.
 
 To turn the whole system off and get plain Minecraft chat, set `enabled: false`.
 
@@ -22,10 +22,9 @@ thread, so chat can never lag the lobby):
 | Anti-spam | new-player checks, length, duplicates, capitals, repeated characters | block or change |
 | Normalize | builds the filter's view of the text (see [Filter](#filter)) | - |
 | Filter | blocked words, censored words, links, IP addresses | block or change |
-| Channel | checks the channel and its permissions | block |
 | Format | picks the rank format and finds mentions | - |
 | Render | builds the message once per kind of viewer | - |
-| Deliver | sends it to everyone who may see it, and to the other lobbies for network channels | - |
+| Deliver | sends it to everyone who may see it | - |
 | Log | writes it to the chat log | - |
 
 A blocked message is logged too, with the step and the reason. Staff using `/chat spy` see blocked
@@ -37,9 +36,7 @@ messages live.
 |---|---|---|
 | `/chat toggle` | `lobby.command.chat` | Hide or show public chat for yourself |
 | `/chat mentions` | `lobby.command.chat` | Switch mention highlights and sounds for yourself |
-| `/ch <channel>` (`/channel`) | `lobby.command.ch` | Switch the channel you write in |
 | `/ignore <player>` | `lobby.command.ignore` | Hide a player's messages (again to undo); `/ignore list` |
-| `/msg <player> <text>` (`/tell`, `/w`), `/r <text>` | `lobby.command.msg` | Private messages, only if `private-messages-enabled: true` |
 | `/chat clear` | `lobby.command.chat.clear` | Clear everyone's chat |
 | `/chat lock` | `lobby.command.chat.lock` | Lock or unlock chat (only `lobby.chat.bypass.lock` can talk) |
 | `/chat delete <id>` | `lobby.command.chat.delete` | Remove one recent message from everyone's screen |
@@ -57,9 +54,6 @@ again without the deleted one.
 | `lobby.chat.formatting` | Style messages with the tags in `player-formatting` (and `&` codes for those styles) |
 | `lobby.chat.emoji` | `:heart:` style emojis |
 | `lobby.chat.mention.everyone` | `@everyone` |
-| `lobby.chat.channel.global` | Write in the global channel (default `send-permission`) |
-| `lobby.chat.channel.staff` | See and write in the staff channel |
-| `lobby.chat.channel.announce` | Write in the announce channel |
 | `lobby.chat.format.<name>` | Use the format `<name>` regardless of group |
 | `lobby.chat.cooldown.<seconds>` | Own cooldown, e.g. `lobby.chat.cooldown.0` for VIPs (the lowest counts) |
 | `lobby.chat.announce.vip` | Join announcement (names are set in `join-announcements`) |
@@ -81,24 +75,13 @@ Without LuckPerms, every player has `lobby.command.chat`, `lobby.command.ch`, `l
 /lp group default permission set lobby.chat.emoji true
 ```
 
-## Channels
+## Who sees a message
 
-Four channels come ready: `local` (this lobby only), `global` (every lobby, needs
-`lobby.chat.channel.global` to write), `staff` (prefix `#`) and `announce`. Players switch with
-`/ch <name>`, or send a single message to a channel by starting it with the channel's prefix: `!hello`
-goes to global, `#hello` to staff.
+There is one chat. A message reaches every player on this lobby server who has not hidden chat
+(`/chat toggle`) or ignored the sender. With `instance-only: true` (the default) it stays inside the
+sender's own [lobby instance](instances.md); that only matters with several instances.
 
-| Option | Meaning |
-|---|---|
-| `enabled` | Off channels disappear completely |
-| `prefix` | One character, or `""` for none. Use a symbol: a message starting with it goes to that channel |
-| `permission` | Needed to see and use the channel. `""` = everyone |
-| `send-permission` | Also needed to write in it. `""` = nothing extra |
-| `network` | `true`: shared with every lobby through the bridge. Without the bridge it stays on this lobby |
-| `instance-only` | `true`: only players in the sender's own lobby instance see it. The `local` channel uses this; it only matters with several [lobby instances](instances.md) |
-| `format` | How messages look. `<format>` is replaced by the rank format; `<message>`, `<name>` also work |
-
-`default-channel` is where players start. Their last choice is saved.
+Private messages and chat between servers are not part of the lobby: they belong to plugins on the proxy.
 
 ## Formats
 
@@ -179,16 +162,14 @@ lobby asks the proxy to run `proxy-command` (for example LiteBans' `tempmute`), 
 network-wide and visible in LiteBans. The first word of that command must be in the bridge's
 `allowed-commands`. Without the bridge the player is muted on this lobby only, until restart.
 
-## Mentions, emojis, ignore, private messages
+## Mentions, emojis, ignore
 
 - **Mentions:** writing a player's name (or `@name`) highlights it for them in `highlight` and plays
   `sound`. `mentions.cooldown` stops one player from pinging the same person over and over. `@everyone`
   needs `lobby.chat.mention.everyone`. Players can turn mentions off with `/chat mentions`.
 - **Emojis:** `:heart:` becomes `❤`. Clients older than 1.19.4 get the `legacy` text (`<3`).
-- **Ignore:** `/ignore <player>` hides their public messages (and private messages, if those are on).
+- **Ignore:** `/ignore <player>` hides their messages.
   Up to 200 players per person.
-- **Private messages** are off by default, because most networks handle `/msg` on the proxy. Turn them on
-  with `private-messages-enabled: true` (restart). Mutes, ignores and the filter apply to them.
 
 ## Join, quit and broadcasts
 
@@ -203,7 +184,7 @@ network-wide and visible in LiteBans. The first word of that command must be in 
 If the lobby has a database connection (any database integration in `integrations.yml` is on), it creates
 two tables with the `storage.table-prefix` (default `lobby_`):
 
-- `lobby_chat_settings`: each player's choices (chat toggle, mentions, channel, ignore list)
+- `lobby_chat_settings`: each player's choices (chat toggle, mentions, ignore list)
 - `lobby_chat_log`: every message, with what the filter did. Written in batches in the background;
   rows older than `log-retention-days` are deleted automatically.
 
@@ -215,8 +196,8 @@ in `logs/chat/` (`log-to-file`). Nothing ever blocks the chat while writing.
 | Feature | Handled by |
 |---|---|
 | Chat formats, filter, anti-spam, mentions | The lobby (it sees each player's client version and permissions) |
-| Messages between lobbies (`network: true` channels) | The lobby, through the bridge plugin on Velocity |
-| `/msg`, `/r` | Usually a proxy plugin (works across all servers); the lobby's own is optional |
+| Messages between servers, staff chat across the network | A proxy plugin |
+| `/msg`, `/r` and other private messages | A proxy plugin |
 | Bans and mutes | LiteBans on the proxy; the lobby reads mutes from the same database |
 | Chat of other servers (bedwars...) | Those servers |
 

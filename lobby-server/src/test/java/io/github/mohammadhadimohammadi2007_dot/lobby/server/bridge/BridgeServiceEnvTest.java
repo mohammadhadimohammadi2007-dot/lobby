@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The lobby side of bridge v2 with fake players: chat relay, server status and command requests. */
+/** The lobby side of bridge v2 with fake players: server status and command requests. */
 @EnvTest
 class BridgeServiceEnvTest {
 
@@ -36,7 +36,6 @@ class BridgeServiceEnvTest {
         Player player = env.createPlayer(env.createFlatInstance(), new Pos(0, 42, 0));
 
         assertFalse(bridge.available());
-        assertFalse(bridge.sendChat(player, chat("hi")));
         ExecutionException error = assertThrows(ExecutionException.class,
                 () -> bridge.requestCommand("mute Steve", "test").get(1, TimeUnit.SECONDS));
         assertInstanceOf(IllegalStateException.class, error.getCause());
@@ -44,22 +43,20 @@ class BridgeServiceEnvTest {
     }
 
     @Test
-    void receivesStatusAndChatAndIgnoresUnknownTypes(Env env) {
+    void receivesStatusAndIgnoresRelayedChatAndUnknownTypes(Env env) {
         BridgeService bridge = new BridgeService(true);
-        List<BridgeMessage.ChatRelay> received = new ArrayList<>();
-        bridge.onChatRelay(received::add);
 
         bridge.receive(BridgeCodec.encode(new BridgeMessage.ServerStatus(Map.of(
                 "bw-1", new BridgeMessage.ServerStatus.Status(true, 100),
                 "bw-2", new BridgeMessage.ServerStatus.Status(false, 0)))), "test");
-        bridge.receive(BridgeCodec.encode(chat("سلام")), "test");
+        // An older lobby may still relay chat: it is read and ignored.
+        bridge.receive(BridgeCodec.encode(chat("hello")), "test");
         bridge.receive(new byte[]{BridgeProtocol.VERSION, 99, 1, 2, 3}, "test");
 
         assertTrue(bridge.networkState().serverOnline("bw-1"));
         assertFalse(bridge.networkState().serverOnline("bw-2"));
         assertFalse(bridge.networkState().serverOnline("never-heard-of"));
         assertEquals(100, bridge.networkState().serverMaxPlayers("bw-1"));
-        assertEquals(List.of(chat("سلام")), received);
     }
 
     @Test

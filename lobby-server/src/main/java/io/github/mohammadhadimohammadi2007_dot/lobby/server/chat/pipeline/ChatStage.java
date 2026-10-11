@@ -21,14 +21,6 @@ public interface ChatStage {
     }
 
     /**
-     * Also run for messages relayed from another lobby? Those were already checked where they were written,
-     * so checks like mute, spam and filter are skipped; formatting, rendering and delivery are not.
-     */
-    default boolean appliesToRelayed() {
-        return false;
-    }
-
-    /**
      * Processes the message.
      *
      * @return {@link Result#CONTINUE}, or a block with the reason

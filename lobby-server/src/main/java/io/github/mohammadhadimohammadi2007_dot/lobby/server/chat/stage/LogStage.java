@@ -31,9 +31,15 @@ public final class LogStage implements ChatStage {
         return Result.CONTINUE;
     }
 
+    /**
+     * What the log's "channel" column holds now that the lobby has one chat. Older logs may also hold
+     * "local", "global", "staff" or "announce" from when there were channels.
+     */
+    public static final String CHANNEL = "chat";
+
     /** A log entry for {@code message}. */
     public static ChatLog.Entry entry(ChatMessage message, String outcome, String reason, String server) {
-        return new ChatLog.Entry(message.receivedMillis(), server, message.channel().name(), message.senderId(),
+        return new ChatLog.Entry(message.receivedMillis(), server, CHANNEL, message.senderId(),
                 message.senderName(), message.original(), message.normalized(), outcome, reason);
     }
 }

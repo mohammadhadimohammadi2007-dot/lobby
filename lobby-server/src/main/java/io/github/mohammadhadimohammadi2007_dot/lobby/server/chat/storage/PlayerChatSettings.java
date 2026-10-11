@@ -11,15 +11,14 @@ import java.util.UUID;
  *
  * @param chatVisible false if the player hid public chat with {@code /chat toggle}
  * @param mentions    false if the player turned mention sounds and highlights off
- * @param channel     the channel the player writes in, or {@code null} for the default channel
  * @param ignored     players whose messages this player does not want to see
  * @param visibility  which players this player sees in the lobby ({@code all}, {@code staff}, {@code none}), or
  *                    {@code null} for the server default
  */
-public record PlayerChatSettings(boolean chatVisible, boolean mentions, @Nullable String channel, Set<UUID> ignored, @Nullable String visibility) {
+public record PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored, @Nullable String visibility) {
 
     /** Settings of a player who never changed anything. */
-    public static final PlayerChatSettings DEFAULTS = new PlayerChatSettings(true, true, null, Set.of(), null);
+    public static final PlayerChatSettings DEFAULTS = new PlayerChatSettings(true, true, Set.of(), null);
 
     /** Most players a player can ignore, so one player cannot grow the settings without limit. */
     public static final int MAX_IGNORED = 200;
@@ -28,24 +27,20 @@ public record PlayerChatSettings(boolean chatVisible, boolean mentions, @Nullabl
         ignored = Set.copyOf(ignored);
     }
 
-    public PlayerChatSettings(boolean chatVisible, boolean mentions, @Nullable String channel, Set<UUID> ignored) {
-        this(chatVisible, mentions, channel, ignored, null);
+    public PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored) {
+        this(chatVisible, mentions, ignored, null);
     }
 
     public PlayerChatSettings withVisibility(@Nullable String mode) {
-        return new PlayerChatSettings(chatVisible, mentions, channel, ignored, mode);
+        return new PlayerChatSettings(chatVisible, mentions, ignored, mode);
     }
 
     public PlayerChatSettings withChatVisible(boolean visible) {
-        return new PlayerChatSettings(visible, mentions, channel, ignored, visibility);
+        return new PlayerChatSettings(visible, mentions, ignored, visibility);
     }
 
     public PlayerChatSettings withMentions(boolean enabled) {
-        return new PlayerChatSettings(chatVisible, enabled, channel, ignored, visibility);
-    }
-
-    public PlayerChatSettings withChannel(@Nullable String newChannel) {
-        return new PlayerChatSettings(chatVisible, mentions, newChannel, ignored, visibility);
+        return new PlayerChatSettings(chatVisible, enabled, ignored, visibility);
     }
 
     /** Adds or removes {@code player} from the ignore list. */
@@ -56,6 +51,6 @@ public record PlayerChatSettings(boolean chatVisible, boolean mentions, @Nullabl
         } else {
             updated.remove(player);
         }
-        return new PlayerChatSettings(chatVisible, mentions, channel, updated, visibility);
+        return new PlayerChatSettings(chatVisible, mentions, updated, visibility);
     }
 }

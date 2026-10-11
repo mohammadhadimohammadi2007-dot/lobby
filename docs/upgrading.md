@@ -4,6 +4,13 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **One chat, no channels, no private messages.** `channels:`, `default-channel:` and
+  `private-messages-enabled:` in chat.yml, `/ch`, the `!`/`#` prefixes and `/msg`/`/r` are gone; chat
+  between lobbies and private messages belong to proxy plugins. New option `instance-only` (default
+  `true`) keeps chat inside the sender's lobby instance, like the old `local` channel. A message starting
+  with `!` or `#` is now sent as written. The `channel` column of `lobby_chat_settings` is left unused and
+  new chat log rows have the channel `chat`. Update the bridge plugin on the proxy too: it no longer
+  forwards chat between lobbies.
 - **Persian/Arabic display fixing is removed** (`/chat persian`, `persian:` in chat.yml, the
   `persian-on`/`persian-off` messages). Texts are shown exactly as written, and every text is rendered
   once per client generation instead of twice. The chat filter still understands Persian and Arabic

@@ -13,7 +13,7 @@ Protocol version **1**, message types 1 to 9.
 | 1 | ClientVersion | proxy → lobby |
 | 2 | NetworkSnapshot | proxy → lobby |
 | 3 | ServerStatus | proxy → lobby |
-| 4 | ChatRelay | lobby → proxy → every other lobby |
+| 4 | ChatRelay | deprecated, unused (was lobby → proxy → every other lobby) |
 | 5 | CommandRequest | lobby → proxy |
 | 6 | CommandResult | proxy → lobby |
 | 7 | ConnectRequest | lobby → proxy |
@@ -22,7 +22,7 @@ Protocol version **1**, message types 1 to 9.
 
 Plugin messages travel through a player's connection. Messages from the lobby to the proxy are sent
 through any player on that lobby; a lobby with nobody online can neither send nor receive (harmless:
-nobody is there to chat, and fresh data arrives as soon as someone joins).
+fresh data arrives as soon as someone joins).
 
 ## Security
 
@@ -31,7 +31,6 @@ A player could try to send a fake `lobby:bridge` message, so:
 - the bridge plugin handles **every** `lobby:bridge` message itself and never forwards one;
 - it **drops** every message that comes from a player client;
 - it only accepts messages from the server connection of a server listed in `lobby-servers`;
-- for a chat relay it overwrites the origin with the real server name;
 - a `CommandRequest` only runs if the command's first word is in `allowed-commands`, the command has no
   line breaks or other control characters and is at most 256 characters; every command that runs is logged;
 - a `ConnectRequest` is only carried out for a player who is really on the lobby that asked, so one lobby
@@ -102,26 +101,10 @@ Sent together with every snapshot. The proxy pings every backend server every `s
 | ↳ online    | bool   | answered the last ping                |
 | ↳ maxPlayers| i32    | player limit it reported, 0 if offline|
 
-## Type 4 – ChatRelay
+## Type 4 – ChatRelay (deprecated)
 
-A message in a network-wide chat channel (`global`, `staff`). The sending lobby has already applied its
-filters; the text is exactly what players should see. The proxy forwards it to every other lobby in
-`lobby-servers` that has players. Receiving lobbies render it with their own formats.
-
-| Field        | Type   | Notes                                             |
-|--------------|--------|---------------------------------------------------|
-| messageId    | string | short id, the same on every lobby                 |
-| channel      | string | e.g. `global`                                     |
-| originServer | string | set by the proxy to the real sending server       |
-| sender       | uuid   |                                                   |
-| senderName   | string |                                                   |
-| prefix       | text   | rank prefix (trusted, may contain colors)         |
-| suffix       | text   | rank suffix                                       |
-| primaryGroup | string | used to pick the chat format                      |
-| metaCount    | count  |                                                   |
-| ↳ key        | string | rank meta key                                     |
-| ↳ value      | text   | rank meta value                                   |
-| message      | text   | the chat message                                  |
+Unused since Phase 4: each lobby has one local chat, and network-wide chat or private messages belong to
+plugins on the proxy. The type id stays reserved and still decodes; the lobby and the bridge drop it.
 
 ## Type 5 – CommandRequest
 

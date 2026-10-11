@@ -97,9 +97,11 @@ public sealed interface BridgeMessage {
     }
 
     /**
-     * Lobby to proxy, then proxy to every other lobby: one chat message in a network-wide channel
-     * (for example {@code global} or {@code staff}). The text is already filtered by the sending lobby;
-     * receiving lobbies only render it with their own formats.
+     * Deprecated and unused: lobbies no longer relay chat (network-wide chat belongs to the proxy). The
+     * type id stays reserved and the message still decodes, so an older lobby or bridge sending it is
+     * ignored quietly instead of being reported as a bad message.
+     *
+     * <p>Was: lobby to proxy, then proxy to every other lobby, one chat message in a network-wide channel.
      *
      * @param messageId    short id of the message, the same on every lobby (used by staff tools)
      * @param channel      channel name, e.g. {@code global}
@@ -112,6 +114,7 @@ public sealed interface BridgeMessage {
      * @param meta         extra rank meta (for example a chat color), may be empty
      * @param message      the message text as players should see it (after censoring)
      */
+    @Deprecated
     record ChatRelay(
             String messageId,
             String channel,

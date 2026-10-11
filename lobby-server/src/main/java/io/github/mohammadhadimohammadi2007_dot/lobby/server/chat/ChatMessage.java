@@ -3,7 +3,6 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.RenderedMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PlayerMeta;
 import net.minestom.server.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,14 +19,12 @@ public final class ChatMessage {
     private final String id;
     private final UUID senderId;
     private final String senderName;
-    private final @Nullable Player sender;
+    private final Player sender;
     private final String original;
     private final long receivedMillis;
-    private final @Nullable String originServer;
 
     private String text;
     private String normalized = "";
-    private ChatConfig.Channel channel;
     private ChatConfig.Format format;
     private PlayerMeta senderMeta = PlayerMeta.EMPTY;
     private final List<String> modifications = new ArrayList<>();
@@ -39,21 +36,16 @@ public final class ChatMessage {
     private RenderedMessage rendered;
 
     /**
-     * @param id           short id shown to staff, the same on every lobby for relayed messages
-     * @param sender       the online player, or {@code null} for a message relayed from another lobby
-     * @param original     exactly what was typed (without a channel prefix character)
-     * @param originServer the lobby a relayed message came from, or {@code null} if it was written here
+     * @param id       short id shown to staff
+     * @param original exactly what was typed
      */
-    public ChatMessage(String id, UUID senderId, String senderName, @Nullable Player sender, String original,
-                       ChatConfig.Channel channel, @Nullable String originServer) {
+    public ChatMessage(String id, Player sender, String original) {
         this.id = id;
-        this.senderId = senderId;
-        this.senderName = senderName;
+        this.senderId = sender.getUuid();
+        this.senderName = sender.getUsername();
         this.sender = sender;
         this.original = original;
         this.text = original;
-        this.channel = channel;
-        this.originServer = originServer;
         this.receivedMillis = System.currentTimeMillis();
     }
 
@@ -69,18 +61,8 @@ public final class ChatMessage {
         return senderName;
     }
 
-    /** The sender if they are on this lobby; {@code null} for relayed messages. */
-    public @Nullable Player sender() {
+    public Player sender() {
         return sender;
-    }
-
-    /** True if the message was written on another lobby and arrived through the bridge. */
-    public boolean relayed() {
-        return originServer != null;
-    }
-
-    public @Nullable String originServer() {
-        return originServer;
     }
 
     /** Exactly what the player typed. This is what gets logged. */
@@ -115,14 +97,6 @@ public final class ChatMessage {
 
     public long receivedMillis() {
         return receivedMillis;
-    }
-
-    public ChatConfig.Channel channel() {
-        return channel;
-    }
-
-    public void channel(ChatConfig.Channel value) {
-        channel = value;
     }
 
     public ChatConfig.Format format() {
@@ -163,7 +137,7 @@ public final class ChatMessage {
         notifyMentions = value;
     }
 
-    /** True if the sender may style the message (lobby.chat.formatting). Always false for relayed messages. */
+    /** True if the sender may style the message (lobby.chat.formatting). */
     public boolean styling() {
         return styling;
     }

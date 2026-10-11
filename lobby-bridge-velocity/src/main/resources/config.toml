@@ -4,7 +4,7 @@
 # =====================================================================
 
 # Names of your lobby servers, exactly as written in velocity.toml under [servers].
-# Only these servers receive bridge messages, and global/staff chat is shared between them.
+# Only these servers receive bridge messages (client versions, player counts, server status).
 lobby-servers = ["lobby"]
 
 # How often player counts are sent to the lobbies, in seconds (1-60).

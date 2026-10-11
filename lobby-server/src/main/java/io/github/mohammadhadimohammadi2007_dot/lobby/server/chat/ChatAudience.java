@@ -1,13 +1,10 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.common.ProtocolVersions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabilities;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.VariantKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.storage.PlayerChatSettings;
 import net.minestom.server.entity.Player;
 
-import java.util.Locale;
-import java.util.Set;
 
 /**
  * Decides who sees a chat message and which version they get. Used for delivery and for resending history
@@ -15,8 +12,6 @@ import java.util.Set;
  */
 public final class ChatAudience {
 
-    /** Channels players still see when they hid the chat with /chat toggle. */
-    private static final Set<String> ALWAYS_VISIBLE = Set.of("staff", "announce");
 
     private final ChatServices services;
 
@@ -26,25 +21,19 @@ public final class ChatAudience {
 
     /** True if {@code viewer} should see {@code message}. */
     public boolean canSee(Player viewer, ChatMessage message) {
-        ChatConfig.Channel channel = message.channel();
-        if (!services.has(viewer, channel.permission())) {
-            return false;
-        }
         if (viewer.getUuid().equals(message.senderId())) {
             return true;
         }
-        // An instance-only channel stays inside the sender's own lobby instance.
-        if (channel.instanceOnly() && message.sender() != null
-                && message.sender().getInstance() != viewer.getInstance()) {
+        ChatConfig config = services.chat();
+        // With instance-only, chat stays inside the sender's own lobby instance.
+        if (config.instanceOnly() && message.sender().getInstance() != viewer.getInstance()) {
             return false;
         }
         PlayerChatSettings settings = services.settings().get(viewer.getUuid());
-        ChatConfig config = services.chat();
-        boolean staffChannel = channel.name().equals("staff");
-        if (config.ignoreEnabled() && !staffChannel && settings.ignored().contains(message.senderId())) {
+        if (config.ignoreEnabled() && settings.ignored().contains(message.senderId())) {
             return false;
         }
-        return !config.chatToggleEnabled() || settings.chatVisible() || ALWAYS_VISIBLE.contains(channel.name());
+        return !config.chatToggleEnabled() || settings.chatVisible();
     }
 
     /** The version of {@code message} that {@code viewer} gets. */

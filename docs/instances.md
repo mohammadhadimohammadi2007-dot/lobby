@@ -53,17 +53,14 @@ menu in `menus.yml` with one item per lobby and `lobby: <number>` as its action.
 
 ## Chat
 
-A channel in `chat.yml` can stay inside the sender's own lobby:
+Chat stays inside the sender's own lobby instance:
 
 ```yaml
-channels:
-  local:
-    instance-only: true    # only players in the same lobby instance see it
+instance-only: true    # in chat.yml: only players in the same lobby instance see a message
 ```
 
-The bundled `local` channel does this, so with several instances each lobby has its own local chat.
-Every other channel (`global`, `staff`, ...) reaches the whole server, and `network: true` channels
-reach the whole network. With one instance, `instance-only` changes nothing.
+Set it to `false` and every instance of this server shares one chat. With one instance, `instance-only`
+changes nothing.
 
 ## What else is shared
 

@@ -45,7 +45,7 @@ scoreboards and holograms.
    It works on Velocity 3.5 (Java 21) and Velocity 4 (Java 25).
 2. Edit `plugins/lobby-bridge/config.toml`:
    ```toml
-   lobby-servers = ["lobby-1", "lobby-2"]   # names from velocity.toml; global and staff chat are shared between them
+   lobby-servers = ["lobby-1", "lobby-2"]   # names from velocity.toml: the lobby servers the bridge talks to
    update-interval = 2                      # seconds between player count updates
    status-interval = 10                     # seconds between online/offline pings
    allowed-commands = ["mute", "tempmute", "warn"]   # console commands lobbies may request (chat auto-mute)
@@ -87,8 +87,7 @@ the proxy log when it starts without ViaVersion. To check a player, have them ru
 client" shows the version the lobby uses and whether the proxy reported it.
 
 Without the bridge, every player counts as a modern client, all counts are 0, every
-server shows as offline, global and staff chat stay on the local lobby, and chat auto-mute falls back to a
-local temporary mute.
+server shows as offline, and chat auto-mute falls back to a local temporary mute.
 
 The bridge only ever runs console commands whose first word is in `allowed-commands`, and only when a lobby
 server (never a player) asks. Every command it runs is written to the proxy log. Set `allowed-commands = []`

@@ -8,7 +8,7 @@ import java.util.Objects;
  * Finds options that changed between two loads but only take effect after a restart.
  *
  * <p>Everything not listed here is applied live by {@code /setup-lobby reload}: MOTD, max players,
- * spawn, protections, time of day, void Y, operators, all messages, and chat.yml except storage and private-messages-enabled.
+ * spawn, protections, time of day, void Y, operators, all messages, and chat.yml except storage.
  */
 public final class RestartRequired {
 
@@ -42,9 +42,6 @@ public final class RestartRequired {
         check(changed, "integrations.yml", before.integrations(), after.integrations());
         // Chat storage (tables, log files) is opened once at startup; everything else in chat.yml reloads.
         check(changed, "chat.yml storage", before.chat().storage(), after.chat().storage());
-        // /msg and /r are registered once at startup.
-        check(changed, "chat.yml private-messages-enabled",
-                before.chat().privateMessagesEnabled(), after.chat().privateMessagesEnabled());
         return changed;
     }
 

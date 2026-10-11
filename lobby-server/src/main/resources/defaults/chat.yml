@@ -1,11 +1,11 @@
 # =====================================================================
-#  Chat - formats, channels, filter, anti-spam and more.
+#  Chat - formats, filter, anti-spam and more.
 #  After editing, run /setup-lobby reload. Full guide with examples: docs/chat.md
 #  Player-facing texts (warnings, mute message...) are in messages.yml.
 # =====================================================================
 
 # ---------------- General ----------------
-# true: the lobby handles chat (formats, filter, channels...). false: plain Minecraft chat.
+# true: the lobby handles chat (formats, filter, anti-spam...). false: plain Minecraft chat.
 enabled: true
 # Longest message players may send, in characters (16-256).
 max-length: 256
@@ -13,54 +13,17 @@ max-length: 256
 # Allowed values: color, bold, italic, underlined, strikethrough, obfuscated, gradient, rainbow.
 # Tags such as click, hover, insertion and font are never available to players.
 player-formatting: [color, bold, italic, underlined, strikethrough]
-# Lobby commands muted players cannot use (without "/").
+# Lobby commands muted players cannot use (without "/"), e.g. [announce].
 # Commands handled by your proxy (for example /msg from a Velocity plugin) never reach the lobby,
 # so only that proxy plugin can block them.
-muted-blocked-commands: [msg, tell, w, r, me]
+muted-blocked-commands: []
 
-# ---------------- Channels ----------------
-# Players switch with /ch <name>, or send one message to a channel by starting it with its prefix
-# (for example "!hello" goes to global).
-#   enabled:         true or false
-#   prefix:          one character, or "" for none
-#   permission:      needed to see and use the channel ("" = everyone)
-#   send-permission: also needed to write in it ("" = nothing extra)
-#   network:         true = shared with every lobby through the bridge (stays on this lobby without it)
-#   instance-only:   true = only players in the sender's own lobby instance see it. Only matters when
-#                    "lobbies.instances" in config.yml is more than 1; the default "local" channel uses it
-#   format:          how messages look; <format> is replaced by the rank format below
-channels:
-  local:
-    enabled: true
-    prefix: ""
-    permission: ""
-    send-permission: ""
-    network: false
-    instance-only: true
-    format: "<format>"
-  global:
-    enabled: true
-    prefix: "!"
-    permission: ""
-    send-permission: "lobby.chat.channel.global"
-    network: true
-    format: "<dark_gray>[<aqua>G</aqua>]</dark_gray> <format>"
-  staff:
-    enabled: true
-    prefix: "#"
-    permission: "lobby.chat.channel.staff"
-    send-permission: ""
-    network: true
-    format: "<dark_gray>[<red>Staff</red>]</dark_gray> <format>"
-  announce:
-    enabled: true
-    prefix: ""
-    permission: ""
-    send-permission: "lobby.chat.channel.announce"
-    network: true
-    format: "<gold><bold>ANNOUNCEMENT</bold></gold> <white><message>"
-# Channel players start in. Must be one of the channels above.
-default-channel: "local"
+# ---------------- Who sees a message ----------------
+# There is one chat. Messages stay on this lobby server: private messages and network-wide chat
+# belong to the proxy (Velocity plugins).
+# true = only players in the sender's own lobby instance see it. Only matters when "lobbies.instances"
+# in config.yml is more than 1. true or false.
+instance-only: true
 
 # ---------------- Formats ----------------
 # How a player's name and message look. The matching format with the highest priority is used.
@@ -218,9 +181,6 @@ emojis:
 ignore-enabled: true
 # /chat toggle: hide all public chat for yourself. true or false.
 chat-toggle-enabled: true
-# /msg and /r private messages. Off by default: keep it off if a proxy plugin already handles
-# private messages, otherwise players get two different /msg commands.
-private-messages-enabled: false
 
 # ---------------- Staff ----------------
 # How many recent messages are kept, so staff can delete one with /chat delete <id> (10-500).
@@ -248,7 +208,7 @@ broadcasts:
   random: false
   # MiniMessage with %placeholders% about the player who receives it.
   messages:
-    - "<gold>Tip:</gold> <gray>Use <white>/ch global</white> to talk to players in every lobby."
+    - "<gold>Tip:</gold> <gray>Use <white>/lobbies</white> to switch to a quieter lobby."
     - "<gold>Tip:</gold> <gray>Too many mention sounds? Type <white>/chat mentions</white>."
   # Optional shorter versions for clients older than 1.19.4, in the same order. [] = use the ones above.
   legacy-messages: []

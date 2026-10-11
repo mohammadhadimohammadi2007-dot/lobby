@@ -59,11 +59,11 @@ class ChatStorageIT {
 
         assertEquals(Optional.empty(), store.load(player));
 
-        PlayerChatSettings first = new PlayerChatSettings(false, true, "global", ignored, "staff");
+        PlayerChatSettings first = new PlayerChatSettings(false, true, ignored, "staff");
         store.save(player, first);
         assertEquals(Optional.of(first), store.load(player));
 
-        PlayerChatSettings second = new PlayerChatSettings(true, false, null, Set.of());
+        PlayerChatSettings second = new PlayerChatSettings(true, false, Set.of());
         store.save(player, second); // Overwrites the same row.
         assertEquals(Optional.of(second), store.load(player));
 
