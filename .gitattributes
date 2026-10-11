@@ -3,3 +3,6 @@
 *.jar binary
 *.polar binary
 *.mca binary
+*.sh text eol=lf
+*.bat text eol=crlf
+gradlew text eol=lf
