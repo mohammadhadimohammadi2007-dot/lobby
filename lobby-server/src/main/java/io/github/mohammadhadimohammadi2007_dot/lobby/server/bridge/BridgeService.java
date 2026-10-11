@@ -10,6 +10,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerPluginMessageEvent;
 import net.minestom.server.event.trait.PlayerEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public final class BridgeService {
     private final Map<String, CompletableFuture<BridgeMessage.CommandResult>> pendingCommands = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<BridgeMessage.ConnectResult>> pendingConnects = new ConcurrentHashMap<>();
     private final List<Consumer<BridgeMessage.SkinUpdate>> skinListeners = new CopyOnWriteArrayList<>();
+    private volatile BridgeMessage.@Nullable ProxyInfo proxyInfo;
 
     /** @param listening true if the bridge is enabled and the server is behind a proxy */
     public BridgeService(boolean listening) {
@@ -146,6 +148,7 @@ public final class BridgeService {
             case BridgeMessage.CommandResult result -> completeCommand(result);
             case BridgeMessage.ConnectResult result -> completeConnect(result);
             case BridgeMessage.SkinUpdate skin -> skinListeners.forEach(listener -> listener.accept(skin));
+            case BridgeMessage.ProxyInfo info -> proxyInfo = info;
             // Only the proxy receives requests; a newer proxy may also send types we do not know yet.
             case BridgeMessage.CommandRequest ignored -> LOGGER.debug("Ignored a command request sent to the lobby");
             case BridgeMessage.ConnectRequest ignored -> LOGGER.debug("Ignored a connect request sent to the lobby");
@@ -193,6 +196,11 @@ public final class BridgeService {
     }
 
     /** Latest player counts, groups and server statuses from the proxy. */
+    /** What the proxy told about itself, or empty if it never did (no bridge, or a bridge older than 0.4). */
+    public java.util.Optional<BridgeMessage.ProxyInfo> proxyInfo() {
+        return java.util.Optional.ofNullable(proxyInfo);
+    }
+
     public NetworkState networkState() {
         return networkState;
     }

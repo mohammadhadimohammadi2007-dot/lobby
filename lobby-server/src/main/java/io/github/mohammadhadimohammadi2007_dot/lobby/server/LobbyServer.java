@@ -79,6 +79,10 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldLoader;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupFacts;
+import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventFilter;
@@ -134,6 +138,10 @@ public final class LobbyServer implements ServerInfo {
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
     private OpList ops;
+    private final SetupChecks setupChecks = new SetupChecks();
+    private final java.util.concurrent.atomic.AtomicInteger playersJoined = new java.util.concurrent.atomic.AtomicInteger();
+    private final long startedNanos = System.nanoTime();
+    private @Nullable String databaseError;
     private final MojangProfiles mojangProfiles = new MojangProfiles();
     private @Nullable LobbyConsole console;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
@@ -213,6 +221,7 @@ public final class LobbyServer implements ServerInfo {
                 database = DatabasePool.connect(settings.database());
                 LOGGER.info("Connected to the database {}", settings.database());
             } catch (SQLException e) {
+                databaseError = e.getMessage();
                 LOGGER.error("{}", e.getMessage());
                 LOGGER.error("Database integrations are turned off until this is fixed and the server restarts.");
             }
@@ -387,6 +396,11 @@ public final class LobbyServer implements ServerInfo {
         global.addChild(playerEvents);
 
         new OpListener(ops, text).register(playerEvents);
+        playerEvents.addListener(PlayerSpawnEvent.class, event -> {
+            if (event.isFirstSpawn()) {
+                playersJoined.incrementAndGet();
+            }
+        });
         new SpawnListener(configManager, lobbies::forJoin).register(playerEvents);
         bridge.register(playerEvents);
         placeholders.register(playerEvents);
@@ -596,6 +610,38 @@ public final class LobbyServer implements ServerInfo {
         return ProtocolVersions.name(client.protocolVersion()) + " (protocol " + client.protocolVersion() + "), "
                 + client.tier().name().toLowerCase(Locale.ROOT)
                 + (client.reported() ? ", reported by the proxy" : ", not reported by a proxy (this server's own version)");
+    }
+
+    @Override
+    public SetupFacts setupFacts() {
+        ConfigSnapshot snapshot = configManager.current();
+        LobbyConfig config = snapshot.config();
+        Pos spawn = SpawnListener.spawnPosition(config);
+        boolean onGround = world.instance().isChunkLoaded(spawn)
+                && world.instance().getBlock(spawn.sub(0, 1, 0)).registry().isSolid();
+        var network = bridge.networkState();
+        long silent = network.lastUpdateMillis().map(last -> System.currentTimeMillis() - last).orElse(-1L);
+        java.util.Map<String, java.util.List<String>> broken = new java.util.LinkedHashMap<>();
+        broken.put("data/holograms.yml", holograms.brokenEntries());
+        broken.put("data/npcs.yml", npcs.brokenEntries());
+        broken.put("data/portals.yml", portals.brokenEntries());
+        LobbyConfig.SpawnPoint point = config.spawn();
+        boolean defaultSpawn = point.x() == 0.5 && point.y() == 65 && point.z() == 0.5;
+        return new SetupFacts(config.connection().mode(), config.connection().onlineMode(),
+                !config.connection().velocitySecret().isBlank(), config.connection().bungeeGuardTokens().size(),
+                world.format(), world.name(), config.world().path(), world.chunkCount(), defaultSpawn, onGround,
+                ops.all().size(), snapshot.integrations().bridge().enabled(), network.hasSnapshot(), silent,
+                network.groups(), bridge.proxyInfo(), playersJoined.get(),
+                (System.nanoTime() - startedNanos) / NANOS_PER_MILLI, integrations, databaseError, networkCheck.last(),
+                networkCheck.referencedGroups(), snapshot.menus().menus().keySet(), snapshot.display().sidebar().enabled(),
+                snapshot.display().tab().enabled(), snapshot.commands().enabled(),
+                java.util.Map.of("NPCs", npcs.count(), "holograms", holograms.count(), "portals", portals.count()),
+                broken, snapshot.warnings());
+    }
+
+    @Override
+    public SetupChecks setupChecks() {
+        return setupChecks;
     }
 
     /** The lobby instances of this server. */

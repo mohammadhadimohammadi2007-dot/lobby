@@ -146,6 +146,12 @@ class BridgeCodecTest {
     }
 
     @Test
+    void proxyInfoRoundTrip() throws BridgeFormatException {
+        BridgeMessage.ProxyInfo info = new BridgeMessage.ProxyInfo("1.4.0", "Velocity 3.5.1", true, true, true, false);
+        assertEquals(info, BridgeCodec.decode(BridgeCodec.encode(info)));
+    }
+
+    @Test
     void newMessageTypesKeepTheProtocolVersion() {
         // Readers reject another version, so adding types must not change it.
         assertEquals(1, BridgeProtocol.VERSION);

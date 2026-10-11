@@ -60,7 +60,12 @@ unknown-command: "<red>Unknown or incomplete command."
 spawn-teleported: "<prefix><gray>Welcome back to spawn, <white>%player_name%</white>."
 
 # /setup-lobby (the admin command; /lobby is left to the proxy's hub command)
-setup-lobby-usage: "<prefix><gray>Usage: <white>/setup-lobby reload</white>, <white>/setup-lobby setspawn</white> or <white>/setup-lobby info"
+setup-lobby-usage: "<prefix><gray>Usage: <white>/setup-lobby setup</white>, <white>/setup-lobby doctor</white>, <white>/setup-lobby reload</white>, <white>/setup-lobby setspawn</white> or <white>/setup-lobby info"
+# /setup-lobby setup and doctor. <summary> = e.g. "5 done, 1 to fix, 2 to look at". The lines below the
+# header are made by the lobby (English); in game, click a [command] to put it in the chat box.
+setup-header: "<gold><bold>Lobby setup</bold></gold> <gray>(<summary>)"
+doctor-header: "<gold><bold>Lobby doctor</bold></gold> <gray>(<summary>)"
+setup-unavailable: "<prefix><red>The setup checks are not available on this server."
 # Moving between the lobby instances of this server (see "lobbies" in config.yml).
 # <number> = the lobby number, <count> = how many lobbies this server has
 lobby-switched: "<prefix><gray>You are now in lobby <white><number></white>."

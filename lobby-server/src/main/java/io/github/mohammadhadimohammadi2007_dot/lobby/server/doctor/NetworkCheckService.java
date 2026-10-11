@@ -57,6 +57,18 @@ public final class NetworkCheckService {
         return report;
     }
 
+    /** The groups that anything in the lobby leads to (menus, NPCs, portals...), for the setup checklist. */
+    public java.util.Set<String> referencedGroups() {
+        java.util.Set<String> groups = new java.util.TreeSet<>();
+        for (NetworkReference reference : NetworkReferences.collect(config.current(), sources.holograms().get(),
+                sources.npcs().get(), sources.portals().get())) {
+            if (reference.kind() == NetworkReference.Kind.GROUP) {
+                groups.add(reference.name());
+            }
+        }
+        return groups;
+    }
+
     /** The last result, for {@code /setup-lobby info}. */
     public NetworkCheck.Report last() {
         return last;

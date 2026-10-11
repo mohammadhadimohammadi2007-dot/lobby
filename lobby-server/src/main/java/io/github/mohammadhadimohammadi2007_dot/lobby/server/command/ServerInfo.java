@@ -51,4 +51,14 @@ public interface ServerInfo {
     default String clientOf(Player player) {
         return "unknown";
     }
+
+    /** What {@code /setup-lobby setup} and {@code doctor} look at. Tick thread. */
+    default @org.jetbrains.annotations.Nullable io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupFacts setupFacts() {
+        return null;
+    }
+
+    /** The setup checks, with those features added. */
+    default io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks setupChecks() {
+        return new io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupChecks();
+    }
 }

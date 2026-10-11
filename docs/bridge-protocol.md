@@ -4,7 +4,7 @@ The Velocity plugin (`lobby-bridge.jar`) and the lobby servers talk over the plu
 **`lobby:bridge`**. You only need this page if you want to write your own bridge (for example for another
 proxy). The reference implementation is `BridgeCodec` in the `lobby-common` module.
 
-Protocol version **1**, message types 1 to 9.
+Protocol version **1**, message types 1 to 10.
 
 ## Directions
 
@@ -19,6 +19,7 @@ Protocol version **1**, message types 1 to 9.
 | 7 | ConnectRequest | lobby → proxy |
 | 8 | ConnectResult | proxy → lobby |
 | 9 | SkinUpdate | proxy → lobby |
+| 10 | ProxyInfo | proxy → lobby (bridge 0.4+) |
 
 Plugin messages travel through a player's connection. Messages from the lobby to the proxy are sent
 through any player on that lobby; a lobby with nobody online can neither send nor receive (harmless:
@@ -188,3 +189,17 @@ Server switching still works in some cases:
 - Phase 1 lobbies (types 1-2 only) reject the new types with a warning in their log; update the lobby and
   the bridge together.
 - From Phase 2 on, unknown types are ignored, so a newer bridge works with an older lobby and the other way round.
+
+## Type 10 – ProxyInfo
+
+Sent with every player who arrives on a lobby, before the network snapshot. What the proxy is, for
+`/setup-lobby setup` and `/setup-lobby doctor`. Older lobbies ignore it.
+
+| Field        | Type    | Meaning                                                   |
+|--------------|---------|-----------------------------------------------------------|
+| bridgeVersion | string | the lobby-bridge plugin's version, e.g. `0.4.0`           |
+| proxyVersion | string  | the proxy software and version, e.g. `Velocity 3.5.1`     |
+| onlineMode   | boolean | the proxy checks names with Mojang                        |
+| viaVersion   | boolean | ViaVersion is installed on the proxy                      |
+| viaBackwards | boolean | ViaBackwards is installed                                 |
+| viaRewind    | boolean | ViaRewind is installed                                    |

@@ -6,6 +6,9 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigSnapsho
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.YamlSectionEditor;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.SetupFacts;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.CheckPrinter;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.doctor.Check;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.integration.IntegrationStatus;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
@@ -23,14 +26,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 /**
- * {@code /setup-lobby reload | setspawn | info}, the admin command. Each sub command has its own permission
- * ({@code lobby.command.reload}, {@code lobby.command.setspawn}, {@code lobby.command.info}).
+ * {@code /setup-lobby setup | doctor | reload | setspawn | info}, the admin command. Each sub command has its
+ * own permission ({@code lobby.command.setup}, {@code lobby.command.reload}, {@code lobby.command.setspawn},
+ * {@code lobby.command.info}).
  *
  * <p>Not called {@code /lobby}: that name belongs to the proxy's hub command on most networks.
  */
@@ -48,7 +53,8 @@ public final class SetupLobbyCommand extends Command {
         this.configManager = configManager;
         this.text = text;
         setCondition(CommandSupport.requireAny(text, permissions,
-                Permissions.COMMAND_RELOAD, Permissions.COMMAND_SETSPAWN, Permissions.COMMAND_INFO));
+                Permissions.COMMAND_RELOAD, Permissions.COMMAND_SETSPAWN, Permissions.COMMAND_INFO,
+                Permissions.COMMAND_SETUP));
         setDefaultExecutor((sender, context) -> sender.sendMessage(text.message(MessageKey.SETUP_LOBBY_USAGE, sender)));
 
         Command reload = new Command("reload");
@@ -69,6 +75,16 @@ public final class SetupLobbyCommand extends Command {
         setSpawn.addSyntax((sender, context) -> setSpawn(sender, new Pos(context.get(x), context.get(y), context.get(z),
                 context.get(yaw), context.get(pitch))), x, y, z, yaw, pitch);
         addSubcommand(setSpawn);
+
+        Command setup = new Command("setup");
+        setup.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_SETUP));
+        setup.setDefaultExecutor((sender, context) -> checks(sender, serverInfo, false));
+        addSubcommand(setup);
+
+        Command doctor = new Command("doctor");
+        doctor.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_SETUP));
+        doctor.setDefaultExecutor((sender, context) -> checks(sender, serverInfo, true));
+        addSubcommand(doctor);
 
         Command info = new Command("info");
         info.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_INFO));
@@ -149,6 +165,19 @@ public final class SetupLobbyCommand extends Command {
                     Messages.text("z", values.get("z")), Messages.text("yaw", values.get("yaw")),
                     Messages.text("pitch", values.get("pitch"))));
         }));
+    }
+
+    /** {@code /setup-lobby setup} (the checklist) or {@code doctor} (problems only, with fixes). */
+    private void checks(CommandSender sender, ServerInfo info, boolean doctor) {
+        SetupFacts facts = info.setupFacts();
+        if (facts == null) {
+            sender.sendMessage(text.message(MessageKey.SETUP_UNAVAILABLE, sender));
+            return;
+        }
+        List<Check> checks = doctor ? info.setupChecks().doctor(facts) : info.setupChecks().setup(facts);
+        sender.sendMessage(text.message(doctor ? MessageKey.DOCTOR_HEADER : MessageKey.SETUP_HEADER, sender,
+                Messages.text("summary", CheckPrinter.summary(checks))));
+        CheckPrinter.print(sender, checks);
     }
 
     private Component infoMessage(CommandSender sender, ServerInfo info) {

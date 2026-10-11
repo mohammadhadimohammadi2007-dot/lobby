@@ -45,13 +45,16 @@ import java.util.concurrent.TimeUnit;
 @Plugin(
         id = "lobby-bridge",
         name = "Lobby Bridge",
-        version = "0.3.0",
-        description = "Connects Minestom lobby servers to the network: client versions, player counts, chat relay.",
+        version = LobbyBridgePlugin.VERSION,
+        description = "Connects Minestom lobby servers to the network: client versions, player counts, server status.",
         url = "https://github.com/mohammadhadimohammadi2007-dot/lobby",
         authors = {"mohammadhadimohammadi2007-dot"},
         dependencies = {@Dependency(id = "viaversion", optional = true)}
 )
 public final class LobbyBridgePlugin {
+
+    /** This plugin's version, also sent to the lobbies (ProxyInfo). */
+    static final String VERSION = "0.4.0";
 
     private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(BridgeProtocol.CHANNEL);
     private static final long PING_TIMEOUT_SECONDS = 3;
@@ -127,6 +130,7 @@ public final class LobbyBridgePlugin {
                     if (skin != null) {
                         skins.put(player.getUniqueId(), skin);
                     }
+                    send(connection, proxyInfo());
                     send(connection, snapshot());
                     send(connection, new BridgeMessage.ServerStatus(statuses));
                 });
@@ -294,6 +298,15 @@ public final class LobbyBridgePlugin {
 
     private static int maxPlayers(ServerPing ping) {
         return ping.getPlayers().map(ServerPing.Players::getMax).orElse(0);
+    }
+
+    /** What the proxy is, for the lobby's setup checklist and doctor. */
+    private BridgeMessage.ProxyInfo proxyInfo() {
+        var plugins = proxy.getPluginManager();
+        return new BridgeMessage.ProxyInfo(VERSION,
+                proxy.getVersion().getName() + " " + proxy.getVersion().getVersion(),
+                proxy.getConfiguration().isOnlineMode(), viaVersion,
+                plugins.isLoaded("viabackwards"), plugins.isLoaded("viarewind"));
     }
 
     private BridgeMessage.NetworkSnapshot snapshot() {

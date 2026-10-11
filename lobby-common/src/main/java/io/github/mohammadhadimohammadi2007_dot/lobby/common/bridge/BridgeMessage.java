@@ -276,6 +276,32 @@ public sealed interface BridgeMessage {
     }
 
     /**
+     * Proxy to lobby, with every player who arrives: what the proxy is, so {@code /setup-lobby setup} and
+     * {@code /setup-lobby doctor} can say what is missing there. Added in bridge 1.4; older lobbies ignore it.
+     *
+     * @param bridgeVersion the lobby-bridge plugin's version
+     * @param proxyVersion  the proxy software and version, e.g. "Velocity 3.5.1"
+     * @param onlineMode    true if the proxy checks names with Mojang
+     * @param viaVersion    true if ViaVersion is installed on the proxy (needed to detect clients below 1.13)
+     * @param viaBackwards  true if ViaBackwards is installed (older clients down to 1.9)
+     * @param viaRewind     true if ViaRewind is installed (1.8 clients)
+     */
+    record ProxyInfo(String bridgeVersion, String proxyVersion, boolean onlineMode, boolean viaVersion,
+                     boolean viaBackwards, boolean viaRewind) implements BridgeMessage {
+        public static final int TYPE_ID = 10;
+
+        public ProxyInfo {
+            Objects.requireNonNull(bridgeVersion, "bridgeVersion");
+            Objects.requireNonNull(proxyVersion, "proxyVersion");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
      * A message type this build does not know, from a newer proxy or lobby. Readers ignore it, so
      * mixing versions does not break anything.
      *

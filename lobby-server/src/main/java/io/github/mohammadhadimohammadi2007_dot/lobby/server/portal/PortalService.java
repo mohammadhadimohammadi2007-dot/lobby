@@ -211,6 +211,11 @@ public final class PortalService implements RegionListener {
         return new ArrayList<>(portals.values());
     }
 
+    /** Names of portals in the file that could not be read. */
+    public java.util.List<String> brokenEntries() {
+        return new java.util.ArrayList<>(store.brokenEntries());
+    }
+
     public synchronized int count() {
         return portals.size();
     }

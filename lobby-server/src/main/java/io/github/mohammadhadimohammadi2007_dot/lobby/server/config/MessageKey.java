@@ -214,7 +214,10 @@ public enum MessageKey {
     FLY_OTHER_OFF("fly-other-off"),
     NPC_CONSOLE_CREATE("npc-console-create"),
     HOLOGRAM_CONSOLE_CREATE("hologram-console-create"),
-    SETSPAWN_CONSOLE("setspawn-console");
+    SETSPAWN_CONSOLE("setspawn-console"),
+    SETUP_HEADER("setup-header"),
+    DOCTOR_HEADER("doctor-header"),
+    SETUP_UNAVAILABLE("setup-unavailable");
 
     private final String path;
 

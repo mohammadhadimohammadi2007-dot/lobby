@@ -9,6 +9,8 @@ public final class Permissions {
     public static final String COMMAND_RELOAD = "lobby.command.reload";
     public static final String COMMAND_SETSPAWN = "lobby.command.setspawn";
     public static final String COMMAND_INFO = "lobby.command.info";
+    /** {@code /setup-lobby setup} and {@code /setup-lobby doctor}. */
+    public static final String COMMAND_SETUP = "lobby.command.setup";
     /** {@code /op}, {@code /deop} and {@code /ops}. Operators have it like every permission. */
     public static final String COMMAND_OP = "lobby.command.op";
     /** {@code /list}: who is online. Everyone has it (players see it if commands.yml lists it). */
