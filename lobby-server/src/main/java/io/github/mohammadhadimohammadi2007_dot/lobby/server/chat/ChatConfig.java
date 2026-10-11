@@ -25,7 +25,6 @@ public record ChatConfig(
         int maxLength,
         Set<String> playerFormatting,
         Set<String> mutedBlockedCommands,
-        Persian persian,
         Map<String, Channel> channels,
         String defaultChannel,
         List<Format> formats,
@@ -52,10 +51,6 @@ public record ChatConfig(
     private static final Pattern SAFE_PREFIX = Pattern.compile("[A-Za-z0-9_]{0,32}");
     private static final int MIN_MESSAGE_LENGTH = 16;
     private static final int MAX_MESSAGE_LENGTH = 256;
-
-    /** {@code persian:} section. */
-    public record Persian(boolean defaultOn, boolean serverMessages, boolean trustRtlClients) {
-    }
 
     /**
      * One chat channel. {@code permission}/{@code sendPermission} are empty when not needed.
@@ -153,8 +148,6 @@ public record ChatConfig(
                 reader.integer("max-length", MIN_MESSAGE_LENGTH, MAX_MESSAGE_LENGTH),
                 readPlayerFormatting(reader),
                 lowerCaseSet(reader.stringList("muted-blocked-commands")),
-                new Persian(reader.bool("persian.default"), reader.bool("persian.server-messages"),
-                        reader.bool("persian.trust-rtl-clients")),
                 channels,
                 defaultChannel,
                 readFormats(reader),

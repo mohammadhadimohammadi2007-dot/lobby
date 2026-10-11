@@ -1,8 +1,8 @@
 # Chat
 
 The lobby has its own chat system: rank formats, channels shared between lobbies, a word/link filter that
-sees through spelling tricks, anti-spam, mentions, emojis, staff tools, and proper display of **Persian and
-Arabic** text, on every client from 1.8.9 to the latest version.
+sees through spelling tricks (including Persian and Arabic spellings), anti-spam, mentions, emojis and staff
+tools, on every client from 1.8.9 to the latest version.
 
 Everything is configured in `chat.yml` (created on first start, every option commented). Texts that players
 see (warnings, command replies) are in `messages.yml`. Word lists are in the `filters/` folder.
@@ -36,7 +36,6 @@ messages live.
 | Command | Permission | What it does |
 |---|---|---|
 | `/chat toggle` | `lobby.command.chat` | Hide or show public chat for yourself |
-| `/chat persian` | `lobby.command.chat` | Switch the Persian/Arabic display fix for yourself |
 | `/chat mentions` | `lobby.command.chat` | Switch mention highlights and sounds for yourself |
 | `/ch <channel>` (`/channel`) | `lobby.command.ch` | Switch the channel you write in |
 | `/ignore <player>` | `lobby.command.ignore` | Hide a player's messages (again to undo); `/ignore list` |
@@ -122,8 +121,7 @@ only the styles in `player-formatting` (`color`, `bold`, `italic`, `underlined`,
 `obfuscated`, `gradient`, `rainbow`). Click, hover, insertion, font, translation, selector, NBT and every
 other tag stay visible as plain text. Typing `%server_online%` shows `%server_online%`.
 
-Each message is rendered once per kind of viewer (new or old client, Persian fix on or off, mentioned or
-not, staff or not), not once per player, so a message to 200 players costs one or two renders.
+Each message is rendered once per kind of viewer (new or old client, mentioned or not, staff or not), not once per player, so a message to 200 players costs one or two renders.
 
 ## Anti-spam
 
@@ -181,23 +179,6 @@ lobby asks the proxy to run `proxy-command` (for example LiteBans' `tempmute`), 
 network-wide and visible in LiteBans. The first word of that command must be in the bridge's
 `allowed-commands`. Without the bridge the player is muted on this lobby only, until restart.
 
-## Persian and Arabic text
-
-Minecraft does not join Persian/Arabic letters and does not show right-to-left text in the right order,
-so `سلام` arrives as separate letters, backwards. The lobby fixes this **when showing** a message (never in
-what is stored, logged or filtered):
-
-1. letters get their joined forms (initial, middle, final, isolated, and ligatures such as `لا`),
-2. the line is put in visual order (bidi), with numbers and English words inside kept left to right.
-
-Every player chooses with `/chat persian`; `persian.default` decides for players who have not chosen.
-`persian.server-messages` applies the same fix to messages.yml texts, broadcasts and join messages.
-
-Newer clients **might** already reverse RTL text when the game language is Persian, Arabic or Hebrew. That
-has not been confirmed on every version, so the lobby fixes for everyone by default. If players with a
-Persian game language see chat backwards, set `trust-rtl-clients: true`: the lobby then skips players
-whose client language is RTL (on clients 1.16 and newer).
-
 ## Mentions, emojis, ignore, private messages
 
 - **Mentions:** writing a player's name (or `@name`) highlights it for them in `highlight` and plays
@@ -222,7 +203,7 @@ whose client language is RTL (on clients 1.16 and newer).
 If the lobby has a database connection (any database integration in `integrations.yml` is on), it creates
 two tables with the `storage.table-prefix` (default `lobby_`):
 
-- `lobby_chat_settings`: each player's choices (chat toggle, Persian, mentions, channel, ignore list)
+- `lobby_chat_settings`: each player's choices (chat toggle, mentions, channel, ignore list)
 - `lobby_chat_log`: every message, with what the filter did. Written in batches in the background;
   rows older than `log-retention-days` are deleted automatically.
 
@@ -233,7 +214,7 @@ in `logs/chat/` (`log-to-file`). Nothing ever blocks the chat while writing.
 
 | Feature | Handled by |
 |---|---|
-| Chat formats, filter, anti-spam, Persian fix, mentions | The lobby (it sees each player's client version and permissions) |
+| Chat formats, filter, anti-spam, mentions | The lobby (it sees each player's client version and permissions) |
 | Messages between lobbies (`network: true` channels) | The lobby, through the bridge plugin on Velocity |
 | `/msg`, `/r` | Usually a proxy plugin (works across all servers); the lobby's own is optional |
 | Bans and mutes | LiteBans on the proxy; the lobby reads mutes from the same database |

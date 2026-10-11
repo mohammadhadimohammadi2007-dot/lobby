@@ -1,6 +1,5 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render;
 
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.text.PersianReshaper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -32,27 +31,6 @@ public final class ComponentTransforms {
         List<Component> mapped = new ArrayList<>(children.size());
         for (Component child : children) {
             mapped.add(downsampleColors(child));
-        }
-        return result.children(mapped);
-    }
-
-    /**
-     * Fixes Persian text in every text part of a component. Each part is fixed on its own, which is right for
-     * normal messages; a single sentence split across differently colored parts may come out in a different
-     * order than one plain sentence would.
-     */
-    public static Component reshapePersian(Component component) {
-        Component result = component;
-        if (result instanceof TextComponent text && PersianReshaper.needsReshaping(text.content())) {
-            result = text.content(PersianReshaper.reshape(text.content()));
-        }
-        List<Component> children = result.children();
-        if (children.isEmpty()) {
-            return result;
-        }
-        List<Component> mapped = new ArrayList<>(children.size());
-        for (Component child : children) {
-            mapped.add(reshapePersian(child));
         }
         return result.children(mapped);
     }

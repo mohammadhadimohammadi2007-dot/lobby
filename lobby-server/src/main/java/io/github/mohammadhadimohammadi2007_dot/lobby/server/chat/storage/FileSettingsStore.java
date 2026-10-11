@@ -28,8 +28,7 @@ public final class FileSettingsStore implements SettingsStore {
     }
 
     /** The JSON shape on disk; kept separate so the format stays readable and stable. */
-    private record Stored(Boolean chatVisible, Boolean mentions, Boolean persian, String channel, List<String> ignored,
-                          String visibility) {
+    private record Stored(Boolean chatVisible, Boolean mentions, String channel, List<String> ignored, String visibility) {
     }
 
     @Override
@@ -46,9 +45,6 @@ public final class FileSettingsStore implements SettingsStore {
             PlayerChatSettings settings = PlayerChatSettings.DEFAULTS;
             settings = settings.withChatVisible(stored.chatVisible() == null || stored.chatVisible());
             settings = settings.withMentions(stored.mentions() == null || stored.mentions());
-            if (stored.persian() != null) {
-                settings = settings.withPersian(stored.persian());
-            }
             settings = settings.withChannel(stored.channel());
             settings = settings.withVisibility(stored.visibility());
             if (stored.ignored() != null) {
@@ -69,7 +65,7 @@ public final class FileSettingsStore implements SettingsStore {
     @Override
     public void save(UUID player, PlayerChatSettings settings) throws IOException {
         Files.createDirectories(folder);
-        Stored stored = new Stored(settings.chatVisible(), settings.mentions(), settings.persian(), settings.channel(),
+        Stored stored = new Stored(settings.chatVisible(), settings.mentions(), settings.channel(),
                 settings.ignored().stream().map(UUID::toString).toList(), settings.visibility());
         Path file = file(player);
         Path temp = file.resolveSibling(file.getFileName() + ".tmp");

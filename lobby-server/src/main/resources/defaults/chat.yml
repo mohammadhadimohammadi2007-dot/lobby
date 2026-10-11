@@ -18,19 +18,6 @@ player-formatting: [color, bold, italic, underlined, strikethrough]
 # so only that proxy plugin can block them.
 muted-blocked-commands: [msg, tell, w, r, me]
 
-# ---------------- Persian / Arabic text ----------------
-# Minecraft does not join Persian letters or show right-to-left text in the right order,
-# so Persian chat looks like separate letters backwards. The lobby can fix it before showing it.
-# Every player can switch this for themselves with /chat persian.
-persian:
-  # Fix Persian for players who have not chosen yet. true or false.
-  default: true
-  # Also fix Persian in server messages (messages.yml, broadcasts, join messages). true or false.
-  server-messages: true
-  # Newer clients may fix Persian themselves when their game language is Persian, Arabic or Hebrew.
-  # If those players see Persian chat backwards, set this to true: the lobby then skips them.
-  trust-rtl-clients: false
-
 # ---------------- Channels ----------------
 # Players switch with /ch <name>, or send one message to a channel by starting it with its prefix
 # (for example "!hello" goes to global).
@@ -262,7 +249,7 @@ broadcasts:
   # MiniMessage with %placeholders% about the player who receives it.
   messages:
     - "<gold>Tip:</gold> <gray>Use <white>/ch global</white> to talk to players in every lobby."
-    - "<gold>Tip:</gold> <gray>Persian text looks wrong? Type <white>/chat persian</white>."
+    - "<gold>Tip:</gold> <gray>Too many mention sounds? Type <white>/chat mentions</white>."
   # Optional shorter versions for clients older than 1.19.4, in the same order. [] = use the ones above.
   legacy-messages: []
 

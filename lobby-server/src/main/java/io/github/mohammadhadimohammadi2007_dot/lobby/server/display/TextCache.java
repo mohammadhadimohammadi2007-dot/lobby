@@ -1,7 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.display;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
@@ -15,7 +14,7 @@ import java.util.UUID;
  * Renders display texts once per group of viewers who would see the same thing, like holograms do: a
  * line with only {@code %server_online%} is rendered once per refresh for everybody, a line with
  * {@code %player_name%} once per player. Viewers are grouped by client tier (1.8-1.12 get the legacy text
- * with 16 colours) and by whether their Persian fix is on.
+ * with 16 colours).
  *
  * <p>Only used on the board thread. {@link #clear()} at the start of each refresh, so placeholders are
  * read again.
@@ -27,11 +26,11 @@ final class TextCache {
      *
      * @param about true for a text about {@link #viewer} rather than read by them
      */
-    private record Key(String template, boolean legacy, boolean reshaped, @Nullable UUID viewer, boolean about) {
+    private record Key(String template, boolean legacy, @Nullable UUID viewer, boolean about) {
     }
 
     /** What is known about a template; it never changes while the config stays the same. */
-    private record Shape(boolean perPlayer, boolean reshapeMatters) {
+    private record Shape(boolean perPlayer) {
     }
 
     private final LobbyText text;
@@ -72,9 +71,8 @@ final class TextCache {
             return Component.empty();
         }
         Shape shape = shapes.computeIfAbsent(template, ignored -> new Shape(
-                this.text.placeholders().scopeOf(template).perPlayer(), HologramText.needsReshaping(template)));
-        boolean reshaped = shape.reshapeMatters() && this.text.transformsFor(viewer);
-        Key key = new Key(template, legacy, reshaped, shape.perPlayer() ? viewer.getUuid() : null, false);
+                this.text.placeholders().scopeOf(template).perPlayer()));
+        Key key = new Key(template, legacy, shape.perPlayer() ? viewer.getUuid() : null, false);
         Component cached = rendered.get(key);
         if (cached != null) {
             return cached;
@@ -88,15 +86,12 @@ final class TextCache {
         return component;
     }
 
-    /**
-     * A text about {@code target} (their name or rank), the same for every viewer: rendered without
-     * anybody's Persian fix, which {@link LobbyText#forViewer} adds per viewer group.
-     */
+    /** A text about {@code target} (their name or rank), the same for every viewer. */
     Component about(String template, Player target, boolean legacy) {
         if (template.isEmpty()) {
             return Component.empty();
         }
-        Key key = new Key(template, legacy, false, target.getUuid(), true);
+        Key key = new Key(template, legacy, target.getUuid(), true);
         Component cached = rendered.get(key);
         if (cached != null) {
             return cached;

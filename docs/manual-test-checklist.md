@@ -88,7 +88,6 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 
 - [ ] A hologram with several lines: armor-stand lines on 1.8, text displays on the latest client,
       at the same height.
-- [ ] Persian text reads right to left on both.
 - [ ] A hologram with `%server_online%` updates on both when someone joins; one with `%player_name%`
       shows each player their own name.
 - [ ] Clicking a hologram with actions runs them once (left and right click), on both clients.

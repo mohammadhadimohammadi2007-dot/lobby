@@ -141,18 +141,18 @@ menus:
         actions:
           - "close_menu"
           - "teleport: spawn"
-      persian:
+      mentions:
         slot: 13
-        material: "book"
-        name: "<aqua>Persian chat"
+        material: "bell"
+        name: "<aqua>Mentions"
         lore:
-          - "<gray>Switch the Persian and Arabic text fix"
-          - "<gray>for yourself."
+          - "<gray>Switch the sound and highlight when"
+          - "<gray>someone writes your name in chat."
           - ""
           - "<yellow>Click to switch"
         actions:
           - "close_menu"
-          - "player_command: chat persian"
+          - "player_command: chat mentions"
       # Two entries share slot 15: staff see the first one, everybody else the second.
       staff-info:
         slot: 15

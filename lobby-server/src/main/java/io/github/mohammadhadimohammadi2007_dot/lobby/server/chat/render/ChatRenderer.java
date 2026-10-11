@@ -2,7 +2,6 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatMessage;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.text.PersianReshaper;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.FormattedText;
@@ -28,7 +27,7 @@ import java.util.regex.Pattern;
 
 /**
  * Builds the components players see for a chat message: channel format around rank format around the
- * player's name (with hover and click) and message (with color, emojis, mention highlight and Persian fixing).
+ * player's name (with hover and click) and message (with color, emojis and mention highlight).
  */
 public final class ChatRenderer {
 
@@ -83,7 +82,7 @@ public final class ChatRenderer {
         return key.legacy() && !ownLegacy ? ComponentTransforms.downsampleColors(full) : full;
     }
 
-    /** The message text with emojis, styling, Persian fixing and the viewer's name highlighted. */
+    /** The message text with emojis, styling and the viewer's name highlighted. */
     private Component body(ChatMessage message, ChatConfig chat, VariantKey key, boolean styling, boolean emojis) {
         String raw = emojis && chat.emojis().enabled()
                 ? EmojiReplacer.apply(message.text(), chat.emojis().list(), key.legacy())
@@ -91,11 +90,8 @@ public final class ChatRenderer {
         Component body;
         if (styling && (raw.indexOf('<') >= 0 || raw.indexOf('&') >= 0)) {
             body = parser(chat).parse(raw, true);
-            if (key.persian()) {
-                body = ComponentTransforms.reshapePersian(body);
-            }
         } else {
-            body = Component.text(key.persian() ? PersianReshaper.reshape(raw) : raw);
+            body = Component.text(raw);
         }
         if (key.mentioned() != null) {
             String name = message.mentionedNames().get(key.mentioned());

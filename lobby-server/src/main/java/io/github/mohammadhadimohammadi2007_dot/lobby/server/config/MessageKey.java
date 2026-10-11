@@ -151,8 +151,6 @@ public enum MessageKey {
     CHAT_STAFF_USAGE("chat-staff-usage"),
     CHAT_HIDDEN("chat-hidden"),
     CHAT_SHOWN("chat-shown"),
-    PERSIAN_ON("persian-on"),
-    PERSIAN_OFF("persian-off"),
     MENTIONS_ON("mentions-on"),
     MENTIONS_OFF("mentions-off"),
     FEATURE_DISABLED("feature-disabled"),

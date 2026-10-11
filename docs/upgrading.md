@@ -4,6 +4,11 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **Persian/Arabic display fixing is removed** (`/chat persian`, `persian:` in chat.yml, the
+  `persian-on`/`persian-off` messages). Texts are shown exactly as written, and every text is rendered
+  once per client generation instead of twice. The chat filter still understands Persian and Arabic
+  spellings. The old
+  `persian:` section and messages are ignored; the `persian` column of `lobby_chat_settings` is left unused.
 - **New `commands.yml`.** Players now only see and may type the commands listed for their groups. The
   bundled file lists `/spawn`, `/lobbies`, `/chat` and `/ignore` for everyone. Staff who are not
   operators and have no `lobby.commands.bypass` need a group section, for example

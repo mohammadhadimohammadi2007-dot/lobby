@@ -231,7 +231,6 @@ Every hologram is **classified** when it is loaded or edited, from the placehold
 | no placeholders, or only unknown ones | once for the whole server | never |
 | only global placeholders (`%server_online%`, `%group_online_bedwars%`, `%bungee_total%`) | once for the whole server | every `update-interval` |
 | a per-player placeholder (`%player_name%`, `%luckperms_prefix%`) | once per viewer **in range** | every `update-interval` |
-| Persian or Arabic letters | twice per client generation: with the right-to-left fix and without, because that fix is a setting with two values | as above |
 
 Measured on this machine (`HologramScaleTest`, 200 fake players standing at the hologram):
 
@@ -240,9 +239,8 @@ Measured on this machine (`HologramScaleTest`, 200 fake players standing at the 
 | `%group_online_bedwars% playing`, 200 viewers | **1** render per update, not 200 |
 | `Hello %player_name%`, 20 viewers near and 50 far away | **20** renders per update, none for the 50 |
 | no placeholders | 1 render, ever |
-| `%server_online% بازیکن آنلاین`, 200 viewers in four groups (1.8 and modern, Persian fix on and off) | **4** renders per update |
-| the same line in Latin letters, same 200 viewers | **2** renders (only the two client generations) |
-| 50 holograms, 200 viewers | 50 renders; 97 ms for the first refresh including every spawn packet, 12 ms for a refresh with nothing changed |
+| `%server_online% online` (or the same in any script), 200 viewers on 1.8 and modern clients | **2** renders per update (one per client generation) |
+| 50 holograms, 200 viewers | 50 renders; about 100-150 ms until all are shown (a refresh spends at most 50 ms on new objects, the rest follow in the next refreshes), 12 ms for a refresh with nothing changed |
 
 ### Which thread
 

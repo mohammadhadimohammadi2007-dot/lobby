@@ -22,11 +22,10 @@ import java.util.UUID;
 public final class HologramText {
 
     /**
-     * What decides whether two viewers can share one rendered text: their client generation, whether
-     * their texts are reshaped for right-to-left reading, and, only for text that really differs per
-     * player, who they are.
+     * What decides whether two viewers can share one rendered text: their client generation and, only for
+     * text that really differs per player, who they are.
      */
-    public record Variant(boolean legacy, boolean reshaped, @Nullable UUID viewer) {
+    public record Variant(boolean legacy, @Nullable UUID viewer) {
     }
 
     private HologramText() {
@@ -40,39 +39,21 @@ public final class HologramText {
      */
     public static Variant variant(HologramData data, LobbyText text, Player viewer, boolean legacy,
                                   boolean perViewer) {
-        // Persian text has two versions, not one per player: the fix is a setting with two values.
-        boolean reshaped = data.reshapeMatters() && text.transformsFor(viewer);
         // Only text that really differs per player gets its own render; a player count does not.
         boolean ownRender = perViewer || data.textScope().perPlayer();
-        return new Variant(legacy, reshaped, ownRender ? viewer.getUuid() : null);
+        return new Variant(legacy, ownRender ? viewer.getUuid() : null);
     }
 
     /**
      * Works out how much a hologram's text can differ between players, which decides whether it is
      * rendered once for everybody or once per viewer. Call it whenever the lines change.
-     *
-     * <p>Persian and Arabic text is not per-player: the right-to-left fix is a setting with two values,
-     * so the text has one version with it and one without, each rendered once.
      */
     public static void classify(HologramData data, PlaceholderService placeholders) {
         PlaceholderScope scope = PlaceholderScope.STATIC;
-        boolean reshapeMatters = false;
         for (List<String> frame : data.frames()) {
             scope = scope.and(placeholders.scopeOf(frame));
-            reshapeMatters = reshapeMatters || frame.stream().anyMatch(HologramText::needsReshaping);
         }
         data.textScope(scope);
-        data.reshapeMatters(reshapeMatters);
-    }
-
-    /** True if the line contains Arabic-script letters, which the Persian fix may reorder. */
-    public static boolean needsReshaping(String line) {
-        for (int i = 0; i < line.length(); i++) {
-            if (Character.UnicodeBlock.of(line.charAt(i)) == Character.UnicodeBlock.ARABIC) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** The entities of the hologram for one variant, with its text rendered for {@code viewer}. */

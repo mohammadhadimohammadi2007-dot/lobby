@@ -17,8 +17,6 @@ public final class ChatAudience {
 
     /** Channels players still see when they hid the chat with /chat toggle. */
     private static final Set<String> ALWAYS_VISIBLE = Set.of("staff", "announce");
-    /** Languages whose clients may order right-to-left text themselves (see persian.trust-rtl-clients). */
-    private static final Set<String> RTL_LANGUAGES = Set.of("fa", "ar", "he", "ur");
 
     private final ChatServices services;
 
@@ -54,18 +52,6 @@ public final class ChatAudience {
         ClientCapabilities client = services.bridge().capabilities(viewer);
         PlayerChatSettings settings = services.settings().get(viewer.getUuid());
         boolean mentioned = settings.mentions() && message.mentionedNames().containsKey(viewer.getUuid());
-        return new VariantKey(client.legacy(), wantsPersian(viewer, settings, client),
-                mentioned ? viewer.getUuid() : null, services.has(viewer, ChatPermissions.STAFF));
-    }
-
-    /** True if Persian text should be fixed for this viewer. */
-    public boolean wantsPersian(Player viewer, PlayerChatSettings settings, ClientCapabilities client) {
-        ChatConfig.Persian persian = services.chat().persian();
-        boolean wanted = settings.persian() != null ? settings.persian() : persian.defaultOn();
-        if (!wanted || !persian.trustRtlClients()) {
-            return wanted;
-        }
-        String language = viewer.getSettings().locale().getLanguage().toLowerCase(Locale.ROOT);
-        return !(RTL_LANGUAGES.contains(language) && client.protocolVersion() >= ProtocolVersions.V1_16);
+        return new VariantKey(client.legacy(), mentioned ? viewer.getUuid() : null, services.has(viewer, ChatPermissions.STAFF));
     }
 }

@@ -71,7 +71,6 @@ public final class HologramData {
     private volatile HologramVisibility visibility = HologramVisibility.ALL;
     private final Set<UUID> manualViewers = ConcurrentHashMap.newKeySet();
     private volatile PlaceholderScope textScope = PlaceholderScope.STATIC;
-    private volatile boolean reshapeMatters;
     private volatile List<Object> actionEntries = List.of();
     private volatile ActionList actions = ActionList.EMPTY;
 
@@ -224,19 +223,6 @@ public final class HologramData {
     }
 
     /**
-     * True if the lines contain Arabic-script letters, so the right-to-left fix changes them. The
-     * viewers who want that fix then see a different text from those who do not, and each version is
-     * rendered once, not once per player.
-     */
-    public boolean reshapeMatters() {
-        return reshapeMatters;
-    }
-
-    public void reshapeMatters(boolean value) {
-        reshapeMatters = value;
-    }
-
-    /**
      * How often the content really is rebuilt: what was asked for, or once a second when the text can
      * change by itself (a placeholder or an animation). Text that cannot change is never rebuilt.
      */
@@ -362,7 +348,6 @@ public final class HologramData {
         copy.permission = permission;
         copy.lineSpacing = lineSpacing;
         copy.textScope = textScope;
-        copy.reshapeMatters = reshapeMatters;
         copy.brightnessBlock = brightnessBlock;
         copy.brightnessSky = brightnessSky;
         copy.shadowRadius = shadowRadius;

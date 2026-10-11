@@ -9,9 +9,8 @@ import java.util.UUID;
  * with 200 viewers there are usually only a handful of keys.
  *
  * @param legacy    the viewer's client is older than 1.19.4
- * @param persian   the viewer wants Persian text fixed
  * @param mentioned the viewer's id if this viewer is mentioned (their name is highlighted), otherwise {@code null}
  * @param staff     the viewer is staff and sees the message id
  */
-public record VariantKey(boolean legacy, boolean persian, @Nullable UUID mentioned, boolean staff) {
+public record VariantKey(boolean legacy, @Nullable UUID mentioned, boolean staff) {
 }

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TextToolsTest {
@@ -61,65 +60,6 @@ class TextToolsTest {
     @Test
     void linkFormKeepsDigits() {
         assertEquals("play.server1.ir 127.0.0.1", TextNormalizer.forLinks("Play.Server1.IR ۱۲۷.0.0.1"));
-    }
-
-    // ---------------- Persian reshaper ----------------
-
-    @Test
-    void shapesSalamWithLamAlefLigature() {
-        // سلام = seen (initial) + lam-alef (final ligature) + meem (isolated, alef does not join forward)
-        assertEquals("ﺳﻼﻡ", PersianReshaper.shape("سلام"));
-        assertEquals("ﻡﻼﺳ", PersianReshaper.reshape("سلام"), "drawn right to left");
-    }
-
-    @Test
-    void shapesPersianLetters() {
-        // پدر: pe initial, dal final, re isolated (dal does not join forward)
-        assertEquals("ﭘﺪﺭ", PersianReshaper.shape("پدر"));
-        // گچ: gaf initial, che final
-        assertEquals("ﮔﭻ", PersianReshaper.shape("گچ"));
-        // کی: keheh initial, farsi yeh final
-        assertEquals("ﮐﯽ", PersianReshaper.shape("کی"));
-        // ژ alone
-        assertEquals("ﮊ", PersianReshaper.shape("ژ"));
-    }
-
-    @Test
-    void zwnjBreaksTheConnectionAndIsRemoved() {
-        // می‌خواهم: meem initial, yeh FINAL (ZWNJ stops it), khah initial, waw final,
-        // alef isolated, heh initial, meem final
-        assertEquals("ﻣﯽﺧﻮﺍﻫﻢ", PersianReshaper.shape("می‌خواهم"));
-    }
-
-    @Test
-    void diacriticsDoNotBreakJoining() {
-        assertEquals(PersianReshaper.shape("سلام"), PersianReshaper.shape("سَلام"));
-    }
-
-    @Test
-    void mixedLineKeepsEnglishAndNumbersReadable() {
-        // Persian first, so the line is right-to-left: Persian on the right, "world 123" left of it.
-        assertEquals("world 123 ﻡﻼﺳ", PersianReshaper.reshape("سلام world 123"));
-        // English first: left-to-right line, the Persian word is reversed in place.
-        assertEquals("hi ﻡﻼﺳ!", PersianReshaper.reshape("hi سلام!"));
-    }
-
-    @Test
-    void persianDigitsStayInReadingOrder() {
-        // "۱۲۳ تا" -> the number keeps its left-to-right order inside the right-to-left line.
-        String result = PersianReshaper.reshape("تا ۱۲۳");
-        assertTrue(result.startsWith("۱۲۳ "), result);
-    }
-
-    @Test
-    void bracketsAreMirroredInRightToLeftText() {
-        assertEquals("(ﻦﻣ)", PersianReshaper.reshape("(من)"));
-    }
-
-    @Test
-    void textWithoutPersianIsUnchanged() {
-        assertFalse(PersianReshaper.needsReshaping("hello <world> 123"));
-        assertEquals("hello (world)", PersianReshaper.reshape("hello (world)"));
     }
 
     // ---------------- Similarity ----------------

@@ -35,7 +35,7 @@ final class TabListService {
     }
 
     /** Viewers who get exactly the same names. */
-    private record Group(boolean legacy, boolean reshaped) {
+    private record Group(boolean legacy) {
     }
 
     private final ClientTiers tiers;
@@ -92,7 +92,7 @@ final class TabListService {
         Map<Group, List<Player>> fresh = new LinkedHashMap<>();
         Map<Group, List<Player>> known = new LinkedHashMap<>();
         for (Player viewer : online) {
-            Group group = new Group(tiers.legacyText(viewer), text.transformsFor(viewer));
+            Group group = new Group(tiers.legacyText(viewer));
             (knowNames.add(viewer.getUuid()) ? fresh : known).computeIfAbsent(group, ignored -> new ArrayList<>())
                     .add(viewer);
         }
@@ -104,14 +104,10 @@ final class TabListService {
     }
 
     private void sendNames(Group group, List<Player> viewers, Collection<Player> targets) {
-        Player representative = viewers.getFirst();
         List<PlayerInfoUpdatePacket.Entry> entries = new ArrayList<>(targets.size());
         for (Player target : targets) {
             Name name = names.get(target.getUuid());
             Component shown = group.legacy() ? name.legacy() : name.modern();
-            if (group.reshaped()) {
-                shown = text.forViewer(representative, shown);
-            }
             entries.add(entry(target, true, shown));
         }
         PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket(PlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME,

@@ -14,7 +14,7 @@ network, and it also runs completely on its own for testing or small servers.
 - Simple, commented config files written for server owners, not programmers.
 - Built for **200+ players per lobby** (the lobby world is read-only and fully in memory).
 - Players on **1.8.9 through the latest version** can join through ViaVersion on your proxy.
-- A complete **chat system** with a filter that sees through spelling tricks and proper **Persian/Arabic** display.
+- A complete **chat system** with a filter that sees through spelling tricks, including Persian and Arabic spellings.
 
 > Status: **Phase 3 of 5** (the lobby experience) done. See the [roadmap](#roadmap).
 
@@ -35,7 +35,7 @@ network, and it also runs completely on its own for testing or small servers.
 | Hotbar and selectors | Locked hotbar items with actions, a game selector that shows each game's status (online, full, offline), a lobby selector with this server's instances and the network's other lobbies, and a saved player-visibility switch (all, staff, none) ([hotbar](docs/hotbar.md), [menus](docs/menus.md)) |
 | Movement and portals | Double jump, `/fly`, jump pads (a plate on a block) and launch pads (a box with a fixed velocity), and portals made in game with a wand that run any action and push players back when a connect fails ([guide](docs/movement-and-portals.md)) |
 | Lobby instances | Several copies of the same map on one server, so a busy lobby never feels crowded: players in different instances do not see each other, with `/lobbies <number>` and a selector menu ([guide](docs/instances.md)) |
-| Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, Persian/Arabic letter joining and right-to-left order, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
+| Chat | Rank formats (modern + 1.8 versions), channels shared between lobbies, anti-spam, word/link/IP filter that catches leetspeak, look-alike letters and Persian spelling tricks, mentions, emojis, ignore, staff tools (clear, lock, slow mode, delete, spy), chat log ([guide](docs/chat.md)) |
 
 ## Quick start (standalone, about a minute)
 
@@ -60,7 +60,7 @@ Type `stop` in the console to shut the server down.
 |---|---|---|
 | `config.yml` | Port, MOTD, max players, connection mode, world, lobby instances, spawn, protections, operators | `/setup-lobby reload` (it tells you if something needs a restart) |
 | `integrations.yml` | Database, LuckPerms, LiteBans, SkinsRestorer, bridge | Restart |
-| `chat.yml` | Chat formats, channels, anti-spam, filter, Persian display, mentions, broadcasts | `/setup-lobby reload` |
+| `chat.yml` | Chat formats, channels, anti-spam, filter, mentions, broadcasts | `/setup-lobby reload` |
 | `filters/` | Blocked, censored and allowed word lists | `/setup-lobby reload` |
 | `data/holograms.yml` | Holograms, normally written by `/hologram` ([guide](docs/holograms.md)) | `/setup-lobby reload` |
 | `data/npcs.yml` | NPCs, normally written by `/npc` ([guide](docs/npcs.md)) | `/setup-lobby reload` |
@@ -122,7 +122,7 @@ Without LuckPerms, players listed under `operators:` in `config.yml` have every 
 ## Roadmap
 
 1. **Foundation** - core, config, connection modes, world loading, integrations, lobby basics, bridge v1
-2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, Persian/RTL support, channels) ← *done*
+2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter, channels) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
    server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads ← *done*
 4. **Fun, social and staff tools** - parkour, PvP area, cosmetics, daily rewards, vanish, in-game editors

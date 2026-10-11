@@ -356,7 +356,6 @@ public final class NpcData {
         to.shadowRadius(from.shadowRadius());
         to.shadowStrength(from.shadowStrength());
         to.textScope(from.textScope());
-        to.reshapeMatters(from.reshapeMatters());
     }
 
     /**

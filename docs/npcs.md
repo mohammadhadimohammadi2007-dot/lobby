@@ -111,7 +111,6 @@ The name is rendered with exactly the same rules as a hologram, measured with 20
 |---|---|
 | `BedWars` / `%group_online_bedwars% playing` / `Click to join` | **once** per update for all 200 players |
 | `Hello %player_name%` | once per player in range (200) |
-| Persian or Arabic text | once with the right-to-left fix and once without |
 
 ## Clicks
 

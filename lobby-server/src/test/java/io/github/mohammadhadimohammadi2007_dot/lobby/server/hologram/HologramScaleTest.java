@@ -2,7 +2,6 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
-import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.render.ComponentTransforms;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.ClientObjectRenderer;
@@ -40,7 +39,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -67,8 +65,6 @@ class HologramScaleTest {
 
     /** Players whose name contains this are treated as 1.8 clients by the test. */
     private static final String LEGACY_MARK = "L";
-    /** Players whose name contains this get their text reshaped for right-to-left reading. */
-    private static final String RTL_MARK = "R";
 
     private HologramService service(InstanceContainer map) throws Exception {
         ConfigManager config = new ConfigManager(dir);
@@ -79,9 +75,6 @@ class HologramScaleTest {
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
                 config, permissions, MuteService.NONE, bridge, info(map), LobbyInstanceInfo.SINGLE));
         LobbyText text = new LobbyText(config, placeholders);
-        // Like the chat system does for players who asked for the Persian fix.
-        text.viewerTransform((player, component) -> ComponentTransforms.reshapePersian(component),
-                player -> player.getUsername().contains(RTL_MARK));
         HologramService service = HologramService.start(dir, renderer,
                 new Hologram.Services(text, permissions,
                         player -> player.getUsername().contains(LEGACY_MARK), WorldScope.mainMap(map)),
@@ -170,39 +163,22 @@ class HologramScaleTest {
     }
 
     @Test
-    void persianTextIsAVariantNotOneRenderPerPlayer(Env env) throws Exception {
+    void aGlobalLineIsRenderedOncePerClientGeneration(Env env) throws Exception {
         InstanceContainer map = (InstanceContainer) env.createFlatInstance();
         HologramService holograms = service(map);
-        // Four kinds of viewer: modern and 1.8, each with the Persian fix on and off.
-        joinAt(env, map, VIEWERS, ORIGIN, number -> switch (number % 4) {
-            case 0 -> "";
-            case 1 -> RTL_MARK;
-            case 2 -> LEGACY_MARK;
-            default -> LEGACY_MARK + RTL_MARK;
-        });
-        HologramData data = holograms.create("fa", HologramType.TEXT, ORIGIN,
-                List.of("%server_online% بازیکن آنلاین"));
-        assertNotNull(data);
-        assertEquals(PlaceholderScope.GLOBAL, data.textScope(), "a player count is the same for everyone");
-        assertTrue(data.reshapeMatters(), "the line has Arabic-script letters");
-
-        int before = renderer.renderCount();
-        renderer.refreshNow();
-        int renders = renderer.renderCount() - before;
-
-        System.out.println("global Persian hologram, " + VIEWERS + " viewers in 4 groups: "
-                + renders + " render(s) per update");
-        assertEquals(4, renders, "one render per client generation and Persian setting, not per player");
-
-        // A Latin line has no second version, so the Persian setting does not split its viewers.
-        HologramData latin = holograms.create("en", HologramType.TEXT, ORIGIN, List.of("%server_online% online"));
-        assertNotNull(latin);
-        assertFalse(latin.reshapeMatters());
-        before = renderer.renderCount();
-        renderer.refreshNow();
-        System.out.println("global Latin hologram, " + VIEWERS + " viewers in 4 groups: "
-                + (renderer.renderCount() - before) + " render(s) per update");
-        assertEquals(2, renderer.renderCount() - before, "only the two client generations");
+        joinAt(env, map, VIEWERS, ORIGIN, number -> number % 2 == 0 ? "" : LEGACY_MARK);
+        // Any script: text is never changed per viewer, so only the client generation splits viewers.
+        for (String line : List.of("%server_online% online", "%server_online% بازیکن آنلاین")) {
+            HologramData data = holograms.create("h" + line.length(), HologramType.TEXT, ORIGIN, List.of(line));
+            assertNotNull(data);
+            assertEquals(PlaceholderScope.GLOBAL, data.textScope(), "a player count is the same for everyone");
+            int before = renderer.renderCount();
+            renderer.refreshNow();
+            int renders = renderer.renderCount() - before;
+            System.out.println("global hologram '" + line + "', " + VIEWERS + " viewers: " + renders
+                    + " render(s) per update");
+            assertEquals(2, renders, "one render per client generation, not per player");
+        }
         renderer.shutdown();
     }
 
@@ -219,21 +195,28 @@ class HologramScaleTest {
 
         int before = renderer.renderCount();
         long startNanos = System.nanoTime();
-        renderer.refreshNow();
+        // A refresh spends at most 50 ms on new objects, so on a slow machine the first ones wait for the
+        // next refresh. Refresh until every hologram is shown.
+        int refreshes = 0;
+        while (renderer.shownObjectCount() < hologramCount && refreshes < 20) {
+            renderer.refreshNow();
+            refreshes++;
+        }
         long millis = (System.nanoTime() - startNanos) / 1_000_000;
         int renders = renderer.renderCount() - before;
 
-        // The second refresh is the steady state: everything is spawned and nothing changed.
+        // Then the steady state: everything is spawned and nothing changed.
         long steadyStart = System.nanoTime();
         renderer.refreshNow();
         long steadyMillis = (System.nanoTime() - steadyStart) / 1_000_000;
 
         System.out.println(hologramCount + " holograms, " + VIEWERS + " viewers: " + renders
-                + " renders in " + millis + " ms (first refresh, including every spawn packet), "
+                + " renders in " + millis + " ms over " + refreshes + " refresh(es), including every spawn packet; "
                 + steadyMillis + " ms for the next refresh with nothing changed");
+        assertEquals(hologramCount, renderer.shownObjectCount());
         assertEquals(hologramCount, renders, "one render per hologram, not per hologram per viewer");
         assertEquals(renders, renderer.renderCount() - before, "nothing is rebuilt while nothing changes");
-        assertTrue(millis < 2000, "the first refresh of 50 holograms took " + millis + " ms");
+        assertTrue(millis < 2000, "showing 50 holograms took " + millis + " ms");
         renderer.shutdown();
     }
 
@@ -285,8 +268,8 @@ class HologramScaleTest {
     }
 
     /**
-     * Joins {@code count} players, with {@code suffix} deciding each one's client generation and
-     * Persian setting from its number.
+     * Joins {@code count} players, with {@code suffix} deciding each one's client generation from its
+     * number.
      */
     private List<TestConnection> joinAt(Env env, Instance instance, int count, Pos where,
                                         java.util.function.IntFunction<String> suffix) {

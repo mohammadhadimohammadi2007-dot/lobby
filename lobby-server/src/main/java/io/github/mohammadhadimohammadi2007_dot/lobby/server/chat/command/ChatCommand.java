@@ -15,7 +15,7 @@ import net.minestom.server.entity.Player;
 import java.util.function.Function;
 
 /**
- * {@code /chat}: player settings ({@code toggle}, {@code persian}, {@code mentions}) and staff tools
+ * {@code /chat}: player settings ({@code toggle}, {@code mentions}) and staff tools
  * ({@code clear}, {@code lock}, {@code delete <id>}, {@code spy}).
  */
 public final class ChatCommand extends Command {
@@ -35,12 +35,6 @@ public final class ChatCommand extends Command {
             boolean visible = !services.settings().get(player.getUuid()).chatVisible();
             services.settings().update(player.getUuid(), settings -> settings.withChatVisible(visible));
             return visible ? MessageKey.CHAT_SHOWN : MessageKey.CHAT_HIDDEN;
-        }));
-        addSubcommand(playerSub("persian", player -> {
-            PlayerChatSettings current = services.settings().get(player.getUuid());
-            boolean now = current.persian() != null ? current.persian() : services.chat().persian().defaultOn();
-            services.settings().update(player.getUuid(), settings -> settings.withPersian(!now));
-            return now ? MessageKey.PERSIAN_OFF : MessageKey.PERSIAN_ON;
         }));
         addSubcommand(playerSub("mentions", player -> {
             boolean enabled = !services.settings().get(player.getUuid()).mentions();

@@ -221,12 +221,10 @@ channel-no-permission: "<prefix><red>You cannot use the <channel> channel."
 ch-usage: "<prefix><gray>Usage: <white>/ch <channel></white>. Channels: <white><channels>"
 
 # /chat
-chat-usage: "<prefix><gray>Usage: <white>/chat toggle</white>, <white>/chat persian</white>, <white>/chat mentions</white>"
+chat-usage: "<prefix><gray>Usage: <white>/chat toggle</white> or <white>/chat mentions</white>"
 chat-staff-usage: "<prefix><gray>Staff: <white>/chat clear</white>, <white>/chat lock</white>, <white>/chat delete <id></white>, <white>/chat spy</white>, <white>/slowmode <seconds|off></white>"
 chat-hidden: "<prefix><gray>Chat hidden. Type <white>/chat toggle</white> to show it again."
 chat-shown: "<prefix><gray>Chat shown again."
-persian-on: "<prefix><gray>Persian text fixing is now <green>on</green>."
-persian-off: "<prefix><gray>Persian text fixing is now <red>off</red>."
 mentions-on: "<prefix><gray>Mention notifications are now <green>on</green>."
 mentions-off: "<prefix><gray>Mention notifications are now <red>off</red>."
 feature-disabled: "<prefix><red>This feature is turned off on this server."

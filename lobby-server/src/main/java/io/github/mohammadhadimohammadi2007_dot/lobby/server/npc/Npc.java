@@ -68,7 +68,7 @@ public final class Npc implements ClientObject {
     /**
      * What decides how the NPC looks for one viewer.
      *
-     * @param text   the name tag's group (tier, reshaping, and the viewer for per-player names)
+     * @param text   the name tag's group (tier, and the viewer for per-player names)
      * @param scaled true if the viewer's client draws the NPC's size; always false at normal size, so
      *               normal-size NPCs never split viewers by it
      */
@@ -135,7 +135,7 @@ public final class Npc implements ClientObject {
      */
     @Override
     public List<EntityPart> render(Object key, Player viewer) {
-        Key npcKey = key instanceof Key known ? known : new Key(new HologramText.Variant(false, false, null), false);
+        Key npcKey = key instanceof Key known ? known : new Key(new HologramText.Variant(false, null), false);
         boolean legacy = npcKey.text().legacy();
         List<EntityPart> parts = new ArrayList<>();
         parts.add(body(viewer, npcKey));
