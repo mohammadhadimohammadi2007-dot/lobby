@@ -230,7 +230,11 @@ class HologramScaleTest {
             holograms.create("sign-" + number, HologramType.TEXT, ORIGIN.add(number % 10, 0, number / 10),
                     List.of("<gold>Shop " + number));
         }
-        renderer.refreshNow();
+        // Show everything first: a refresh spends at most 50 ms on new objects, so this may take a few.
+        for (int refresh = 0; refresh < 20 && renderer.shownObjectCount() < hologramCount; refresh++) {
+            renderer.refreshNow();
+        }
+        assertEquals(hologramCount, renderer.shownObjectCount());
         // A refresh with nothing new, to compare against.
         long idleStart = System.nanoTime();
         renderer.refreshNow();
