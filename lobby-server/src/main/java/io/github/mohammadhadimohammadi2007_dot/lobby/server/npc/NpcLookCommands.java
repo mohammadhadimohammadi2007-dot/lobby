@@ -125,7 +125,7 @@ final class NpcLookCommands {
         Command command = new Command("attribute");
         command.setDefaultExecutor((sender, context) -> support.usage(sender));
         ArgumentWord set = ArgumentType.Word("set").from("set");
-        ArgumentWord name = ArgumentType.Word("attribute").from("pose");
+        ArgumentWord name = ArgumentType.Word("attribute-name").from("pose");
         ArgumentWord pose = poseArgument();
         command.addSyntax((sender, context) -> setPose(sender, context.get(npc), context.get(pose)),
                 npc, set, name, pose);
@@ -133,7 +133,7 @@ final class NpcLookCommands {
     }
 
     private static ArgumentWord poseArgument() {
-        ArgumentWord pose = ArgumentType.Word("pose");
+        ArgumentWord pose = ArgumentType.Word("pose-name");
         pose.setSuggestionCallback((sender, context, suggestion) -> {
             for (NpcPose value : NpcPose.values()) {
                 suggestion.addEntry(new SuggestionEntry(value.configName()));

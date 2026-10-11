@@ -193,7 +193,7 @@ public final class PortalCommand extends Command {
     private Command permission(ArgumentWord portal) {
         Command command = new Command("permission");
         command.setDefaultExecutor((sender, context) -> usage(sender));
-        ArgumentWord node = ArgumentType.Word("permission");
+        ArgumentWord node = ArgumentType.Word("node");
         command.addSyntax((sender, context) -> {
             Portal found = found(sender, context.get(portal));
             if (found == null) {
@@ -210,7 +210,7 @@ public final class PortalCommand extends Command {
     private Command action(ArgumentWord portal) {
         Command command = new Command("action", "actions");
         command.setDefaultExecutor((sender, context) -> usage(sender));
-        var line = ArgumentType.StringArray("action");
+        var line = ArgumentType.StringArray("action-line");
         command.addSyntax((sender, context) -> editActions(sender, context.get(portal), found -> {
             String written = String.join(" ", context.get(line));
             try {

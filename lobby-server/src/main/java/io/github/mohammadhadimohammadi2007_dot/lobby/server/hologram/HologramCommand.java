@@ -84,7 +84,7 @@ public final class HologramCommand extends Command {
         ArgumentWord property = ArgumentType.Word("property").from(HologramProperties.names().toArray(String[]::new));
         var value = ArgumentType.StringArray("value");
         var lineText = ArgumentType.StringArray("text");
-        var actionText = ArgumentType.StringArray("action");
+        var actionText = ArgumentType.StringArray("action-line");
         ArgumentNumber<Integer> lineNumber = ArgumentType.Integer("line").min(1).max(HologramData.MAX_LINES);
         ArgumentNumber<Integer> radius = ArgumentType.Integer("radius").min(1).max(MAX_NEAR_RADIUS);
 

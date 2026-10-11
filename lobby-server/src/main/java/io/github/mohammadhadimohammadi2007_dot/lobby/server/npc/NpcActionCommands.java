@@ -50,7 +50,7 @@ final class NpcActionCommands {
         command.setDefaultExecutor((sender, context) -> support.usage(sender));
         ArgumentWord trigger = ArgumentType.Word("trigger").from(NpcTrigger.commandNames().stream().sorted()
                 .toArray(String[]::new));
-        ArgumentStringArray action = ArgumentType.StringArray("action");
+        ArgumentStringArray action = ArgumentType.StringArray("action-line");
         ArgumentNumber<Integer> number = ArgumentType.Integer("number").min(1);
 
         command.addSyntax((sender, context) -> edit(sender, context.get(npc), context.get(trigger), 0,

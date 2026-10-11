@@ -236,7 +236,7 @@ public final class NpcCommand extends Command {
     private Command type(ArgumentWord npc) {
         Command command = new Command("type");
         command.setDefaultExecutor((sender, context) -> support.usage(sender));
-        ArgumentWord type = ArgumentType.Word("type");
+        ArgumentWord type = ArgumentType.Word("entity-type");
         type.setSuggestionCallback((sender, context, suggestion) -> {
             for (EntityType entityType : EntityType.values()) {
                 suggestion.addEntry(new SuggestionEntry(entityType.key().value()));
@@ -262,7 +262,7 @@ public final class NpcCommand extends Command {
         Command command = new Command("skin");
         command.setDefaultExecutor((sender, context) -> support.usage(sender));
         // A greedy argument keeps a link whole whatever it contains.
-        var skinText = ArgumentType.StringArray("skin");
+        var skinText = ArgumentType.StringArray("skin-source");
         skinText.setSuggestionCallback((sender, context, suggestion) -> {
             for (String word : List.of("@none", "@mirror")) {
                 suggestion.addEntry(new SuggestionEntry(word));
@@ -396,7 +396,7 @@ public final class NpcCommand extends Command {
     private Command permission(ArgumentWord npc) {
         Command command = new Command("permission");
         command.setDefaultExecutor((sender, context) -> support.usage(sender));
-        ArgumentWord node = ArgumentType.Word("permission");
+        ArgumentWord node = ArgumentType.Word("node");
         command.addSyntax((sender, context) -> {
             NpcData data = support.found(sender, context.get(npc));
             if (data != null) {
