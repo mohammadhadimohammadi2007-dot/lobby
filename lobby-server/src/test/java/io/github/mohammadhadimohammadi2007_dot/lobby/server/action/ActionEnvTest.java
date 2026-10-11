@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.action;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
@@ -36,7 +37,7 @@ class ActionEnvTest {
         ConfigManager config = new ConfigManager(dir);
         config.load();
         return new ActionServices(config, new LobbyText(config, new PlaceholderService(new PlaceholderRegistry())),
-                new OperatorPermissionService(config), new BridgeService(false));
+                new OperatorPermissionService(TestOps.named()), new BridgeService(false));
     }
 
     private static ActionList list(String... lines) {

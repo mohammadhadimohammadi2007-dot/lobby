@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.portal;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -60,7 +61,7 @@ class PortalEnvTest {
     private PortalService start(Env env) throws Exception {
         ConfigManager config = new ConfigManager(dir);
         config.load();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named());
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         // No proxy here, so every connect fails: just what the push-back needs.
         ActionServices actions = new ActionServices(config, text, permissions, new BridgeService(false));

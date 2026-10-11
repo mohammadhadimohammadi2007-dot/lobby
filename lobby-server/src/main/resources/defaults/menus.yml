@@ -143,7 +143,7 @@ menus:
           - "teleport: spawn"
       mentions:
         slot: 13
-        material: "bell"
+        material: "name_tag"
         name: "<aqua>Mentions"
         lore:
           - "<gray>Switch the sound and highlight when"

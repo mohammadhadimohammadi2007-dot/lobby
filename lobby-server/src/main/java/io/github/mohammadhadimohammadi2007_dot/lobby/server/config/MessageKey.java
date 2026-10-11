@@ -180,7 +180,24 @@ public enum MessageKey {
     CONNECT_FULL("connect-full"),
     CONNECT_OFFLINE("connect-offline"),
     CONNECT_UNKNOWN("connect-unknown"),
-    CONNECT_FAILED("connect-failed");
+    CONNECT_FAILED("connect-failed"),
+    OP_USAGE("op-usage"),
+    OP_ADDED("op-added"),
+    OP_ADDED_PENDING("op-added-pending"),
+    OP_ADDED_NEEDS_CODE("op-added-needs-code"),
+    OP_NO_ACCOUNT("op-no-account"),
+    OP_LOOKUP_FAILED("op-lookup-failed"),
+    OP_NOW("op-now"),
+    OP_CONFIRM_NEEDED("op-confirm-needed"),
+    OP_CONFIRMED("op-confirmed"),
+    OP_CONFIRM_WRONG("op-confirm-wrong"),
+    OP_CONFIRM_NONE("op-confirm-none"),
+    DEOP_USAGE("deop-usage"),
+    DEOP_DONE("deop-done"),
+    DEOP_UNKNOWN("deop-unknown"),
+    DEOP_NOW("deop-now"),
+    OPS_HEADER("ops-header"),
+    OPS_ENTRY("ops-entry");
 
     private final String path;
 

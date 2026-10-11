@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
@@ -70,7 +71,7 @@ class HologramScaleTest {
     private HologramService service(InstanceContainer map) throws Exception {
         ConfigManager config = new ConfigManager(dir);
         config.load();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named());
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(

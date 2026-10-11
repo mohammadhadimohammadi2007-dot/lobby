@@ -25,6 +25,21 @@ Everything 1.8-specific below depends on the lobby knowing that a client is 1.8.
 - [ ] Restart twice: `logs/` has `<today>-1.log.gz` and `<today>-2.log.gz`; `latest.log` holds only the
       current run.
 
+## 0c. Operators (standalone offline mode first)
+
+- [ ] `op <your name>` in the console while you are offline. Join: you are NOT an operator yet, the chat
+      tells you to confirm, and the console shows a code. `/op confirm <code>`: you are an operator.
+- [ ] Rejoin from the same address: an operator right away. From another address (e.g. mobile hotspot):
+      a new code, no rights until confirmed.
+- [ ] A friend joins with your name from another address: no rights, and `/op` is the only extra command
+      they see.
+- [ ] Put `operators: ["YourName"]` in an old config.yml and start: the log says it was moved, config.yml
+      has a comment instead, `ops` lists you.
+- [ ] Behind Velocity: `op <name>` for someone offline shows "will be an operator when they first join";
+      after they join, `data/ops.yml` has their UUID and they are an operator without a code.
+- [ ] With LuckPerms: an operator without any LuckPerms group can use `/npc`; after
+      `ops.have-all-permissions: false` and `/setup-lobby reload` they cannot.
+
 ## 1. NPC skins on 1.8 (most important)
 
 The lobby lists a player NPC in a 1.8 client's tab list while it appears, then removes it after

@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.npc;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -87,7 +88,7 @@ class NpcTierEnvTest {
     private Setup start(Env env, InstanceContainer map) throws Exception {
         ConfigManager config = new ConfigManager(dir);
         config.load();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named());
         BridgeService bridge = new BridgeService(false);
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         ClientObjectRenderer renderer = new ClientObjectRenderer();

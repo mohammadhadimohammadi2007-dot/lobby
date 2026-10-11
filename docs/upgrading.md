@@ -4,6 +4,14 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **Operators are stored by UUID in `data/ops.yml`.** The `operators:` list of config.yml is moved there on
+  the first start (the log says what was moved) and replaced by a comment. Manage operators with `/op`,
+  `/deop` and `/ops`. In standalone offline mode an operator has to confirm with a one-time code from the
+  console (`ops.protection: code-and-ip`); see [console-and-ops.md](console-and-ops.md). With LuckPerms,
+  operators now have every permission unless `ops.have-all-permissions: false`.
+- **Standalone offline mode: players get the vanilla offline UUID** (`OfflinePlayer:<name>`) instead of the
+  UUID their client sends, which a client could fake. Settings saved under an old UUID (chat toggle,
+  ignore list, visibility) start fresh for players whose client sent a different one.
 - **New console.** Tab completion, history and colors (`console.colors`), Ctrl+C stops cleanly. `stop` is
   now a normal command (permission `lobby.command.stop`). Old log archives were named
   `logs/<date>.log.gz`; new ones are `logs/<date>-<n>.log.gz`, made at every start and at midnight.

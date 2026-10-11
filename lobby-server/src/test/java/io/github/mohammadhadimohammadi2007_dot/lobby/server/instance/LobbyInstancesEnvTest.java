@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.instance;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.NetworkState;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -64,7 +65,7 @@ class LobbyInstancesEnvTest {
     }
 
     private LobbyInstances lobbies(Env env, ConfigManager config) {
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named("Admin"));
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         return LobbyInstances.create((InstanceContainer) env.createFlatInstance(), config, text, permissions);
     }
@@ -81,7 +82,7 @@ class LobbyInstancesEnvTest {
         InstanceContainer map = (InstanceContainer) env.createFlatInstance();
         LobbyInstances lobbies = LobbyInstances.create(map, config,
                 new LobbyText(config, new PlaceholderService(new PlaceholderRegistry())),
-                new OperatorPermissionService(config));
+                new OperatorPermissionService(TestOps.named("Admin")));
 
         assertEquals(1, lobbies.count());
         assertSame(map, lobbies.forJoin(), "with one lobby no shared instance is needed");
@@ -154,8 +155,7 @@ class LobbyInstancesEnvTest {
     @Test
     void aFullInstanceOnlyLetsStaffIn(Env env) throws Exception {
         ConfigManager config = config("instances: 1", "instances: 2",
-                "players-per-instance: 50", "players-per-instance: 1",
-                "operators: []", "operators: [\"Admin\"]");
+                "players-per-instance: 50", "players-per-instance: 1");
         LobbyInstances lobbies = lobbies(env, config);
         join(env, lobbies.byNumber(2), "Resident");
 

@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.movement;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionTracker;
@@ -49,7 +50,7 @@ class MovementEnvTest {
             config.load();
         }
         RegionTracker regions = new RegionTracker();
-        MovementService movement = new MovementService(config, new OperatorPermissionService(config), regions);
+        MovementService movement = new MovementService(config, new OperatorPermissionService(TestOps.named()), regions);
         EventNode<PlayerEvent> node = EventNode.type("movement-test-" + UUID.randomUUID(), EventFilter.PLAYER);
         env.process().eventHandler().addChild(node);
         regions.register(node);

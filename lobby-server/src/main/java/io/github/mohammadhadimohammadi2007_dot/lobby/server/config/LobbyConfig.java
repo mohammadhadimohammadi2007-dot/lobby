@@ -1,6 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.logging.ConsoleAppender;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.ConnectionMode;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.instance.JoinStrategy;
 
@@ -21,7 +22,8 @@ import java.util.stream.Collectors;
  * @param protection what players may do in the lobby
  * @param npcs       NPC settings
  * @param console    console colors and log file retention
- * @param operators  lower-case usernames with every permission (used when LuckPerms is disabled)
+ * @param ops        operator settings (the operators themselves are in data/ops.yml)
+ * @param legacyOperators names from the old {@code operators:} list, only read to move them to data/ops.yml
  */
 public record LobbyConfig(
         Server server,
@@ -32,7 +34,8 @@ public record LobbyConfig(
         Protection protection,
         Npcs npcs,
         Console console,
-        Set<String> operators
+        Ops ops,
+        List<String> legacyOperators
 ) {
 
     /** Highest valid TCP port. */
@@ -132,6 +135,21 @@ public record LobbyConfig(
     public record Console(ConsoleAppender.Colors colors, int logKeepDays) {
     }
 
+    /**
+     * {@code ops:} section.
+     *
+     * @param protection          how operators prove who they are where names cannot be trusted
+     * @param protectBehindProxy  also protect operators behind a proxy (for proxies in offline mode)
+     * @param haveAllPermissions  operators have every permission even with LuckPerms
+     */
+    public record Ops(OpList.Protection protection, boolean protectBehindProxy, boolean haveAllPermissions) {
+    }
+
+    /** True if usernames are checked by Mojang before players get here (online mode, or a proxy that checks). */
+    public boolean namesTrusted() {
+        return connection.mode() == ConnectionMode.STANDALONE ? connection.onlineMode() : !ops.protectBehindProxy();
+    }
+
     /** {@code spawn:} section. */
     public record SpawnPoint(double x, double y, double z, float yaw, float pitch) {
     }
@@ -214,11 +232,23 @@ public record LobbyConfig(
         }
         Console console = new Console(colors, reader.integer("logging.keep-days", 1, MAX_LOG_KEEP_DAYS, 14));
 
-        Set<String> operators = reader.stringList("operators").stream()
-                .map(name -> name.toLowerCase(Locale.ROOT))
-                .collect(Collectors.toUnmodifiableSet());
+        String protectionText = reader.string("ops.protection", "code-and-ip").strip().toLowerCase(Locale.ROOT);
+        OpList.Protection opProtection = switch (protectionText) {
+            case "code-and-ip" -> OpList.Protection.CODE_AND_IP;
+            case "code" -> OpList.Protection.CODE;
+            case "off" -> OpList.Protection.OFF;
+            default -> {
+                reader.reportInvalid("ops.protection", protectionText, "code-and-ip, code or off");
+                yield OpList.Protection.CODE_AND_IP;
+            }
+        };
+        Ops ops = new Ops(opProtection, reader.bool("ops.protect-behind-proxy", false),
+                reader.bool("ops.have-all-permissions", true));
+        // The old list, only to move it to data/ops.yml once.
+        List<String> legacyOperators = reader.stringList("operators", List.of()).stream()
+                .map(String::strip).filter(name -> !name.isEmpty()).toList();
 
-        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, npcs, console, operators);
+        return new LobbyConfig(server, connection, world, lobbies, spawn, protection, npcs, console, ops, legacyOperators);
     }
 
     /** Reads the {@code lobbies:} section. {@code instances} is a number or the word {@code auto}. */

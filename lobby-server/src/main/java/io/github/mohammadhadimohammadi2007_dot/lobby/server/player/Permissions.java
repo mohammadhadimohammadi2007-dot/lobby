@@ -9,6 +9,8 @@ public final class Permissions {
     public static final String COMMAND_RELOAD = "lobby.command.reload";
     public static final String COMMAND_SETSPAWN = "lobby.command.setspawn";
     public static final String COMMAND_INFO = "lobby.command.info";
+    /** {@code /op}, {@code /deop} and {@code /ops}. Operators have it like every permission. */
+    public static final String COMMAND_OP = "lobby.command.op";
     /** {@code /stop}. */
     public static final String COMMAND_STOP = "lobby.command.stop";
     /** Use {@code /lobbies [number]} and the lobby selector to move between the lobbies of this server. */

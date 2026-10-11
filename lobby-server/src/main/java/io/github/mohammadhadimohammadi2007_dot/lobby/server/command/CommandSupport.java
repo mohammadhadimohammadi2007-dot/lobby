@@ -15,9 +15,9 @@ final class CommandSupport {
     private CommandSupport() {
     }
 
-    /** Who ran a command, for logs: the player's name or "the console". */
+    /** Who ran a command, for logs: the player's name or "Console". */
     static String name(CommandSender sender) {
-        return sender instanceof Player player ? player.getUsername() : "the console";
+        return sender instanceof Player player ? player.getUsername() : "Console";
     }
 
     /**

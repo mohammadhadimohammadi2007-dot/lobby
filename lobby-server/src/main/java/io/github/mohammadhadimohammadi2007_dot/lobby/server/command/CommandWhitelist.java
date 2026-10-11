@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
 /**
@@ -46,6 +47,7 @@ public final class CommandWhitelist {
     private final PermissionService permissions;
     private final LobbyText text;
     private final CommandManager commands;
+    private volatile BiPredicate<Player, Command> exceptions = (player, command) -> false;
 
     public CommandWhitelist(Supplier<CommandsConfig> config, PermissionService permissions, LobbyText text,
                             CommandManager commands) {
@@ -102,10 +104,18 @@ public final class CommandWhitelist {
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(Player::refreshCommands);
     }
 
+    /**
+     * Commands a player may always see, whatever commands.yml says (for example {@code /op} for an operator
+     * who still has to confirm with a code).
+     */
+    public void exceptions(BiPredicate<Player, Command> rule) {
+        exceptions = rule;
+    }
+
     /** True if {@code player} may see and use {@code command} (its own permission aside). */
     public boolean allowed(Player player, Command command) {
         CommandsConfig current = config.get();
-        if (!current.enabled() || permissions.hasPermission(player, BYPASS)) {
+        if (!current.enabled() || permissions.hasPermission(player, BYPASS) || exceptions.test(player, command)) {
             return true;
         }
         List<String> names = new ArrayList<>();

@@ -12,6 +12,25 @@ prefix: "<dark_gray>[<gold>Lobby</gold>]</dark_gray> "
 
 no-permission: "<prefix><red>You don't have permission to do that."
 players-only: "<prefix><red>Only players can use this command."
+
+# /op, /deop, /ops. <player> <error> <count> <name> <status>
+op-usage: "<prefix><gray>Usage: <white>/op <player></white>, <white>/deop <player></white>, <white>/ops</white>"
+op-added: "<prefix><green><player> is now an operator."
+op-added-pending: "<prefix><green><player> will be an operator when they first join this lobby."
+op-added-needs-code: "<prefix><green><player> is now an operator.</green> <gray>Names are not checked on this server, so the first time they join, the console shows a code they must confirm by typing <white>/op confirm</white> and that code."
+op-no-account: "<prefix><red>There is no Minecraft account called <white><player></white>."
+op-lookup-failed: "<prefix><red>Could not look up <white><player></white>: <error>. Try again when they are online."
+op-now: "<prefix><green>You are now an operator."
+op-confirm-needed: "<prefix><yellow>You are an operator, but this connection is not confirmed yet. Type <white>/op confirm</white> followed by the code shown in the server console."
+op-confirmed: "<prefix><green>Confirmed. You have your operator rights."
+op-confirm-wrong: "<prefix><red>That code is wrong."
+op-confirm-none: "<prefix><red>There is no code waiting for you. Rejoin to get a new one."
+deop-usage: "<prefix><gray>Usage: <white>/deop <player>"
+deop-done: "<prefix><gray><player> is no longer an operator."
+deop-unknown: "<prefix><red><player> is not an operator."
+deop-now: "<prefix><gray>You are no longer an operator."
+ops-header: "<prefix><gray>Operators (<white><count></white>):"
+ops-entry: "<gray> - <white><name></white> (<status>)"
 # A command that does not exist, or one commands.yml hides from this player (the same answer, on purpose).
 unknown-command: "<red>Unknown or incomplete command."
 

@@ -57,6 +57,13 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placehol
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.builtin.BuiltinPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.OpCommands;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.connection.OfflineUuids;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.MojangProfiles;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpList;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpMigration;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpsHaveAllPermissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalCommand;
@@ -125,6 +132,8 @@ public final class LobbyServer implements ServerInfo {
     private PortalService portals;
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
+    private OpList ops;
+    private final MojangProfiles mojangProfiles = new MojangProfiles();
     private @Nullable LobbyConsole console;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
@@ -166,6 +175,11 @@ public final class LobbyServer implements ServerInfo {
         // Holograms and NPCs are only packets, so without this the first player paid for it during their join.
         new LivingEntity(EntityType.PLAYER);
 
+        ops = new OpList(configManager.dataDir(), () -> {
+            LobbyConfig current = configManager.current().config();
+            return new OpList.Settings(current.ops().protection(), current.namesTrusted());
+        });
+        OpMigration.migrate(configManager.dataDir().resolve(ConfigManager.CONFIG_FILE), config, ops, mojangProfiles);
         startIntegrations(snapshot);
         // The instances need the permission service (to let staff into a full lobby) and messages.
         lobbies = LobbyInstances.create(world.instance(), configManager, text, permissions);
@@ -189,6 +203,9 @@ public final class LobbyServer implements ServerInfo {
         IntegrationsConfig settings = snapshot.integrations();
         LobbyConfig.Connection connection = snapshot.config().connection();
         EventNode<Event> global = MinecraftServer.getGlobalEventHandler();
+        if (connection.mode() == ConnectionMode.STANDALONE && !connection.onlineMode()) {
+            OfflineUuids.register(global);
+        }
 
         if (settings.needsDatabase()) {
             try {
@@ -247,9 +264,9 @@ public final class LobbyServer implements ServerInfo {
         }
     }
 
-    /** LuckPerms if enabled and included in this build; otherwise the operators list. */
+    /** LuckPerms if enabled and included in this build (operators on top); otherwise operators only. */
     private PermissionService startLuckPerms(IntegrationsConfig settings) {
-        PermissionService operators = new OperatorPermissionService(configManager);
+        PermissionService operators = new OperatorPermissionService(ops);
         if (!settings.luckPerms().enabled()) {
             integrations.add(IntegrationStatus.disabled(LUCKPERMS));
             return operators;
@@ -263,7 +280,9 @@ public final class LobbyServer implements ServerInfo {
         try {
             PermissionService service = luckPerms.get().start(configManager.dataDir(), settings.database(), settings.luckPerms());
             integrations.add(IntegrationStatus.active(LUCKPERMS, "messaging: " + settings.luckPerms().messagingService()));
-            return service;
+            // Operators keep every permission, like on Bukkit, unless ops.have-all-permissions is false.
+            return new OpsHaveAllPermissions(service, ops,
+                    () -> configManager.current().config().ops().haveAllPermissions());
         } catch (Exception | LinkageError e) {
             LOGGER.error("LuckPerms could not start", e);
             integrations.add(IntegrationStatus.failed(LUCKPERMS, e.getMessage() + ". Using the operators list instead"));
@@ -366,6 +385,7 @@ public final class LobbyServer implements ServerInfo {
         EventNode<PlayerEvent> playerEvents = EventNode.type("lobby-players", EventFilter.PLAYER);
         global.addChild(playerEvents);
 
+        new OpListener(ops, text).register(playerEvents);
         new SpawnListener(configManager, lobbies::forJoin).register(playerEvents);
         bridge.register(playerEvents);
         placeholders.register(playerEvents);
@@ -395,15 +415,18 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
         commands.register(new StopCommand(text, permissions));
+        new OpCommands(configManager, text, permissions, ops, mojangProfiles).commands().forEach(commands::register);
         // Last, so it covers every command above (and the chat commands registered with the listeners).
         EventNode<PlayerEvent> commandEvents = EventNode.type("lobby-commands", EventFilter.PLAYER);
         MinecraftServer.getGlobalEventHandler().addChild(commandEvents);
         commandWhitelist = new CommandWhitelist(() -> configManager.current().commands(), permissions, text, commands);
+        commandWhitelist.exceptions((player, command) -> command.getName().equals("op") && ops.hasPendingCode(player.getUuid()));
         commandWhitelist.register(commandEvents);
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
     private void applyReload(ConfigSnapshot reloaded) {
+        ops.reload(MinecraftServer.getConnectionManager().getOnlinePlayers());
         LogFiles.keepDays(configManager.dataDir().resolve("logs"), reloaded.config().console().logKeepDays());
         if (console != null) {
             console.colors(reloaded.config().console().colors());
@@ -444,13 +467,26 @@ public final class LobbyServer implements ServerInfo {
             }
         }
         AuthFactory.logSafetyWarnings(config.connection(), config.server().port());
-        if (config.connection().mode() == ConnectionMode.STANDALONE && !config.connection().onlineMode()
-                && !config.operators().isEmpty()) {
-            LOGGER.warn("The operators list uses usernames. In offline mode anyone can join with an operator's name"
-                    + " and get every permission.");
-        }
+        logOperatorSafety(config);
         LOGGER.info("Ready in {} ms. Listening on {}:{}. Type 'stop' to shut down.",
                 startMillis, config.server().host(), config.server().port());
+    }
+
+    /** Says how operators are protected, and warns loudly where they are not. */
+    private void logOperatorSafety(LobbyConfig config) {
+        if (config.namesTrusted()) {
+            LOGGER.info("Operators: {} in data/ops.yml (names are checked by {})", ops.all().size(),
+                    config.connection().mode() == ConnectionMode.STANDALONE ? "Mojang" : "the proxy");
+            return;
+        }
+        switch (config.ops().protection()) {
+            case CODE_AND_IP -> LOGGER.info("Operators: {} in data/ops.yml, protected: a new address needs a one-time"
+                    + " code from this console (ops.protection: code-and-ip)", ops.all().size());
+            case CODE -> LOGGER.info("Operators: {} in data/ops.yml, protected: each needs a one-time code from this"
+                    + " console once (ops.protection: code)", ops.all().size());
+            case OFF -> LOGGER.warn("ops.protection is off and names are not checked: ANYONE who joins with an"
+                    + " operator's name gets every permission. Use code-and-ip unless nobody else can reach this server.");
+        }
     }
 
     /** Runs once when the server stops (the 'stop' command, Ctrl+C or a kill signal). */
@@ -466,6 +502,7 @@ public final class LobbyServer implements ServerInfo {
 
     /** Stops and saves every feature; package-private so tests can stop a lobby without stopping {@link Async}. */
     void stopFeatures() {
+        ops.close();
         chat.shutdown();
         holograms.shutdown();
         npcs.shutdown();

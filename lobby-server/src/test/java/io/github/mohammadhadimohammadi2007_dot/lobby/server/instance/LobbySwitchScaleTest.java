@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.instance;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
@@ -56,7 +57,7 @@ class LobbySwitchScaleTest {
         config.load();
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         return LobbyInstances.create((InstanceContainer) env.createFlatInstance(), config, text,
-                new OperatorPermissionService(config));
+                new OperatorPermissionService(TestOps.named()));
     }
 
     @Test

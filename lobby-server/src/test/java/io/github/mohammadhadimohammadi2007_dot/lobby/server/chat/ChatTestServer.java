@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
@@ -58,13 +59,12 @@ final class ChatTestServer {
         ConfigManager config = new ConfigManager(dir);
         config.load();
         Path main = dir.resolve(ConfigManager.CONFIG_FILE);
-        Files.writeString(main, Files.readString(main).replace("operators: []", "operators: [\"Admin\"]"));
         Path chatFile = dir.resolve(ConfigManager.CHAT_FILE);
         Files.writeString(chatFile, chatYml.apply(Files.readString(chatFile)));
         config.load();
 
         Instance instance = env.createFlatInstance();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named("Admin"));
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(

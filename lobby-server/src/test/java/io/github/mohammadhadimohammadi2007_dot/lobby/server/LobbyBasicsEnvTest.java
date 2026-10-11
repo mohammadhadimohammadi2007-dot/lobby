@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SpawnCommand;
@@ -68,14 +69,11 @@ class LobbyBasicsEnvTest {
     private ConfigManager config() throws Exception {
         ConfigManager manager = new ConfigManager(dir);
         manager.load();
-        Path file = dir.resolve(ConfigManager.CONFIG_FILE);
-        Files.writeString(file, Files.readString(file).replace("operators: []", "operators: [\"Admin\"]"));
-        manager.load();
         return manager;
     }
 
     private static PermissionService register(Env env, ConfigManager config, Instance instance) {
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named("Admin"));
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         BuiltinPlaceholders.registerAll(placeholders.registry(), new BuiltinPlaceholders.Sources(
                 config, permissions, MuteService.NONE, new BridgeService(false), fakeInfo(instance),

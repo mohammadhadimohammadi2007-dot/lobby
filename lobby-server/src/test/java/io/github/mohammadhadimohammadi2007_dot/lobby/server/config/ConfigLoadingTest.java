@@ -126,19 +126,19 @@ class ConfigLoadingTest {
     }
 
     @Test
-    void operatorsAreLowerCased() throws Exception {
-        writeConfigReplacing("operators: []", "operators: [\"Notch\", \"jeb_\", \"\"]");
+    void anOldOperatorsListIsReadForMoving() throws Exception {
+        writeConfigReplacing("  have-all-permissions: true", "  have-all-permissions: true\noperators: [\"Notch\", \"jeb_\", \"\"]");
 
-        assertEquals(java.util.Set.of("notch", "jeb_"), new ConfigManager(dir).load().config().operators());
+        assertEquals(java.util.List.of("Notch", "jeb_"), new ConfigManager(dir).load().config().legacyOperators());
     }
 
     @Test
     void emptyOptionUsesDefaultAndWarns() throws Exception {
-        writeConfigReplacing("operators: []", "operators:");
+        writeConfigReplacing("  max-players: 200", "  max-players:");
 
         ConfigSnapshot snapshot = new ConfigManager(dir).load();
-        assertTrue(snapshot.config().operators().isEmpty());
-        assertTrue(hasWarning(snapshot, "'operators' is missing or empty"));
+        assertEquals(200, snapshot.config().server().maxPlayers());
+        assertTrue(hasWarning(snapshot, "'server.max-players' is missing or empty"), snapshot.warnings().toString());
     }
 
     @Test

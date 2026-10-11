@@ -123,6 +123,19 @@ logging:
   keep-days: 14
 
 # ---------------- Operators ----------------
-# Only used when LuckPerms is disabled (see integrations.yml).
-# Usernames listed here get every permission. Example: ["Notch", "jeb_"]
-operators: []
+# Operators have every permission. They are kept in data/ops.yml (by UUID) and managed with
+# /op <player> and /deop <player>, from the console or by operators in game. Full guide:
+# docs/console-and-ops.md
+ops:
+  # In offline mode anyone can join with ANY name, including yours. So where names are not checked by
+  # Mojang, an operator only gets their rights after proving who they are:
+  #   code-and-ip  (recommended) the first time, and whenever they join from a new address, the console
+  #                prints a one-time code; they type /op confirm <code>. Known addresses work right away.
+  #   code         the code is needed once; after that any address works.
+  #   off          a name is enough. Only for servers nobody else can reach.
+  # Not used in online mode or behind a proxy (they check names), unless protect-behind-proxy is true.
+  protection: code-and-ip
+  # true = also protect operators behind a proxy. Set this if your proxy runs in offline (cracked) mode.
+  protect-behind-proxy: false
+  # With LuckPerms, operators still have every permission. false = they only have what LuckPerms gives.
+  have-all-permissions: true

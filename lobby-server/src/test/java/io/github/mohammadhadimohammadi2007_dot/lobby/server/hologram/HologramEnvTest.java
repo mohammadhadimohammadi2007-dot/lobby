@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
@@ -80,9 +81,8 @@ class HologramEnvTest {
         ConfigManager config = new ConfigManager(dir);
         config.load();
         Path main = dir.resolve(ConfigManager.CONFIG_FILE);
-        Files.writeString(main, Files.readString(main).replace("operators: []", "operators: [\"Admin\"]"));
         config.load();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named("Admin"));
         BridgeService bridge = new BridgeService(false);
         PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
         // The real placeholders, so %server_online% is known and counts as a global one.

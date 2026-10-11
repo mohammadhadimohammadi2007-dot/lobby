@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSettingsService;
@@ -67,9 +68,8 @@ class HotbarEnvTest {
         config.load();
         // "Staff" is an operator, so they have every permission, the staff one included.
         Path main = dir.resolve(ConfigManager.CONFIG_FILE);
-        Files.writeString(main, Files.readString(main).replace("operators: []", "operators: [\"Staff\"]"));
         config.load();
-        PermissionService permissions = new OperatorPermissionService(config);
+        PermissionService permissions = new OperatorPermissionService(TestOps.named("Staff"));
         BridgeService bridge = new BridgeService(false);
         LobbyText text = new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
         ActionServices actions = new ActionServices(config, text, permissions, bridge);
