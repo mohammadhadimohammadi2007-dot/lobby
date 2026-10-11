@@ -114,7 +114,7 @@ class WorldLoaderIntegrationTest {
     }
 
     private static LobbyConfig.World settings(Path path, boolean convert) {
-        return new LobbyConfig.World(path.toString(), convert, PRELOAD_RADIUS, 8, 6000, 0);
+        return new LobbyConfig.World(path.toString(), convert, true, 20_000, PRELOAD_RADIUS, 8, 6000, 0);
     }
 
     /** Builds a small map with the flat generator and saves it as Polar. */

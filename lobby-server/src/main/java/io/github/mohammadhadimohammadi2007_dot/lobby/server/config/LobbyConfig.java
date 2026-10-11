@@ -81,9 +81,14 @@ public record LobbyConfig(
         }
     }
 
-    /** {@code world:} section. {@code time} is -1 for a normal day/night cycle. */
-    public record World(String path, boolean convertAnvilToPolar, int preloadRadius, int viewDistance,
-                        int time, int voidY) {
+    /**
+     * {@code world:} section. {@code time} is -1 for a normal day/night cycle.
+     *
+     * @param preloadWholeMap  load every stored chunk (and the edges around them) before players can join
+     * @param preloadMaxChunks above this many chunks only {@code preloadRadius} around spawn is loaded
+     */
+    public record World(String path, boolean convertAnvilToPolar, boolean preloadWholeMap, int preloadMaxChunks,
+                        int preloadRadius, int viewDistance, int time, int voidY) {
         /** True if the time of day should stay fixed. */
         public boolean fixedTime() {
             return time >= 0;
@@ -200,6 +205,8 @@ public record LobbyConfig(
         World world = new World(
                 reader.string("world.path"),
                 reader.bool("world.convert-anvil-to-polar"),
+                reader.bool("world.preload-whole-map", true),
+                reader.integer("world.preload-max-chunks", 100, 1_000_000, 20_000),
                 reader.integer("world.preload-radius", 1, MAX_CHUNK_RADIUS),
                 reader.integer("world.view-distance", MIN_VIEW_DISTANCE, MAX_CHUNK_RADIUS),
                 reader.integer("world.time", -1, TICKS_PER_DAY),

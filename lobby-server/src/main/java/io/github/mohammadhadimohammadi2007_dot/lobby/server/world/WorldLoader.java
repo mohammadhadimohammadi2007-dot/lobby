@@ -82,12 +82,16 @@ public final class WorldLoader {
             loaded = flatFallback(instance, spawn);
         }
 
-        Set<Long> chunks = new LinkedHashSet<>(loaded.mapChunks());
-        // At least every chunk a player at spawn is sent (Minestom sends one ring more than the view distance),
-        // so the first player does not have missing chunks made and lit on the tick thread. A chunk made later
-        // would also drop the light of its neighbours, which were already built.
-        chunks.addAll(chunksAround(spawn, Math.max(settings.preloadRadius(), settings.viewDistance() + 1)));
-        preload(instance, chunks);
+        // Everything a player can be sent, so no chunk is made and lit on the tick thread later (a chunk made
+        // later would also drop the light of its neighbours, which were already built).
+        PreloadPlan plan = PreloadPlan.of(loaded.mapChunks(), spawn, settings.preloadWholeMap(),
+                settings.preloadMaxChunks(), settings.preloadRadius(), settings.viewDistance());
+        if (!plan.wholeMap() && !loaded.mapChunks().isEmpty()) {
+            LOGGER.warn("Only the chunks within {} of spawn are preloaded ({}). Chunks further away are made while"
+                    + " players walk there, which can cause short lag spikes.",
+                    Math.max(settings.preloadRadius(), settings.viewDistance() + 1), plan.reason());
+        }
+        preload(instance, plan.chunks());
 
         boolean lightComputed = false;
         if (needsLighting(instance)) {
@@ -105,9 +109,11 @@ public final class WorldLoader {
         long memoryMb = Math.max(0, usedMemory() - memoryBefore) / BYTES_PER_MB;
         LobbyWorld world = new LobbyWorld(instance, loaded.name(), loaded.format(), instance.getChunks().size(),
                 loadMillis, memoryMb, lightComputed);
-        LOGGER.info("Map '{}' ready: {} ({} chunks, loaded in {} ms, about {} MB of memory{})",
-                world.name(), world.format().name().toLowerCase(), world.chunkCount(), world.loadMillis(),
-                world.memoryMb(), lightComputed ? ", lighting computed" : "");
+        LOGGER.info("Map '{}' ready: {} ({} chunks preloaded{}, loaded in {} ms, about {} MB of memory{})",
+                world.name(), world.format().name().toLowerCase(), world.chunkCount(),
+                plan.wholeMap() ? ": the whole map (" + plan.storedChunks() + " stored) and "
+                        + (world.chunkCount() - plan.storedChunks()) + " around its edges" : ": the area around spawn",
+                world.loadMillis(), world.memoryMb(), lightComputed ? ", lighting computed" : "");
         return world;
     }
 
@@ -119,10 +125,16 @@ public final class WorldLoader {
     }
 
     private static Loaded loadAnvil(InstanceContainer instance, Path folder) {
-        LOGGER.info("Loading Anvil map {} (only chunks near spawn are preloaded;"
-                + " turn on convert-anvil-to-polar to load the whole map up front)", folder);
+        LOGGER.info("Loading Anvil map {}", folder);
         instance.setChunkLoader(new ReadOnlyChunkLoader(anvilLoader(folder)));
-        return new Loaded(fileName(folder), WorldFormat.ANVIL, List.of(), null);
+        List<Long> stored;
+        try {
+            stored = AnvilRegions.storedChunks(WorldSource.regionParent(folder).resolve("region"));
+        } catch (IOException e) {
+            LOGGER.warn("Could not list the chunks of {}: {}. Only the area around spawn is preloaded.", folder, e.getMessage());
+            stored = List.of();
+        }
+        return new Loaded(fileName(folder), WorldFormat.ANVIL, stored, null);
     }
 
     /**
@@ -230,18 +242,6 @@ public final class WorldLoader {
         List<Long> keys = new ArrayList<>();
         for (PolarChunk chunk : world.chunks()) {
             keys.add(CoordConversion.chunkIndex(chunk.x(), chunk.z()));
-        }
-        return keys;
-    }
-
-    private static List<Long> chunksAround(Pos center, int radius) {
-        int centerX = center.chunkX();
-        int centerZ = center.chunkZ();
-        List<Long> keys = new ArrayList<>();
-        for (int x = centerX - radius; x <= centerX + radius; x++) {
-            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                keys.add(CoordConversion.chunkIndex(x, z));
-            }
         }
         return keys;
     }

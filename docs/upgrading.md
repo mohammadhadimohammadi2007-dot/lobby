@@ -4,6 +4,9 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **The whole map is preloaded** (`world.preload-whole-map: true`, `world.preload-max-chunks: 20000`), also
+  for Anvil folders that are not converted. Startup takes a little longer on big maps and memory use is
+  in the log. `preload-radius` now only matters for maps over the limit, or with `preload-whole-map: false`.
 - **New server commands:** `list`, `say`, `tp`, `gamemode`, `clear`, `version`, `tps` (see
   [console-and-ops.md](console-and-ops.md)). `/fly <player>` needs `lobby.command.fly.others`. Admin
   commands that used your position also take coordinates (for the console). The messages `npc-created`,

@@ -41,10 +41,15 @@ Build the lobby inside that range. The server warns at startup if blocks exist o
 ## Spawn and preloading
 
 - `spawn:` is where players appear. Stand somewhere in game and run `/setup-lobby setspawn` to save it.
-- `preload-radius` chunks around spawn (and at least `view-distance` + 1, which is what a player at spawn
-  is sent) are always loaded before players can join, even for Anvil. Their chunk packets, light included,
-  are built at the same time, so the first player after a start does not wait for them.
-- Every chunk stored in a Polar file is loaded.
+- The whole map is loaded before players can join (`preload-whole-map: true`, the default): every chunk
+  saved in the Polar file or Anvil folder, plus `view-distance` + 1 chunks around its edges (what a player
+  standing at the edge is sent). Their chunk packets, light included, are built at the same time. So no
+  chunk is ever made while players walk around, which would cost the server a lag spike.
+- The log says what it took, for example:
+  `Map 'lobby' ready: polar (529 chunks preloaded: the whole map (25 stored) and 504 around its edges, loaded in 742 ms, about 4 MB of memory)`.
+- A map bigger than `preload-max-chunks` (20000 by default), or `preload-whole-map: false`, loads only
+  `preload-radius` around spawn (at least `view-distance` + 1), and the log warns that chunks further away
+  are made while players walk there.
 
 ## When the map is missing
 
