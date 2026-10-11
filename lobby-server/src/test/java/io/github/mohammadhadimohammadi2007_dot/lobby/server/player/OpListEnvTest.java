@@ -33,10 +33,20 @@ class OpListEnvTest {
 
     private final AtomicLong now = new AtomicLong(1_000_000);
     private final Map<String, String> addressOf = new HashMap<>();
+    private final List<OpList> created = new java.util.ArrayList<>();
+
+    /** Waits for ops.yml writes before JUnit deletes the folder. */
+    @org.junit.jupiter.api.AfterEach
+    void closeLists() {
+        created.forEach(OpList::close);
+    }
 
     private OpList ops(OpList.Protection protection, boolean namesTrusted) {
         OpList.Settings settings = new OpList.Settings(protection, namesTrusted);
-        return new OpList(dir, () -> settings, now::get, player -> addressOf.getOrDefault(player.getUsername(), "10.0.0.1"));
+        OpList ops = new OpList(dir, () -> settings, now::get,
+                player -> addressOf.getOrDefault(player.getUsername(), "10.0.0.1"));
+        created.add(ops);
+        return ops;
     }
 
     private static Player join(Env env, Instance instance, String name, UUID uuid) {
