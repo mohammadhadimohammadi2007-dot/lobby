@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
@@ -216,7 +217,7 @@ class HologramScaleTest {
         assertEquals(hologramCount, renderer.shownObjectCount());
         assertEquals(hologramCount, renders, "one render per hologram, not per hologram per viewer");
         assertEquals(renders, renderer.renderCount() - before, "nothing is rebuilt while nothing changes");
-        assertTrue(millis < 2000, "showing 50 holograms took " + millis + " ms");
+        PerfReport.report("HologramScaleTest: showing 50 holograms to 200 viewers", millis, 2000, "ms");
         renderer.shutdown();
     }
 
@@ -241,10 +242,14 @@ class HologramScaleTest {
         long idleMillis = (System.nanoTime() - idleStart) / 1_000_000;
 
         // One more player joins: every hologram has to be spawned for them, and for nobody else.
+        int rendersBeforeJoin = renderer.renderCount();
         join(env, map, 1);
         long joinStart = System.nanoTime();
         renderer.refreshNow();
         long joinMillis = (System.nanoTime() - joinStart) / 1_000_000;
+        assertEquals(rendersBeforeJoin, renderer.renderCount(),
+                "the joining player gets the texts already built for everybody, nothing is rendered again");
+        assertEquals(hologramCount, renderer.shownObjectCount());
 
         // A reload: read the file again, despawn everything for 200 players, show it again.
         long reloadStart = System.nanoTime();
@@ -256,10 +261,10 @@ class HologramScaleTest {
                 + idleMillis + " ms, one player joining " + joinMillis + " ms (" + (joinMillis - idleMillis)
                 + " ms more than idle), /hologram reload " + reloadMillis + " ms");
         assertEquals(hologramCount, holograms.count(), "the reload found every hologram again");
-        assertTrue(joinMillis - idleMillis < 50,
-                "spawning " + hologramCount + " holograms for one joining player took "
-                        + (joinMillis - idleMillis) + " ms more than an idle refresh");
-        assertTrue(reloadMillis < 2000, "a reload took " + reloadMillis + " ms");
+        PerfReport.report("HologramScaleTest: one player joining 200 with 50 holograms, ms more than idle",
+                joinMillis - idleMillis, 50, "ms");
+        PerfReport.report("HologramScaleTest: /hologram reload with 50 holograms and 200 viewers", reloadMillis, 2000,
+                "ms");
         renderer.shutdown();
     }
 

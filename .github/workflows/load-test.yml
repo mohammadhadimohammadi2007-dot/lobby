@@ -1,6 +1,11 @@
 # The load tests: 200 fake players chatting for a minute, 200 players walking for five minutes with
-# everything on, and what one join costs in a full lobby. Too slow for every push, so they run once a week and whenever started by hand
+# everything on, what one join costs in a full lobby, and the timings of the scale tests. Too slow (and
+# too machine-dependent) for every push, so they run once a week and whenever started by hand
 # (Actions > Load test > Run workflow).
+#
+# Timings never fail these jobs: each one is written to lobby-server/build/reports/perf.txt, marked
+# MISSED when it is over its target, shown in the run summary and kept as an artifact. The regular build
+# only asserts counts (renders, packets, objects shown), which do not depend on the machine.
 name: Load test
 
 on:
@@ -45,12 +50,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Lobby load test (200 players, everything on, 5 minutes)
         run: ./gradlew :lobby-server:test --tests '*LobbyLoadTest' -i
+      - name: Timings in the summary
+        if: always()
+        run: cat lobby-server/build/reports/perf.txt >> "$GITHUB_STEP_SUMMARY" || true
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lobby-load-test
-          path: lobby-server/build/reports/lobby-load-test.txt
+          path: |
+            lobby-server/build/reports/lobby-load-test.txt
+            lobby-server/build/reports/perf.txt
   join-cost:
     runs-on: ubuntu-latest
     env:
@@ -66,9 +76,40 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Join cost (real lobby, 199 players walking, 40 joins)
         run: ./gradlew :lobby-server:test --tests '*JoinCostTest' -i
+      - name: Timings in the summary
+        if: always()
+        run: cat lobby-server/build/reports/perf.txt >> "$GITHUB_STEP_SUMMARY" || true
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: join-cost
-          path: lobby-server/build/reports/join-cost.txt
+          path: |
+            lobby-server/build/reports/join-cost.txt
+            lobby-server/build/reports/perf.txt
+  scale-timings:
+    runs-on: ubuntu-latest
+    env:
+      LOBBY_LOAD_TEST: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Scale tests (holograms, display, lobby switching), timings reported
+        run: >-
+          ./gradlew :lobby-server:test --rerun
+          --tests '*HologramScaleTest' --tests '*DisplayScaleTest' --tests '*LobbySwitchScaleTest' -i
+      - name: Timings in the summary
+        if: always()
+        run: cat lobby-server/build/reports/perf.txt >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scale-timings
+          path: lobby-server/build/reports/perf.txt

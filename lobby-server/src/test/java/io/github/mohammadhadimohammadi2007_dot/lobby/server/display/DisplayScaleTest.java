@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.display;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
@@ -241,8 +242,10 @@ class DisplayScaleTest {
                 "  garbage collection: %d ms in %d collections over %d simulated seconds (%.1f s of wall time),"
                         + " heap max %d MB", gcDuring, gcCollections, MEASURED_SECONDS, wallSeconds,
                 Runtime.getRuntime().maxMemory() / (1024 * 1024)));
-        // The target is well under half; this only catches a big step backwards on a slow machine.
-        assertTrue(averageMillis < 800, "the display thread was busy " + averageMillis + " ms per second");
+        // The target is well under half of every second.
+        PerfReport.report("DisplayScaleTest: display thread busy per simulated second", averageMillis, 500, "ms");
+        assertTrue(counters.get(0) > 0 && counters.get(1) > 0 && counters.get(2) > 0,
+                "texts were rendered and sent: " + counters);
     }
 
     /** Longest call of each kind: rebuilding renderer refresh, other renderer refresh, display on the second, other display. */

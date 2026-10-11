@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeTestAccess;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramType;
@@ -161,7 +162,7 @@ class JoinCostTest {
         Files.createDirectories(reports);
         Files.writeString(reports.resolve("join-cost.txt"), report);
         double median = median(total) / 1e6;
-        assertTrue(median < 100, "median join tick " + median + " ms");
+        PerfReport.report("JoinCostTest: median join tick with 200 online", median, 50, "ms");
     }
 
     /** Marks a join in a Java Flight Recorder recording. */

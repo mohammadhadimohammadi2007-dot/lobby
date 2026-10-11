@@ -270,14 +270,18 @@ public final class ClientObjectRenderer {
         long start = System.nanoTime();
         tabRemovals.sendDue(start);
         Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
+        boolean shownNew = false;
         for (Tracked entry : tracked.values()) {
             // Both are asked, never short-circuited: a dirty object must still book its next update time,
             // or it would be built again on the very next refresh.
             boolean overBudget = System.nanoTime() - start > BUDGET_NANOS;
-            if (overBudget && entry.variants.isEmpty() && entry.contentDirty) {
-                // A new object nobody sees yet: it appears on the next refresh.
+            boolean isNew = entry.variants.isEmpty() && entry.contentDirty;
+            if (overBudget && isNew && shownNew) {
+                // A new object nobody sees yet: it appears on the next refresh. At least one new object is
+                // shown per refresh, so they always keep coming, however slow the machine is.
                 continue;
             }
+            shownNew |= isNew;
             boolean due = dueForUpdate(entry);
             boolean dirty = entry.contentDirty;
             // An object already on screen whose content changed keeps its old look one refresh longer.

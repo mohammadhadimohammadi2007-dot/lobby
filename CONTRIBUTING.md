@@ -76,6 +76,15 @@ LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test --tests '*LobbyLoadTest'
 
 `LOBBY_LOAD_TEST_SECONDS` changes the duration (300 by default). It runs with the chat load test in CI.
 
+### Timings in tests
+
+The regular test suite must give the same answer on every machine. Assert counts (renders, packets,
+objects shown after N refreshes, ticks a move was spread over), never milliseconds, and never assume that
+work fits in one refresh. Report a timing with `PerfReport.report(what, value, target, unit)`: the
+regular build only prints it; with `LOBBY_LOAD_TEST=1` it is also written to
+`lobby-server/build/reports/perf.txt`, marked `MISSED` when over its target. The load-test workflow
+(weekly and on demand) collects that file and shows it in the run summary; it never fails on a timing.
+
 ## Commits and pull requests
 
 - One logical change per commit, with a clear message: a short summary line, a blank line, then why.

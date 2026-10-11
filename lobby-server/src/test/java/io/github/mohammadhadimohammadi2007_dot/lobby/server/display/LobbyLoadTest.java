@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.display;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.PerfReport;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSettingsService;
@@ -212,7 +213,7 @@ class LobbyLoadTest {
         Files.createDirectories(out.getParent());
         Files.writeString(out, report);
         double average = ticks.stream().mapToLong(Long::longValue).average().orElse(0) / 1e6;
-        assertTrue(average < 25, "average tick " + average + " ms; the target is well under 50");
+        PerfReport.report("LobbyLoadTest: average tick (MSPT)", average, 25, "ms");
     }
 
     /** Every player walks a small circle around their own spot, one step per tick, looking ahead. */

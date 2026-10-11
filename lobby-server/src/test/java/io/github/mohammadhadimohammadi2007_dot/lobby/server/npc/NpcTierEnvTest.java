@@ -325,7 +325,10 @@ class NpcTierEnvTest {
         setup.npcs().changed(sitting);
         Collector<ServerPacket> packets = viewer.trackIncoming(ServerPacket.class);
 
-        setup.renderer().refreshNow();
+        // Two new NPCs: a slow refresh may show the second one in the next refresh.
+        for (int refresh = 0; refresh < 5 && setup.renderer().shownObjectCount() < 2; refresh++) {
+            setup.renderer().refreshNow();
+        }
 
         List<ServerPacket> all = packets.collect();
         int crouchingBody = bodyId(all, crouching);
