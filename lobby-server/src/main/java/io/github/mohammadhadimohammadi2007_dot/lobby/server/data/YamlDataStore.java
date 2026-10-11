@@ -73,10 +73,14 @@ public final class YamlDataStore<T> {
     }
 
     /**
-     * Reads every entry, in file order. A missing file means no entries. Blocking: call it at startup or on
-     * {@code /setup-lobby reload}, never from a player event.
+     * Reads every entry, in file order, after any save still being written. A missing file means no
+     * entries. Blocking: call it at startup or on {@code /setup-lobby reload}, never from a player event.
      */
     public synchronized Map<String, T> load() {
+        // A save may still be on its way to disk (a reload right after a command): read what was saved last.
+        if (!writer.isShutdown()) {
+            flush();
+        }
         Map<String, T> entries = new LinkedHashMap<>();
         Map<String, ConfigurationNode> brokenEntries = new LinkedHashMap<>();
         if (!Files.isRegularFile(file)) {

@@ -113,4 +113,16 @@ class YamlDataStoreTest {
 
         assertEquals(Map.of("p", new Point("lobby", 49)), store().load());
     }
+
+    @Test
+    void loadRightAfterSaveSeesTheLastSave() {
+        YamlDataStore<Point> store = store();
+        Map<String, Point> points = new java.util.LinkedHashMap<>();
+        for (int i = 1; i <= 50; i++) {
+            points.put("p" + i, new Point("lobby", i));
+            store.save(Map.copyOf(points));
+        }
+        // Like /setup-lobby reload straight after a command: the last save may still be queued.
+        assertEquals(50, store.load().size());
+    }
 }
