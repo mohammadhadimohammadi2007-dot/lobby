@@ -8,6 +8,7 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.luckperms.api.node.types.PrefixNode;
+import net.luckperms.api.node.types.WeightNode;
 import net.minestom.server.MinecraftServer;
 
 import java.nio.file.Files;
@@ -24,6 +25,8 @@ import java.util.UUID;
 public final class SecondLuckPermsInstance {
 
     static final String GROUP = "vip";
+    static final String PARENT_GROUP = "supporter";
+    static final int WEIGHT = 40;
     static final String PREFIX = "&6[VIP] ";
     static final String PERMISSION = "lobby.command.info";
     static final String DONE = "SECOND_INSTANCE_DONE";
@@ -43,8 +46,13 @@ public final class SecondLuckPermsInstance {
                 .configurationAdapter(plugin -> new LobbyConfigAdapter(plugin, database, settings))
                 .enable();
 
+        // vip inherits "supporter", so commands.yml rules for supporter apply to vip players too.
+        Group parent = luckPerms.getGroupManager().createAndLoadGroup(PARENT_GROUP).join();
+        luckPerms.getGroupManager().saveGroup(parent).join();
         Group group = luckPerms.getGroupManager().createAndLoadGroup(GROUP).join();
         group.data().add(PrefixNode.builder(PREFIX, 100).build());
+        group.data().add(WeightNode.builder(WEIGHT).build());
+        group.data().add(InheritanceNode.builder(PARENT_GROUP).build());
         group.data().add(Node.builder(PERMISSION).build());
         luckPerms.getGroupManager().saveGroup(group).join();
         // A group change is announced as a full update, like /lp does.

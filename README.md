@@ -68,6 +68,7 @@ Type `stop` in the console to shut the server down.
 | `movement.yml` | Double jump, `/fly`, jump pads, launch pads ([guide](docs/movement-and-portals.md)) | `/setup-lobby reload` |
 | `data/portals.yml` | Portals, normally written by `/portal` ([guide](docs/movement-and-portals.md)) | `/setup-lobby reload` |
 | `display.yml` | Scoreboard, tab list, nametags, boss bar, join title, action bar ([guide](docs/display.md)) | `/setup-lobby reload` |
+| `commands.yml` | Which commands each group sees in tab completion and may type ([guide](docs/commands.md)) | `/setup-lobby reload` |
 | `messages.yml` | Every message players see ([MiniMessage](https://docs.advntr.dev/minimessage/format) format, with [placeholders](docs/placeholders.md)) | `/setup-lobby reload` |
 
 Every option has a comment above it. Missing options use the default (with a warning in the console),

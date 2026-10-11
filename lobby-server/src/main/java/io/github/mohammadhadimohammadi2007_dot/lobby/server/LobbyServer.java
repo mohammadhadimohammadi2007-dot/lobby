@@ -7,6 +7,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabilities;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSystem;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandWhitelist;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ConsoleInput;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.LobbiesCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.SetupLobbyCommand;
@@ -120,6 +121,7 @@ public final class LobbyServer implements ServerInfo {
     private MovementService movement;
     private PortalService portals;
     private NetworkCheckService networkCheck;
+    private CommandWhitelist commandWhitelist;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
 
@@ -386,6 +388,11 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
+        // Last, so it covers every command above (and the chat commands registered with the listeners).
+        EventNode<PlayerEvent> commandEvents = EventNode.type("lobby-commands", EventFilter.PLAYER);
+        MinecraftServer.getGlobalEventHandler().addChild(commandEvents);
+        commandWhitelist = new CommandWhitelist(() -> configManager.current().commands(), permissions, text, commands);
+        commandWhitelist.register(commandEvents);
     }
 
     /** Applies the options that can change while running. Called after every successful reload. */
@@ -404,7 +411,7 @@ public final class LobbyServer implements ServerInfo {
         Async.onTickThread(() -> {
             lobbies.applyWorldRules(reloaded.config().world());
             hotbar.giveAll();
-            // The operators list may have changed, which changes which commands players can see.
+            // The operators list or commands.yml may have changed, which changes which commands players can see.
             for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
                 player.refreshCommands();
             }

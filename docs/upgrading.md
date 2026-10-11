@@ -4,6 +4,10 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **New `commands.yml`.** Players now only see and may type the commands listed for their groups. The
+  bundled file lists `/spawn`, `/lobbies`, `/chat` and `/ignore` for everyone. Staff who are not
+  operators and have no `lobby.commands.bypass` need a group section, for example
+  `mod: { commands: [slowmode, fly] }`. See [commands.md](commands.md). `enabled: false` turns it off.
 - **`/lobby` is gone from the lobby server.** On most networks `/lobby` is the proxy's hub command, and the
   two collided.
   - The admin command is now `/setup-lobby` (`reload`, `info`, `setspawn`, ...). The permissions are

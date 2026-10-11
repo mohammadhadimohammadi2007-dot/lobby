@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.config;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarConfig;
@@ -22,7 +23,8 @@ import java.util.List;
  * @param warnings     non-fatal problems found while loading, ready to be logged
  */
 public record ConfigSnapshot(LobbyConfig config, IntegrationsConfig integrations, ChatConfig chat, MenuConfig menus,
-                             DisplayConfig display, HotbarConfig hotbar, MovementConfig movement, Messages messages,
+                             DisplayConfig display, HotbarConfig hotbar, MovementConfig movement, CommandsConfig commands,
+                             Messages messages,
                              List<String> warnings) {
     public ConfigSnapshot {
         warnings = List.copyOf(warnings);

@@ -14,6 +14,7 @@ import net.minestom.server.entity.Player;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -61,6 +62,12 @@ final class LuckPermsPermissionService implements PermissionService {
     public boolean hasPermission(Player player, String permission) {
         User user = luckPerms.getUserManager().getUser(player.getUuid());
         return user != null && user.getCachedData().getPermissionData().checkPermission(permission).asBoolean();
+    }
+
+    @Override
+    public OptionalInt groupWeight(String group) {
+        Group found = luckPerms.getGroupManager().getGroup(group);
+        return found == null ? OptionalInt.empty() : found.getWeight();
     }
 
     @Override

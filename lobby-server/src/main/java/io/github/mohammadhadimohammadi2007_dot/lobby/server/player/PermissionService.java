@@ -3,6 +3,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.player;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.entity.Player;
 
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -20,6 +21,14 @@ public interface PermissionService {
 
     /** True if {@code player} has {@code permission}. */
     boolean hasPermission(Player player, String permission);
+
+    /**
+     * The weight of a group in the permission plugin, or empty if it has none (or there is no plugin).
+     * Used to rank the groups of commands.yml.
+     */
+    default OptionalInt groupWeight(String group) {
+        return OptionalInt.empty();
+    }
 
     /** Rank prefix, suffix, group and meta of {@code player}. */
     PlayerMeta meta(Player player);

@@ -5,6 +5,7 @@ public enum MessageKey {
     PREFIX("prefix"),
     NO_PERMISSION("no-permission"),
     PLAYERS_ONLY("players-only"),
+    UNKNOWN_COMMAND("unknown-command"),
     SPAWN_TELEPORTED("spawn-teleported"),
     SETUP_LOBBY_USAGE("setup-lobby-usage"),
     RELOAD_DONE("reload-done"),

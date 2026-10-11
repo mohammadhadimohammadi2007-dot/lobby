@@ -1,0 +1,52 @@
+# ============================================================================
+#  commands.yml - which commands each group sees and may type
+#
+#  Only the commands listed for a player's groups are sent to their client, so tab completion shows
+#  nothing else. A command that is not listed cannot be typed either: the player gets the same answer as
+#  for a command that does not exist ("unknown-command" in messages.yml).
+#
+#  A command that is listed still needs its own permission (for example /npc needs lobby.command.npc).
+#  Operators, the console and players with "lobby.commands.bypass" see every command.
+#  Commands run by NPCs, menus, portals and hotbar items are not limited by this file, so you can hide
+#  a command from typing and still use it from a menu.
+#
+#  Changes apply with /setup-lobby reload. Full guide: docs/commands.md
+# ============================================================================
+
+# false = everyone sees every command their permissions allow.
+enabled: true
+
+# Who is in which group:
+#  - "default" is every player.
+#  - With LuckPerms, a group here is the LuckPerms group of the same name. Inherited groups count, so an
+#    admin who inherits "mod" is in "mod" too.
+#  - Without LuckPerms (or for a group LuckPerms does not have), give the permission
+#    "lobby.commands.group.<name>", e.g. lobby.commands.group.mod.
+#
+# How lists combine: a player gets the commands of all their groups. If two groups disagree about a
+# command, the group with the highest weight wins (the LuckPerms weight; without LuckPerms, "weight:"
+# below; "default" is always the lowest).
+#   name    allows the command (aliases count too: "hd" means /hologram)
+#   -name   hides it, even if a lower group allows it
+#   "*"     allows every command, except the ones this same group hides
+#
+# Velocity adds its own commands (/server, /glist...) to what the client sees. The lobby cannot hide
+# those: control them with permissions on the proxy.
+groups:
+  default:
+    commands:
+      - spawn
+      - lobbies
+      - chat
+      - ignore
+
+  # Examples (remove the # to use them):
+  # mod:
+  #   weight: 50
+  #   commands:
+  #     - slowmode
+  #     - fly
+  # admin:
+  #   weight: 100
+  #   commands:
+  #     - "*"

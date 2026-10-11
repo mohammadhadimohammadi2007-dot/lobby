@@ -84,6 +84,14 @@ class LuckPermsLiveIT {
             assertEquals(SecondLuckPermsInstance.GROUP, meta.primaryGroup());
             assertTrue(changes.contains(PLAYER_ID), "UserDataRecalculateEvent must reach onMetaChange listeners");
             assertFalse(service.hasPermission(player, Permissions.BYPASS_PROTECTION), "only the granted permission");
+            // What commands.yml uses: group membership (inherited groups included) and weights.
+            assertTrue(service.hasPermission(player, "group." + SecondLuckPermsInstance.GROUP));
+            assertTrue(service.hasPermission(player, "group." + SecondLuckPermsInstance.PARENT_GROUP),
+                    "an inherited group counts");
+            assertFalse(service.hasPermission(player, "group.admin"));
+            assertEquals(java.util.OptionalInt.of(SecondLuckPermsInstance.WEIGHT),
+                    service.groupWeight(SecondLuckPermsInstance.GROUP));
+            assertEquals(java.util.OptionalInt.empty(), service.groupWeight("no-such-group"));
         } finally {
             LuckPermsMinestom.disable();
         }

@@ -12,6 +12,8 @@ prefix: "<dark_gray>[<gold>Lobby</gold>]</dark_gray> "
 
 no-permission: "<prefix><red>You don't have permission to do that."
 players-only: "<prefix><red>Only players can use this command."
+# A command that does not exist, or one commands.yml hides from this player (the same answer, on purpose).
+unknown-command: "<red>Unknown or incomplete command."
 
 # /spawn
 spawn-teleported: "<prefix><gray>Welcome back to spawn, <white>%player_name%</white>."

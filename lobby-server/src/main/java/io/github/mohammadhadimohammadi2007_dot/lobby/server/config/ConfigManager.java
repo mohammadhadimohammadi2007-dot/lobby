@@ -4,6 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.movement.MovementConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public final class ConfigManager {
     public static final String DISPLAY_FILE = "display.yml";
     public static final String HOTBAR_FILE = "hotbar.yml";
     public static final String MOVEMENT_FILE = "movement.yml";
+    public static final String COMMANDS_FILE = "commands.yml";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigManager.class);
 
@@ -63,7 +65,8 @@ public final class ConfigManager {
      * @throws ConfigException if a file cannot be used at all
      */
     public ConfigSnapshot load() throws ConfigException {
-        for (String file : List.of(CONFIG_FILE, INTEGRATIONS_FILE, CHAT_FILE, MENUS_FILE, DISPLAY_FILE, HOTBAR_FILE, MOVEMENT_FILE, MESSAGES_FILE)) {
+        for (String file : List.of(CONFIG_FILE, INTEGRATIONS_FILE, CHAT_FILE, MENUS_FILE, DISPLAY_FILE, HOTBAR_FILE, MOVEMENT_FILE, COMMANDS_FILE,
+                MESSAGES_FILE)) {
             try {
                 if (ConfigFiles.createIfMissing(dataDir, file)) {
                     LOGGER.info("Created default {}", file);
@@ -136,11 +139,16 @@ public final class ConfigManager {
         MovementConfig movement = MovementConfig.read(movementReader);
         warnings.addAll(movementReader.warnings());
 
+        ConfigReader commandsReader = reader(dataDir, COMMANDS_FILE);
+        CommandsConfig commands = CommandsConfig.read(commandsReader);
+        warnings.addAll(commandsReader.warnings());
+
         ConfigReader messagesReader = reader(dataDir, MESSAGES_FILE);
         Messages messages = Messages.read(messagesReader);
         warnings.addAll(messagesReader.warnings());
 
-        return new ConfigSnapshot(config, integrations, chat, menus, display, hotbar, movement, messages, warnings);
+        return new ConfigSnapshot(config, integrations, chat, menus, display, hotbar, movement, commands, messages,
+                warnings);
     }
 
     private static ConfigReader reader(Path dataDir, String fileName) throws ConfigException {
