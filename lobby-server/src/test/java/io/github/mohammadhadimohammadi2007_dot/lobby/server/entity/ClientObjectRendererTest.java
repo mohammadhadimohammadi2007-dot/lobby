@@ -176,7 +176,7 @@ class ClientObjectRendererTest {
         TestConnection elsewhere = env.createConnection(new GameProfile(UUID.randomUUID(), "Cid"));
         inLobby.connect(map, ORIGIN);
         inSecondLobby.connect(secondLobby, ORIGIN);
-        // Same coordinates, different world: the parkour map of phase 4 must not show lobby holograms.
+        // Same coordinates, different world: a PvP arena world must not show lobby holograms.
         elsewhere.connect(otherWorld, ORIGIN);
         TextObject hologram = new TextObject("Welcome", false);
         hologram.scope = WorldScope.mainMap(map);

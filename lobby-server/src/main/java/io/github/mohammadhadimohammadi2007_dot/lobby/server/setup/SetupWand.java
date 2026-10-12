@@ -41,8 +41,8 @@ import java.util.function.Function;
  * The setup wand ({@code /setup-lobby wand}, also {@code /portal wand}), one tool for everything set up in
  * the world:
  * <ul>
- *   <li>hit a block: corner 1 of the selection; right-click a block: corner 2. Portals, and later parkour,
- *       PvP and elytra regions, are made from this selection;</li>
+ *   <li>hit a block: corner 1 of the selection; right-click a block: corner 2. Portals, and later PvP areas,
+ *       are made from this selection;</li>
  *   <li>click an NPC or hologram: it becomes the selected object (no actions run), for the edit
  *       commands and menus;</li>
  *   <li>sneak and click a block inside a region (a portal...): that region becomes the selected object.</li>

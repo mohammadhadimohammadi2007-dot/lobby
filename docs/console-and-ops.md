@@ -111,8 +111,8 @@ moved operator confirms once with a code on their first join.
 | Sneak and hit a block inside a portal | Selects the portal |
 
 The selection is outlined with green particles, and a selected object with a white column, which only you
-see while you hold the wand. Portals are made from the selection (`/portal create <name>`); parkour, PvP and
-elytra areas will use it too. The wand never breaks or places blocks.
+see while you hold the wand. Portals are made from the selection (`/portal create <name>`); PvP areas will use it
+too. The wand never breaks or places blocks.
 
 **Check it worked:** hit one block and right-click another: the chat says "Selection: N blocks" and the box
 is outlined.

@@ -130,7 +130,8 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
    server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads ← *done*
-4. **Fun, social and staff tools** - parkour, PvP area, cosmetics, daily rewards, vanish, in-game editors
+4. **Fun, social and staff tools** - addon API, PvP area, cosmetics, coins and daily rewards,
+   staff tools
 5. **Production** - load testing (250-300 bots, mixed versions), Prometheus metrics, graceful shutdown, CI and Docker
 
 ## Known issues

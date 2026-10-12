@@ -184,7 +184,7 @@ More: holograms ([holograms.md](holograms.md)), portals you walk through (made w
 on the hotbar ([menus.md](menus.md), [hotbar.md](hotbar.md)).
 
 **Check it worked:** clicking the NPC sends you to a BedWars server. `/setup-lobby setup` no longer lists
-"Group bedwars: nothing leads there", and `/setup-lobby doctor` reports no unknown names (a typo in a group
+"Group bedwars: no NPC, portal, menu or hotbar item leads there", and `/setup-lobby doctor` reports no unknown names (a typo in a group
 name shows up there).
 
 ## 12. Make it yours

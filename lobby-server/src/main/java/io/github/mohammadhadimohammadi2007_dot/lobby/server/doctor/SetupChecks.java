@@ -29,7 +29,7 @@ public final class SetupChecks {
 
     private final List<Supplier<List<Check>>> extraSteps = new ArrayList<>();
 
-    /** Adds checks of a feature (parkour, PvP...) to the end of {@code /setup-lobby setup}. */
+    /** Adds checks of a feature (PvP...) to the end of {@code /setup-lobby setup}. */
     public void addSetupStep(Supplier<List<Check>> step) {
         extraSteps.add(step);
     }
@@ -167,7 +167,8 @@ public final class SetupChecks {
                 continue;
             }
             checks.add(Check.info("Group " + group, "no NPC, portal, menu or hotbar item leads there yet. Stand where"
-                    + " it should be and create an NPC that joins it:", "/npc create " + group));
+                    + " it should be, create an NPC and give it the action connect_group: " + group + " (see"
+                    + " docs/npcs.md):", "/npc create " + group));
         }
         return checks;
     }

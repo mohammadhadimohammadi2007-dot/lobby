@@ -133,9 +133,9 @@ class SetupChecksTest {
 
     @Test
     void featuresAddTheirOwnSetupSteps() {
-        checks.addSetupStep(() -> List.of(Check.info("Parkour", "not set up", "/parkour create ")));
+        checks.addSetupStep(() -> List.of(Check.info("PvP", "not set up", "/pvp create ")));
         List<Check> setup = checks.setup(network());
-        assertEquals("Parkour", setup.getLast().title());
+        assertEquals("PvP", setup.getLast().title());
     }
 
     private static SetupFacts withBridge(boolean seen, Optional<BridgeMessage.ProxyInfo> proxy, int joined) {
