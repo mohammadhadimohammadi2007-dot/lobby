@@ -327,5 +327,12 @@ connect-unknown: "<prefix><red><white><server></white> does not exist. Please te
 connect-failed: "<prefix><red>Could not send you to <white><server></white>. Please try again."
 # Shown while the proxy moves the player. <server>
 connecting: "<prefix><gray>Sending you to <white><server></white>..."
+# A "player_command" (not a lobby command) or "proxy_command" action, but there is no proxy to run it on
+# (standalone, BungeeCord, or the bridge is off). <command>
+proxy-command-not-available: "<prefix><red><white>/<command></white> is not available here: it needs the network's proxy, and this lobby runs without one."
+# The proxy has no such command, or the player may not use it there. <command>
+proxy-command-unknown: "<prefix><red><white>/<command></white> is not available to you on this network."
+# The proxy did not run it (it did not answer, its bridge is too old, or it turned player commands off). <command>
+proxy-command-failed: "<prefix><red>Could not run <white>/<command></white> right now. Please try again later."
 # A "transfer" action for a client older than 1.20.5, which cannot be transferred. <host>
 transfer-not-supported: "<prefix><red>Your Minecraft version cannot switch servers this way. Join <white><host></white> directly."

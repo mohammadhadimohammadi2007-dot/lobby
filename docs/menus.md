@@ -32,6 +32,28 @@ menus:
         click-cooldown: 250       # milliseconds
 ```
 
+## Sending players to servers, and proxy commands
+
+The same actions as everywhere else ([NPCs](npcs.md#sending-players-to-servers-and-proxy-commands)):
+
+| Action | What it does |
+|---|---|
+| `connect: <server>` | Sends the player to that server (its name in `velocity.toml`) |
+| `connect_group: <group>` | Sends the player to the best server of a group from the bridge's `config.toml` (Velocity with the bridge) |
+| `player_command: <command>` | Runs the command as the player. A lobby command (`spawn`, `lobbies`...) runs on the lobby; **any other command is sent to the proxy and runs there as the player**, for example `player_command: server bedwars` or a queue plugin's `player_command: queue bedwars` |
+| `proxy_command: <command>` | Always runs on the proxy as the player, for a command both have (such as the proxy's `/hub` or `/lobby`) |
+
+- Commands on the proxy run with **the player's own permissions there**: a player can only run what they
+  could type themselves. If the proxy has no such command, or the player may not use it, they are told
+  (`proxy-command-unknown` in messages.yml) and the console names the command, which also shows typos.
+- This needs Velocity with lobby-bridge 0.5 or newer, and `player-commands = true` in the bridge's
+  `config.toml` (the default). In standalone mode, or behind BungeeCord, the player is told that the
+  command is not available without a proxy (`proxy-command-not-available`), and the console says why once.
+- Placeholders work: `player_command: party join %player_name%`.
+- Only actions set up by admins do this. What a player types is never passed on by the lobby.
+- For switching servers, `connect` and `connect_group` are better than `player_command: server ...`: they
+  say why it did not work (full, offline) and push a player back out of a portal.
+
 ## One slot, different items: `show-if`
 
 Several entries may use the same slot. The first one whose `show-if` conditions all hold is shown, so a

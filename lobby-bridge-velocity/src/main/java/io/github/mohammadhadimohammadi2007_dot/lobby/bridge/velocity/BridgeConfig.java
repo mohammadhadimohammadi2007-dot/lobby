@@ -24,10 +24,12 @@ import java.util.Set;
  * @param groups                group name to server names, in file order (always has {@code lobbies})
  * @param strategies            group name to how its server is picked; groups not listed use least-players
  * @param joinFullPermission    permission that lets a player join a server that is already full
+ * @param playerCommands        true if lobbies may run commands on the proxy as a player (their actions)
  */
 record BridgeConfig(Set<String> lobbyServers, int updateIntervalSeconds, int statusIntervalSeconds,
                     Set<String> allowedCommands, Map<String, List<String>> groups,
-                    Map<String, ServerPicker.Strategy> strategies, String joinFullPermission) {
+                    Map<String, ServerPicker.Strategy> strategies, String joinFullPermission,
+                    boolean playerCommands) {
 
     /** Group that lists every lobby; added automatically. */
     static final String LOBBIES_GROUP = "lobbies";
@@ -102,8 +104,9 @@ record BridgeConfig(Set<String> lobbyServers, int updateIntervalSeconds, int sta
             }
         }
         String joinFull = toml.getString("join-full-permission", DEFAULT_JOIN_FULL_PERMISSION).trim();
+        boolean playerCommands = toml.getBoolean("player-commands", true);
         return new BridgeConfig(Set.copyOf(lobbies), update, status, Set.copyOf(allowed), groups,
-                Map.copyOf(strategies), joinFull);
+                Map.copyOf(strategies), joinFull, playerCommands);
     }
 
     /** How {@code group} picks its server. */

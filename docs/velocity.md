@@ -49,6 +49,7 @@ scoreboards and holograms.
    update-interval = 2                      # seconds between player count updates
    status-interval = 10                     # seconds between online/offline pings
    allowed-commands = ["mute", "tempmute", "warn"]   # console commands lobbies may request (chat auto-mute)
+   player-commands = true                   # NPCs and menus may run proxy commands as the clicking player
    [groups]
    bedwars = ["bw-1", "bw-2"]
    ```
@@ -91,7 +92,13 @@ server shows as offline, and chat auto-mute falls back to a local temporary mute
 
 The bridge only ever runs console commands whose first word is in `allowed-commands`, and only when a lobby
 server (never a player) asks. Every command it runs is written to the proxy log. Set `allowed-commands = []`
-to turn this off completely. Wire format and security details: [bridge-protocol.md](bridge-protocol.md).
+to turn this off completely.
+
+NPCs, menus, hotbar items and portals can also run proxy commands **as the player who clicked**
+(`player_command: server bedwars`, a queue plugin's `player_command: queue bedwars`, or `proxy_command:`;
+see [npcs.md](npcs.md#sending-players-to-servers-and-proxy-commands)). The player's own permissions on the
+proxy apply, so they can only run what they could type themselves. `player-commands = false` turns this
+off. Wire format and security details: [bridge-protocol.md](bridge-protocol.md).
 
 ## Skins
 

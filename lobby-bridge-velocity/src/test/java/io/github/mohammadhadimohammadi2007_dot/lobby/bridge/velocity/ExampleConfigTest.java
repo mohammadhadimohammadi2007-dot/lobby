@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** The bridge config of examples/network reads as documented. */
 class ExampleConfigTest {
@@ -30,5 +32,21 @@ class ExampleConfigTest {
         assertEquals(List.of("lobby-1", "lobby-2"), config.groups().get("lobbies"), "added automatically");
         assertEquals(Map.of("bedwars", ServerPicker.Strategy.FILL_FIRST, "skywars", ServerPicker.Strategy.LEAST_PLAYERS),
                 config.strategies());
+        assertTrue(config.playerCommands());
+    }
+
+    @Test
+    void theBundledDefaultReadsAndAllowsPlayerCommands() throws Exception {
+        BridgeConfig config = BridgeConfig.load(dir, NOPLogger.NOP_LOGGER);
+
+        assertTrue(Files.exists(dir.resolve("config.toml")));
+        assertTrue(config.playerCommands());
+    }
+
+    @Test
+    void playerCommandsCanBeTurnedOff() throws Exception {
+        Files.writeString(dir.resolve("config.toml"), "lobby-servers = [\"lobby\"]\nplayer-commands = false\n");
+
+        assertFalse(BridgeConfig.load(dir, NOPLogger.NOP_LOGGER).playerCommands());
     }
 }

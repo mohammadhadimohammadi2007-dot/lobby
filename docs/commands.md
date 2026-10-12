@@ -58,7 +58,8 @@ though `default` allows it.
 
 Commands run by NPCs, menus, portals and hotbar items (`player_command:`) are not limited by
 `commands.yml`. You can hide a command from typing and still offer it from a menu. The command's own
-permission still applies.
+permission still applies. A `player_command` the lobby does not have (such as `server bedwars`) runs on the
+proxy as the player ([how](npcs.md#sending-players-to-servers-and-proxy-commands)).
 
 ## What the lobby cannot hide
 

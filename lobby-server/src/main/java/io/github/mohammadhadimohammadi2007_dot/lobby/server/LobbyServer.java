@@ -20,6 +20,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.Region;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionListener;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeConnector;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeProxyCommands;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.ClientCapabilities;
@@ -408,6 +409,7 @@ public final class LobbyServer implements ServerInfo {
         actions = new ActionServices(configManager, text, permissions, bridge);
         if (bridge.enabled()) {
             actions.connector(new BridgeConnector(bridge, text));
+            actions.proxyCommands(new BridgeProxyCommands(bridge, text));
             LiveSkinUpdater.register(bridge);
         } else if (snapshot.config().connection().mode() == ConnectionMode.BUNGEECORD) {
             actions.connector(new BungeeConnector(text));

@@ -119,6 +119,16 @@ public final class BridgeCodec {
                     out.writeBoolean(msg.viaBackwards());
                     out.writeBoolean(msg.viaRewind());
                 }
+                case BridgeMessage.PlayerCommandRequest msg -> {
+                    writeString(out, msg.requestId());
+                    writeUuid(out, msg.playerId());
+                    writeText(out, msg.command());
+                }
+                case BridgeMessage.PlayerCommandResult msg -> {
+                    writeString(out, msg.requestId());
+                    writeUuid(out, msg.playerId());
+                    out.writeByte(msg.outcome().id());
+                }
                 case BridgeMessage.Unknown msg ->
                         throw new IllegalArgumentException("Cannot encode unknown message type " + msg.unknownTypeId());
             }
@@ -166,6 +176,10 @@ public final class BridgeCodec {
                         new BridgeMessage.SkinUpdate(readUuid(in), readText(in), readText(in));
                 case BridgeMessage.ProxyInfo.TYPE_ID -> new BridgeMessage.ProxyInfo(readString(in), readString(in),
                         in.readBoolean(), in.readBoolean(), in.readBoolean(), in.readBoolean());
+                case BridgeMessage.PlayerCommandRequest.TYPE_ID ->
+                        new BridgeMessage.PlayerCommandRequest(readString(in), readUuid(in), readText(in));
+                case BridgeMessage.PlayerCommandResult.TYPE_ID -> new BridgeMessage.PlayerCommandResult(readString(in),
+                        readUuid(in), BridgeMessage.PlayerCommandResult.Outcome.fromId(in.readUnsignedByte()));
                 default -> new BridgeMessage.Unknown(typeId);
             };
             if (!(message instanceof BridgeMessage.Unknown) && in.available() > 0) {

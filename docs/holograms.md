@@ -135,7 +135,8 @@ Rotation, brightness and the shadow are drawn by the client's display entity, so
 Left and right clicks both run the list, once per click: holding the button down does not repeat it,
 and the `click-cooldown` in the file (500 ms by default) is the shortest time between two runs. Every action the
 lobby has works here, including `connect`, `lobby`, `open_menu`, `message`,
-`title`, `sound`, `teleport`, `player_command`, `console_command` and `random`.
+`title`, `sound`, `teleport`, `player_command`, `proxy_command`, `console_command` and `random` (see
+[sending players to servers, and proxy commands](npcs.md#sending-players-to-servers-and-proxy-commands)).
 
 Because holograms are packets, this needs the raw click packet from the client: left clicks arrive as
 an attack, right clicks as an interact, and only the main hand counts, so one click is one click.

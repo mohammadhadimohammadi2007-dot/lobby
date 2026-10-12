@@ -42,12 +42,18 @@ public final class BridgeService {
     private static final long COMMAND_TIMEOUT_SECONDS = 10;
     /** How long to wait for the proxy to answer a connect request. */
     private static final long CONNECT_TIMEOUT_SECONDS = 10;
+    /** How long to wait for the proxy to answer a player command request. */
+    private static final long PLAYER_COMMAND_TIMEOUT_SECONDS = 10;
+    /** The first bridge version that runs commands as a player ({@link BridgeMessage.PlayerCommandRequest}). */
+    public static final String PLAYER_COMMANDS_SINCE = "0.5.0";
 
     private final boolean listening;
     private final NetworkState networkState = new NetworkState();
     private final Map<UUID, ClientCapabilities> capabilities = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<BridgeMessage.CommandResult>> pendingCommands = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<BridgeMessage.ConnectResult>> pendingConnects = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<BridgeMessage.PlayerCommandResult>> pendingPlayerCommands =
+            new ConcurrentHashMap<>();
     private final List<Consumer<BridgeMessage.SkinUpdate>> skinListeners = new CopyOnWriteArrayList<>();
     private volatile BridgeMessage.@Nullable ProxyInfo proxyInfo;
 
@@ -120,6 +126,56 @@ public final class BridgeService {
                 .whenComplete((ignored, error) -> pendingConnects.remove(requestId));
     }
 
+    /**
+     * Asks the proxy to run a command as {@code player}, with the player's permissions on the proxy. Only for
+     * actions an admin configured, never for text a player typed.
+     *
+     * @param command without the leading {@code /}
+     * @return what happened; completes exceptionally if the bridge is off or does not answer
+     */
+    public CompletableFuture<BridgeMessage.PlayerCommandResult> requestPlayerCommand(Player player, String command) {
+        if (!listening) {
+            return CompletableFuture.failedFuture(new IllegalStateException("the bridge is turned off"));
+        }
+        String requestId = shortId();
+        CompletableFuture<BridgeMessage.PlayerCommandResult> result = new CompletableFuture<>();
+        pendingPlayerCommands.put(requestId, result);
+        if (!send(player, new BridgeMessage.PlayerCommandRequest(requestId, player.getUuid(), command))) {
+            pendingPlayerCommands.remove(requestId);
+            return CompletableFuture.failedFuture(new IllegalStateException("could not send the request"));
+        }
+        return result.orTimeout(PLAYER_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .whenComplete((ignored, error) -> pendingPlayerCommands.remove(requestId));
+    }
+
+    /**
+     * False if the bridge on the proxy is known to be older than {@link #PLAYER_COMMANDS_SINCE}, so it would
+     * never answer a player command. True while its version is not known yet.
+     */
+    public boolean bridgeRunsPlayerCommands() {
+        BridgeMessage.ProxyInfo info = proxyInfo;
+        return info == null || atLeast(info.bridgeVersion(), PLAYER_COMMANDS_SINCE);
+    }
+
+    /** True if {@code version} (like {@code 0.5.0}) is at least {@code minimum}; text that is no version counts as new. */
+    static boolean atLeast(String version, String minimum) {
+        String[] have = version.strip().split("[.-]");
+        String[] want = minimum.split("\\.");
+        for (int i = 0; i < want.length; i++) {
+            int wanted = Integer.parseInt(want[i]);
+            int part;
+            try {
+                part = i < have.length ? Integer.parseInt(have[i]) : 0;
+            } catch (NumberFormatException e) {
+                return true;
+            }
+            if (part != wanted) {
+                return part > wanted;
+            }
+        }
+        return true;
+    }
+
     /** Runs {@code listener} when the proxy reports a changed skin. Called on a network thread. */
     public void onSkinUpdate(Consumer<BridgeMessage.SkinUpdate> listener) {
         skinListeners.add(listener);
@@ -147,11 +203,13 @@ public final class BridgeService {
             case BridgeMessage.ChatRelay ignored -> LOGGER.debug("Ignored relayed chat from an older lobby");
             case BridgeMessage.CommandResult result -> completeCommand(result);
             case BridgeMessage.ConnectResult result -> completeConnect(result);
+            case BridgeMessage.PlayerCommandResult result -> completePlayerCommand(result);
             case BridgeMessage.SkinUpdate skin -> skinListeners.forEach(listener -> listener.accept(skin));
             case BridgeMessage.ProxyInfo info -> proxyInfo = info;
             // Only the proxy receives requests; a newer proxy may also send types we do not know yet.
             case BridgeMessage.CommandRequest ignored -> LOGGER.debug("Ignored a command request sent to the lobby");
             case BridgeMessage.ConnectRequest ignored -> LOGGER.debug("Ignored a connect request sent to the lobby");
+            case BridgeMessage.PlayerCommandRequest ignored -> LOGGER.debug("Ignored a player command request sent to the lobby");
             case BridgeMessage.Unknown unknown -> LOGGER.debug("Ignored unknown bridge message type {}", unknown.typeId());
         }
     }
@@ -165,6 +223,13 @@ public final class BridgeService {
 
     private void completeConnect(BridgeMessage.ConnectResult result) {
         CompletableFuture<BridgeMessage.ConnectResult> pending = pendingConnects.remove(result.requestId());
+        if (pending != null) {
+            pending.complete(result);
+        }
+    }
+
+    private void completePlayerCommand(BridgeMessage.PlayerCommandResult result) {
+        CompletableFuture<BridgeMessage.PlayerCommandResult> pending = pendingPlayerCommands.remove(result.requestId());
         if (pending != null) {
             pending.complete(result);
         }

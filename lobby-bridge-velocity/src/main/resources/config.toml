@@ -21,6 +21,12 @@ allowed-commands = ["mute", "tempmute", "warn"]
 # Permission that lets a player join a server that is already full (staff). Empty = nobody may.
 join-full-permission = "lobby.bridge.join-full"
 
+# Lets the lobby's NPCs, menus, hotbar items and portals run proxy commands AS the player who clicked, for
+# example "player_command: server bedwars" or a queue plugin's "/queue bedwars". The player's own
+# permissions on the proxy apply, so they can only run what they could type themselves. Only actions set
+# up by the lobby's admins do this, never text a player types. false = lobbies cannot run player commands.
+player-commands = true
+
 # Server groups the lobby can show, for example in a server selector.
 # Each line is: group-name = ["server", "server", ...] using names from velocity.toml.
 # A group called "lobbies" with your lobby-servers is added automatically if you do not define it.

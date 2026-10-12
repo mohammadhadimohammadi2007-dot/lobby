@@ -9,6 +9,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.MessageA
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.NeedPermissionAction;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.OpenMenuAction;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.PlayerCommandAction;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.ProxyCommandAction;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.RandomAction;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.SoundAction;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.type.TeleportAction;
@@ -64,6 +65,7 @@ public final class ActionParser {
         TYPES.put("message", argument -> new MessageAction(required(argument, "the text")));
         TYPES.put("player_command", argument -> new PlayerCommandAction(command(argument)));
         TYPES.put("console_command", argument -> new ConsoleCommandAction(command(argument)));
+        TYPES.put("proxy_command", argument -> new ProxyCommandAction(command(argument)));
         TYPES.put("connect", argument -> new ConnectAction(word(argument, "a server name"), false));
         TYPES.put("connect_group", argument -> new ConnectAction(word(argument, "a group name"), true));
         TYPES.put("lobby", argument -> new LobbyAction(integer(argument, 1, MAX_LOBBY, "a lobby number")));

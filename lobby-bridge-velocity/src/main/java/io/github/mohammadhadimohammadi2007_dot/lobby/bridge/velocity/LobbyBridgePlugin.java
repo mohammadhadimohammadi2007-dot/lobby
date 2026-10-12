@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 public final class LobbyBridgePlugin {
 
     /** This plugin's version, also sent to the lobbies (ProxyInfo). */
-    static final String VERSION = "0.4.0";
+    static final String VERSION = "0.5.0";
 
     private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(BridgeProtocol.CHANNEL);
     private static final long PING_TIMEOUT_SECONDS = 3;
@@ -166,6 +166,7 @@ public final class LobbyBridgePlugin {
             case BridgeMessage.ChatRelay ignored -> logger.debug("Dropped relayed chat from '{}'", origin);
             case BridgeMessage.CommandRequest request -> runCommand(connection, origin, request);
             case BridgeMessage.ConnectRequest request -> connectPlayer(connection, origin, request);
+            case BridgeMessage.PlayerCommandRequest request -> runPlayerCommand(connection, origin, request);
             default -> logger.debug("Ignored bridge message type {} from '{}'", message.typeId(), origin);
         }
     }
@@ -238,6 +239,49 @@ public final class LobbyBridgePlugin {
             }
             send(connection, result(request, ok ? Outcome.CONNECTED : Outcome.REFUSED, chosen));
         });
+    }
+
+    /**
+     * Runs a command on the proxy as a player, because an action in their lobby asked (an NPC or menu item an
+     * admin set up). The player's own permissions apply, and only the lobby the player is on may ask.
+     */
+    private void runPlayerCommand(ServerConnection connection, String origin, BridgeMessage.PlayerCommandRequest request) {
+        if (!config.playerCommands()) {
+            logger.warn("Lobby {} asked to run '/{}' as a player, but player-commands is false in config.toml.",
+                    origin, request.command());
+            send(connection, commandResult(request, BridgeMessage.PlayerCommandResult.Outcome.FAILED));
+            return;
+        }
+        Player player = proxy.getPlayer(request.playerId()).orElse(null);
+        if (player == null || player.getCurrentServer()
+                .filter(current -> current.getServerInfo().getName().equals(origin)).isEmpty()) {
+            logger.warn("Lobby {} asked to run a command as a player who is not on it. Ignored.", origin);
+            send(connection, commandResult(request, BridgeMessage.PlayerCommandResult.Outcome.FAILED));
+            return;
+        }
+        String command = PlayerCommands.normalize(request.command());
+        if (command == null) {
+            logger.warn("Lobby {} sent an empty or broken player command. Ignored.", origin);
+            send(connection, commandResult(request, BridgeMessage.PlayerCommandResult.Outcome.FAILED));
+            return;
+        }
+        proxy.getCommandManager().executeAsync(player, command).whenComplete((found, error) -> {
+            BridgeMessage.PlayerCommandResult.Outcome outcome;
+            if (error != null) {
+                logger.warn("'/{}' run as {} from lobby {} failed: {}", command, player.getUsername(), origin,
+                        error.getMessage());
+                outcome = BridgeMessage.PlayerCommandResult.Outcome.FAILED;
+            } else {
+                outcome = Boolean.TRUE.equals(found) ? BridgeMessage.PlayerCommandResult.Outcome.EXECUTED
+                        : BridgeMessage.PlayerCommandResult.Outcome.NOT_FOUND;
+            }
+            send(connection, commandResult(request, outcome));
+        });
+    }
+
+    private static BridgeMessage.PlayerCommandResult commandResult(BridgeMessage.PlayerCommandRequest request,
+                                                                   BridgeMessage.PlayerCommandResult.Outcome outcome) {
+        return new BridgeMessage.PlayerCommandResult(request.requestId(), request.playerId(), outcome);
     }
 
     private static BridgeMessage.ConnectResult result(BridgeMessage.ConnectRequest request, Outcome outcome,

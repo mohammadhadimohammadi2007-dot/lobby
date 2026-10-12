@@ -4,7 +4,7 @@ The Velocity plugin (`lobby-bridge.jar`) and the lobby servers talk over the plu
 **`lobby:bridge`**. You only need this page if you want to write your own bridge (for example for another
 proxy). The reference implementation is `BridgeCodec` in the `lobby-common` module.
 
-Protocol version **1**, message types 1 to 10.
+Protocol version **1**, message types 1 to 12.
 
 ## Directions
 
@@ -20,6 +20,8 @@ Protocol version **1**, message types 1 to 10.
 | 8 | ConnectResult | proxy → lobby |
 | 9 | SkinUpdate | proxy → lobby |
 | 10 | ProxyInfo | proxy → lobby (bridge 0.4+) |
+| 11 | PlayerCommandRequest | lobby → proxy (bridge 0.5+) |
+| 12 | PlayerCommandResult | proxy → lobby (bridge 0.5+) |
 
 Plugin messages travel through a player's connection. Messages from the lobby to the proxy are sent
 through any player on that lobby; a lobby with nobody online can neither send nor receive (harmless:
@@ -37,6 +39,11 @@ A player could try to send a fake `lobby:bridge` message, so:
 - a `ConnectRequest` is only carried out for a player who is really on the lobby that asked, so one lobby
   cannot pull players off another server, and a player may only join a full server with the permission in
   `join-full-permission`;
+- a `PlayerCommandRequest` only runs if `player-commands` is true in `config.toml`, for a player who is
+  really on the lobby that asked, with no line breaks or control characters and at most 256 characters. It
+  runs **as that player**, so the player's own permissions on the proxy decide; a lobby can make a player
+  run only what that player could type. The lobby only sends it for actions its admins set up (NPCs,
+  holograms, menus, hotbar items, portals), never for text a player typed;
 - the lobby ignores the channel completely in `standalone` mode (there is no proxy to trust);
 - the decoder rejects messages that are too large or malformed.
 
@@ -174,6 +181,36 @@ profile every two seconds, so this works with any plugin that changes the profil
 | value     | text | the base64 texture value from Mojang's session server      |
 | signature | text | Mojang's signature for `value`, or empty if unsigned       |
 
+## Type 11 – PlayerCommandRequest
+
+The lobby asks the proxy to run a command as a player: a `player_command` action whose command the lobby
+does not have (`server bedwars`, a queue plugin's `queue bedwars`), or a `proxy_command` action. See
+[Security](#security).
+
+| Field     | Type   | Notes                     |
+|-----------|--------|---------------------------|
+| requestId | string | echoed in the result      |
+| playerId  | uuid   | the player to run it as   |
+| command   | text   | without the leading `/`   |
+
+The lobby only sends it to a bridge that reported version 0.5.0 or newer in `ProxyInfo` (or whose version
+it does not know yet). A 0.4 bridge would ignore it and never answer.
+## Type 12 – PlayerCommandResult
+
+| Field     | Type   | Notes                             |
+|-----------|--------|-----------------------------------|
+| requestId | string | from the request                  |
+| playerId  | uuid   | the player the request was about  |
+| outcome   | u8     | see below                         |
+
+| Outcome | Value | Meaning |
+|---------|-------|---------|
+| EXECUTED | 0 | The proxy ran the command. |
+| NOT_FOUND | 1 | The proxy has no such command, or the player may not use it (Velocity hides commands a player has no permission for). |
+| FAILED | 2 | Not run: `player-commands` is false, the player is not on that lobby, the command was empty or too long, or it threw an error. |
+
+A value this build does not know is read as `FAILED`.
+
 ## Without the bridge
 
 Server switching still works in some cases:
@@ -183,6 +220,10 @@ Server switching still works in some cases:
 | Velocity with the bridge | `ConnectRequest`, with groups, status and full checks |
 | BungeeCord or Waterfall | the proxy's own `BungeeCord` plugin message channel; `connect_group` is not possible, because BungeeCord tells the lobby nothing about its servers |
 | Standalone | not possible; the player is told so. A `transfer` action can send modern clients straight to another address instead |
+
+Commands on the proxy (`proxy_command`, and a `player_command` the lobby does not have) only work with
+Velocity and the bridge; in standalone mode and behind BungeeCord the player is told they are not
+available.
 
 ## Compatibility
 

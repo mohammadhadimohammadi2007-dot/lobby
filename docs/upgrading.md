@@ -4,6 +4,13 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **`player_command` actions with a command the lobby does not have now run on the proxy**, as the player
+  (for example `player_command: server bedwars`, which used to answer "unknown command"). New action
+  `proxy_command: <command>` for commands both have. This needs **lobby-bridge 0.5.0** on the proxy: update
+  `lobby-bridge.jar`. Its `config.toml` gets the option `player-commands` (default `true`; add it by hand to
+  turn it off). New messages: `proxy-command-not-available`, `proxy-command-unknown`, `proxy-command-failed`.
+  See [npcs.md](npcs.md#sending-players-to-servers-and-proxy-commands).
+
 - **Addons.** The lobby now reads jars from an `addons/` folder (created on the first start) and lists them
   with `/setup-lobby addons`; see [addons.md](addons.md). Nothing changes while the folder is empty. Start
   scripts and Docker setups that copy the server folder should keep `addons/` (it also holds the addons'

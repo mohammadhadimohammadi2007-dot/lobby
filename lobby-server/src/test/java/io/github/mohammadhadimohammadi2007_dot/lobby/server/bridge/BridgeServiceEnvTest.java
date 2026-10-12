@@ -3,7 +3,16 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeCodec;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeProtocol;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.network.packet.server.play.SystemChatPacket;
+import net.minestom.server.network.player.GameProfile;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Path;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.common.PluginMessagePacket;
 import net.minestom.testing.Collector;
@@ -29,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** The lobby side of bridge v2 with fake players: server status and command requests. */
 @EnvTest
 class BridgeServiceEnvTest {
+
+    @TempDir
+    Path dir;
 
     @Test
     void withoutBridgeEverythingDegradesGracefully(Env env) {
@@ -80,6 +92,88 @@ class BridgeServiceEnvTest {
         bridge.receive(BridgeCodec.encode(new BridgeMessage.CommandResult(request.requestId(), true, "")), player.getUsername());
 
         assertTrue(result.get(1, TimeUnit.SECONDS).accepted());
+    }
+
+    @Test
+    void playerCommandsAreSentAsThePlayerAndTheAnswerIsShown(Env env) throws Exception {
+        BridgeService bridge = new BridgeService(true);
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player player = connection.connect(env.createFlatInstance(), new Pos(0, 42, 0));
+        Collector<PluginMessagePacket> outgoing = connection.trackIncoming(PluginMessagePacket.class);
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+        BridgeProxyCommands commands = new BridgeProxyCommands(bridge, text());
+
+        CompletableFuture<Boolean> ran = commands.run(player, "queue bedwars", "NPC 'bedwars'");
+
+        BridgeMessage.PlayerCommandRequest request = assertInstanceOf(BridgeMessage.PlayerCommandRequest.class,
+                outgoing.collect().stream().filter(packet -> packet.channel().equals(BridgeProtocol.CHANNEL))
+                        .map(packet -> decode(packet.data())).findFirst().orElseThrow());
+        assertEquals(player.getUuid(), request.playerId());
+        assertEquals("queue bedwars", request.command());
+        assertFalse(ran.isDone());
+
+        bridge.receive(BridgeCodec.encode(new BridgeMessage.PlayerCommandResult(request.requestId(), player.getUuid(),
+                BridgeMessage.PlayerCommandResult.Outcome.NOT_FOUND)), player.getUsername());
+
+        assertFalse(ran.get(1, TimeUnit.SECONDS));
+        assertEquals(List.of("[Lobby] /queue bedwars is not available to you on this network."), plain(chat));
+    }
+
+    @Test
+    void anExecutedPlayerCommandSaysNothing(Env env) throws Exception {
+        BridgeService bridge = new BridgeService(true);
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player player = connection.connect(env.createFlatInstance(), new Pos(0, 42, 0));
+        Collector<PluginMessagePacket> outgoing = connection.trackIncoming(PluginMessagePacket.class);
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+
+        CompletableFuture<Boolean> ran = new BridgeProxyCommands(bridge, text()).run(player, "server bedwars", "test");
+        BridgeMessage.PlayerCommandRequest request = (BridgeMessage.PlayerCommandRequest) outgoing.collect().stream()
+                .filter(packet -> packet.channel().equals(BridgeProtocol.CHANNEL))
+                .map(packet -> decode(packet.data())).findFirst().orElseThrow();
+        bridge.receive(BridgeCodec.encode(new BridgeMessage.PlayerCommandResult(request.requestId(), player.getUuid(),
+                BridgeMessage.PlayerCommandResult.Outcome.EXECUTED)), player.getUsername());
+
+        assertTrue(ran.get(1, TimeUnit.SECONDS));
+        assertEquals(List.of(), plain(chat));
+    }
+
+    @Test
+    void anOlderBridgeIsNotAskedToRunPlayerCommands(Env env) throws Exception {
+        BridgeService bridge = new BridgeService(true);
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player player = connection.connect(env.createFlatInstance(), new Pos(0, 42, 0));
+        bridge.receive(BridgeCodec.encode(new BridgeMessage.ProxyInfo("0.4.0", "Velocity 3.5.1", true, true, true,
+                true)), player.getUsername());
+        Collector<PluginMessagePacket> outgoing = connection.trackIncoming(PluginMessagePacket.class);
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+
+        assertFalse(new BridgeProxyCommands(bridge, text()).run(player, "server bedwars", "test").get(1, TimeUnit.SECONDS));
+
+        assertEquals(List.of(), outgoing.collect(), "it would never answer");
+        assertEquals(List.of("[Lobby] Could not run /server bedwars right now. Please try again later."), plain(chat));
+    }
+
+    @Test
+    void bridgeVersionsAreCompared() {
+        assertTrue(BridgeService.atLeast("0.5.0", "0.5.0"));
+        assertTrue(BridgeService.atLeast("0.10.1", "0.5.0"));
+        assertTrue(BridgeService.atLeast("1.0", "0.5.0"));
+        assertTrue(BridgeService.atLeast("0.5.0-SNAPSHOT", "0.5.0"));
+        assertTrue(BridgeService.atLeast("dev", "0.5.0"), "a version that cannot be read is trusted");
+        assertFalse(BridgeService.atLeast("0.4.0", "0.5.0"));
+        assertFalse(BridgeService.atLeast("0.4.9", "0.5.0"));
+    }
+
+    private LobbyText text() throws Exception {
+        ConfigManager config = new ConfigManager(dir);
+        config.load();
+        return new LobbyText(config, new PlaceholderService(new PlaceholderRegistry()));
+    }
+
+    private static List<String> plain(Collector<SystemChatPacket> chat) {
+        return chat.collect().stream().filter(packet -> !packet.overlay())
+                .map(packet -> PlainTextComponentSerializer.plainText().serialize(packet.message())).toList();
     }
 
     private static BridgeMessage.ChatRelay chat(String text) {

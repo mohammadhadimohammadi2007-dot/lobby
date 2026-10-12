@@ -136,6 +136,43 @@ class BridgeCodecTest {
     }
 
     @Test
+    void playerCommandRequestAndResultRoundTrip() throws BridgeFormatException {
+        UUID player = UUID.randomUUID();
+        BridgeMessage.PlayerCommandRequest request = new BridgeMessage.PlayerCommandRequest("abc123", player,
+                "queue bedwars-solo");
+        assertEquals(request, BridgeCodec.decode(BridgeCodec.encode(request)));
+
+        for (BridgeMessage.PlayerCommandResult.Outcome outcome : BridgeMessage.PlayerCommandResult.Outcome.values()) {
+            BridgeMessage.PlayerCommandResult result = new BridgeMessage.PlayerCommandResult("abc123", player, outcome);
+            assertEquals(result, BridgeCodec.decode(BridgeCodec.encode(result)));
+        }
+    }
+
+    @Test
+    void playerCommandMessagesHaveStableLayouts() {
+        UUID player = new UUID(1, 2);
+        byte[] request = BridgeCodec.encode(new BridgeMessage.PlayerCommandRequest("r1", player, "server a"));
+        byte[] expected = {1, 11, 0, 2, 'r', '1', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2,
+                0, 8, 's', 'e', 'r', 'v', 'e', 'r', ' ', 'a'};
+        assertArrayEquals(expected, request);
+
+        byte[] result = BridgeCodec.encode(new BridgeMessage.PlayerCommandResult("r1", player,
+                BridgeMessage.PlayerCommandResult.Outcome.NOT_FOUND));
+        assertEquals(12, result[1]);
+        assertEquals(1, result[result.length - 1]);
+    }
+
+    @Test
+    void unknownPlayerCommandOutcomeBecomesFailed() throws BridgeFormatException {
+        byte[] data = BridgeCodec.encode(new BridgeMessage.PlayerCommandResult("abc123", UUID.randomUUID(),
+                BridgeMessage.PlayerCommandResult.Outcome.EXECUTED));
+        data[data.length - 1] = 99;
+
+        BridgeMessage.PlayerCommandResult decoded = (BridgeMessage.PlayerCommandResult) BridgeCodec.decode(data);
+        assertEquals(BridgeMessage.PlayerCommandResult.Outcome.FAILED, decoded.outcome());
+    }
+
+    @Test
     void skinUpdateRoundTripWithLongTextures() throws BridgeFormatException {
         BridgeMessage.SkinUpdate update = new BridgeMessage.SkinUpdate(UUID.randomUUID(),
                 "e".repeat(1000), "s".repeat(700));

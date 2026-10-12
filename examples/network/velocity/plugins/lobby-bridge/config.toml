@@ -11,6 +11,9 @@ allowed-commands = ["tempmute", "warn"]
 
 join-full-permission = "lobby.bridge.join-full"
 
+# NPCs and menus in the lobby may run proxy commands as the clicking player ("player_command: server parkour").
+player-commands = true
+
 # The groups the lobby's NPCs, menus and portals use ("connect_group: bedwars", %group_online_bedwars%).
 # A "lobbies" group with lobby-servers is added automatically.
 [groups]

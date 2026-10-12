@@ -302,6 +302,82 @@ public sealed interface BridgeMessage {
     }
 
     /**
+     * Lobby to proxy: run this command on the proxy as this player, with the player's own permissions there
+     * (for example {@code server bedwars} or a queue plugin's {@code queue bedwars}). Only sent for actions an
+     * admin configured (NPCs, menus, hotbar items, portals), never for text a player typed. The proxy answers
+     * with a {@link PlayerCommandResult}. Added in bridge 0.5; older bridges ignore it.
+     *
+     * @param requestId short id, echoed in the result
+     * @param playerId  the player to run it as; must be on the lobby that sent the request
+     * @param command   the command without the leading {@code /}
+     */
+    record PlayerCommandRequest(String requestId, UUID playerId, String command) implements BridgeMessage {
+        public static final int TYPE_ID = 11;
+
+        public PlayerCommandRequest {
+            Objects.requireNonNull(playerId, "playerId");
+            Objects.requireNonNull(command, "command");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
+     * Proxy to lobby: the answer to a {@link PlayerCommandRequest}.
+     *
+     * @param requestId the id from the request
+     * @param playerId  the player the request was about
+     * @param outcome   what happened
+     */
+    record PlayerCommandResult(String requestId, UUID playerId, Outcome outcome) implements BridgeMessage {
+        public static final int TYPE_ID = 12;
+
+        /** What came of a player command request. */
+        public enum Outcome {
+            /** The proxy ran the command. */
+            EXECUTED(0),
+            /** The proxy has no such command, or the player may not use it. */
+            NOT_FOUND(1),
+            /** Not run: player commands are turned off on the proxy, the player is not on that lobby, or it failed. */
+            FAILED(2);
+
+            private final int id;
+
+            Outcome(int id) {
+                this.id = id;
+            }
+
+            /** The number written on the wire. */
+            public int id() {
+                return id;
+            }
+
+            /** The outcome with this wire id, or {@link #FAILED} for a number this build does not know. */
+            public static Outcome fromId(int id) {
+                for (Outcome outcome : values()) {
+                    if (outcome.id == id) {
+                        return outcome;
+                    }
+                }
+                return FAILED;
+            }
+        }
+
+        public PlayerCommandResult {
+            Objects.requireNonNull(playerId, "playerId");
+            Objects.requireNonNull(outcome, "outcome");
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
      * A message type this build does not know, from a newer proxy or lobby. Readers ignore it, so
      * mixing versions does not break anything.
      *

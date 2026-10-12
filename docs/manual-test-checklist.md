@@ -126,7 +126,12 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
       `/portal action test add connect_group: <a real group>`: walking in connects you. With a group whose
       servers are all down, you are put back outside and pushed away, and told why.
 - [ ] The portal works in every lobby instance (`/lobbies 2`).
-
+- [ ] Behind Velocity with bridge 0.5: an NPC with `player_command: server <a real server>` sends you there;
+      one with `player_command: glist` (a Velocity command) shows the proxy's answer when you have
+      `velocity.command.glist` on the proxy; without it you get "not available to you on this network".
+      With `player-commands = false` in the bridge's config.toml you get "Could not run ... right now", and
+      the proxy log says why.
+- [ ] Standalone: the same NPC says the command needs the network's proxy; the console explains it once.
 ## 6. Network names
 
 - [ ] Behind Velocity with the bridge, rename a group in the bridge's `[groups]` and restart the proxy:

@@ -4,10 +4,13 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.TestOps;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placeholder;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderRegistry;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OperatorPermissionService;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.command.builder.Command;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.SystemChatPacket;
@@ -102,5 +105,71 @@ class ActionEnvTest {
         list("connect_group: bedwars").runFrom(0, new ActionContext(player, services, "test"));
 
         assertEquals(List.of("[Lobby] Switching servers is not available right now."), lines(chat));
+    }
+
+    /** Remembers what would have been run on the proxy. */
+    private static List<String> recordProxyCommands(ActionServices services) {
+        List<String> sent = new java.util.concurrent.CopyOnWriteArrayList<>();
+        services.proxyCommands((player, command, source) -> {
+            sent.add(player.getUsername() + ": " + command);
+            return java.util.concurrent.CompletableFuture.completedFuture(true);
+        });
+        return sent;
+    }
+
+    @Test
+    void aCommandTheLobbyDoesNotHaveGoesToTheProxyAsThePlayer(Env env) throws Exception {
+        ActionServices services = services();
+        services.text().placeholders().registry().register("test", params -> Placeholder.player(Player::getUsername));
+        List<String> proxy = recordProxyCommands(services);
+        Player player = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"))
+                .connect(env.createFlatInstance(), new Pos(0, 41, 0));
+
+        list("player_command: /server bedwars", "player_command: queue %test_name%")
+                .runFrom(0, new ActionContext(player, services, "test"));
+
+        assertEquals(List.of("Steve: server bedwars", "Steve: queue Steve"), proxy);
+    }
+
+    @Test
+    void aLobbyCommandRunsOnTheLobbyUnlessItIsAProxyCommand(Env env) throws Exception {
+        ActionServices services = services();
+        List<String> proxy = recordProxyCommands(services);
+        List<String> ranHere = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Command spawn = new Command("testspawn", "tspawn");
+        spawn.setDefaultExecutor((sender, context) -> ranHere.add(context.getInput()));
+        MinecraftServer.getCommandManager().register(spawn);
+        Player player = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"))
+                .connect(env.createFlatInstance(), new Pos(0, 41, 0));
+
+        list("player_command: testspawn", "player_command: TSPAWN", "proxy_command: testspawn")
+                .runFrom(0, new ActionContext(player, services, "test"));
+        env.tick();
+
+        assertEquals(List.of("testspawn", "tspawn"), ranHere);
+        assertEquals(List.of("Steve: testspawn"), proxy);
+    }
+
+    @Test
+    void withoutAProxyThePlayerIsToldItIsNotAvailable(Env env) throws Exception {
+        ActionServices services = services();
+        TestConnection connection = env.createConnection(new GameProfile(UUID.randomUUID(), "Steve"));
+        Player player = connection.connect(env.createFlatInstance(), new Pos(0, 41, 0));
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+
+        list("player_command: server bedwars", "proxy_command: queue bedwars")
+                .runFrom(0, new ActionContext(player, services, "test"));
+
+        assertEquals(List.of(
+                "[Lobby] /server bedwars is not available here: it needs the network's proxy, and this lobby runs without one.",
+                "[Lobby] /queue bedwars is not available here: it needs the network's proxy, and this lobby runs without one."),
+                lines(chat));
+    }
+
+    @Test
+    void lineBreaksFromPlaceholdersCannotStartASecondCommand() {
+        assertEquals("say hi op Steve", ProxyCommands.clean("/say hi\nop Steve"));
+        assertEquals(null, ProxyCommands.clean(" / "));
+        assertEquals(null, ProxyCommands.clean("x".repeat(ProxyCommands.MAX_LENGTH + 1)));
     }
 }
