@@ -29,6 +29,7 @@ public final class RegionTracker {
 
     private final Map<String, List<Region>> byOwner = new ConcurrentHashMap<>();
     private final Map<String, List<RegionListener>> listeners = new ConcurrentHashMap<>();
+    private final List<RegionListener> everyRegion = new CopyOnWriteArrayList<>();
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
     private volatile RegionIndex index = RegionIndex.EMPTY;
 
@@ -106,7 +107,19 @@ public final class RegionTracker {
         return state == null ? List.of() : state.inside;
     }
 
+    /** Calls {@code listener} for players entering and leaving any region (the addon events). */
+    public void listenAll(RegionListener listener) {
+        everyRegion.add(listener);
+    }
+
     private void notify(Player player, Region region, boolean entered) {
+        for (RegionListener listener : everyRegion) {
+            if (entered) {
+                listener.entered(player, region);
+            } else {
+                listener.left(player, region);
+            }
+        }
         List<RegionListener> owners = listeners.get(region.owner());
         if (owners == null) {
             return;

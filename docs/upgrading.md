@@ -4,6 +4,11 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **Addons.** The lobby now reads jars from an `addons/` folder (created on the first start) and lists them
+  with `/setup-lobby addons`; see [addons.md](addons.md). Nothing changes while the folder is empty. Start
+  scripts and Docker setups that copy the server folder should keep `addons/` (it also holds the addons'
+  own files).
+
 - **The portal wand is now the setup wand** (`/setup-lobby wand`, `/portal wand` still works, and old wands
   in inventories keep working). The messages `portal-wand-*` and `portal-position-set` are replaced by
   `wand-*`.

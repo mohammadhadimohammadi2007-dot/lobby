@@ -2,6 +2,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.pipeline.ChatPipeline;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.AddonStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.AntiSpamStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.CooldownStage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.DeliverStage;
@@ -67,6 +68,7 @@ public final class ChatService {
                 new AntiSpamStage(services),
                 new NormalizeStage(),
                 new FilterStage(services),
+                new AddonStage(),
                 new FormatStage(services),
                 new RenderStage(services),
                 new DeliverStage(services, audience),

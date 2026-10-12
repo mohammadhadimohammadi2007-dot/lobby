@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.menu;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.LobbyEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.MenuClickEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.MenuHandler;
@@ -79,6 +81,25 @@ public final class MenuService implements MenuHandler {
         builtIn.put(name.toLowerCase(Locale.ROOT), builder);
     }
 
+    /**
+     * Adds a built-in menu unless one with that name exists (an addon's menu).
+     *
+     * @return false if the name is taken
+     */
+    public boolean addBuiltInIfAbsent(String name, Function<Player, MenuDefinition> builder) {
+        return builtIn.putIfAbsent(name.toLowerCase(Locale.ROOT), builder) == null;
+    }
+
+    /** Removes a built-in menu (an addon's, when it is disabled). */
+    public void removeBuiltIn(String name) {
+        builtIn.remove(name.toLowerCase(Locale.ROOT));
+    }
+
+    /** True if menus.yml has this menu or it is built in. */
+    public boolean exists(String name) {
+        return config.get().menu(name) != null || builtIn.containsKey(name.toLowerCase(Locale.ROOT));
+    }
+
     @Override
     public void open(Player player, String name) {
         MenuDefinition definition = definition(player, name);
@@ -154,6 +175,10 @@ public final class MenuService implements MenuHandler {
         // Cancel first, always: nothing in a menu may be taken, dropped, swapped or shift-clicked.
         event.setCancelled(true);
         ActionList clicked = menu.actionsAt(event.getSlot());
+        if (clicked != null && LobbyEvents.active() && LobbyEvents.fire(new MenuClickEvent(event.getPlayer(),
+                menu.definition().name(), event.getSlot())).isCancelled()) {
+            return;
+        }
         if (clicked != null) {
             clicked.run(event.getPlayer(), actions, "menu '" + menu.definition().name() + "'");
         }

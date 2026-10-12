@@ -71,8 +71,10 @@ class JoinCostTest {
     @Test
     void joiningAFullLobby(Env env) throws Exception {
         ConfigManager config = new ConfigManager(dir);
-        config.load();
         LobbyServer lobby = new LobbyServer(config);
+        // As LobbyMain starts it: the (empty) addons folder is read first, so the joins include the addon system.
+        lobby.loadAddons();
+        config.load();
         lobby.build();
         try {
             measure(env, lobby, SpawnListener.spawnPosition(config.current().config()));

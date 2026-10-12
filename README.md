@@ -118,6 +118,7 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)
+- [Addons](docs/addons.md): installing them, and writing your own
 - Integrations: [Database](docs/integrations/database.md) ·
   [LuckPerms](docs/integrations/luckperms.md) ·
   [LiteBans](docs/integrations/litebans.md) ·
@@ -168,6 +169,7 @@ Project layout:
 lobby-server/           Minestom server
 lobby-bridge-velocity/  Velocity plugin
 lobby-common/           Shared code (bridge message format)
+lobby-api/              The API addons are written against
 lobby-luckperms/        LuckPerms support (off until enabled in integrations.yml)
 third_party/luckperms/  LuckPerms Minestom port (git submodule, built from source)
 docs/                   Setup guides

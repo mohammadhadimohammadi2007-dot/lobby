@@ -1,7 +1,24 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.ProtocolVersions;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyJoinEvent;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyQuitEvent;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionEnterEvent;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionLeaveEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.AddonChecks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.AddonManager;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.AddonServices;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.AddonState;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.LobbyEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.settings.AddonSettingsStore;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.settings.DatabaseAddonSettings;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.settings.FileAddonSettings;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.AddonsCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigException;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.Region;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionListener;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeConnector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BungeeConnector;
@@ -155,10 +172,20 @@ public final class LobbyServer implements ServerInfo {
     private @Nullable LobbyConsole console;
     private final PlaceholderService placeholders = new PlaceholderService(new PlaceholderRegistry());
     private final LobbyText text;
+    private final AddonManager addons;
 
     public LobbyServer(ConfigManager configManager) {
         this.configManager = configManager;
         this.text = new LobbyText(configManager, placeholders);
+        this.addons = new AddonManager(configManager.dataDir().resolve("addons"), placeholders);
+    }
+
+    /**
+     * Finds the addons and runs their {@code onLoad}, so the action types and placeholders they add exist when
+     * the config and data files are read. Call before {@link ConfigManager#load()}.
+     */
+    public void loadAddons() {
+        addons.loadAll();
     }
 
     /** Boots everything in order and opens the port. Players can only join after the map is loaded. */
@@ -211,6 +238,61 @@ public final class LobbyServer implements ServerInfo {
         registerListeners();
         registerCommands();
         configManager.onReload(this::applyReload);
+        startAddons();
+    }
+
+    /**
+     * Enables the addons, last, so every service they can use exists. Without addons nothing is started here:
+     * the lobby's events stay off ({@link LobbyEvents}) and no table or file is made.
+     */
+    private void startAddons() {
+        setupChecks.addSetupStep(() -> AddonChecks.setup(addons.infos()));
+        setupChecks.addDoctorStep(() -> AddonChecks.doctor(addons.infos()));
+        var setupCommand = MinecraftServer.getCommandManager().getCommand("setup-lobby");
+        if (setupCommand != null) {
+            setupCommand.addSubcommand(new AddonsCommand(addons, text, permissions));
+        }
+        if (!addons.any()) {
+            return;
+        }
+        regions.listenAll(new RegionListener() {
+            @Override
+            public void entered(Player player, Region region) {
+                if (LobbyEvents.active()) {
+                    LobbyEvents.fire(new RegionEnterEvent(player, region.owner(), region.name()));
+                }
+            }
+
+            @Override
+            public void left(Player player, Region region) {
+                if (LobbyEvents.active()) {
+                    LobbyEvents.fire(new RegionLeaveEvent(player, region.owner(), region.name()));
+                }
+            }
+        });
+        addons.enableAll(new AddonServices(text, MinecraftServer.getCommandManager(), commandWhitelist, permissions,
+                actions, menus, holograms, npcs, bridge, addonSettings(), this::reloadForAddons));
+    }
+
+    /** Where addons keep per-player values: the shared database if there is one, otherwise files. */
+    private AddonSettingsStore addonSettings() {
+        if (database != null) {
+            try {
+                return DatabaseAddonSettings.create(database, configManager.current().chat().storage().tablePrefix());
+            } catch (SQLException e) {
+                LOGGER.error("Could not create the addon settings table, using files instead: {}", e.getMessage());
+            }
+        }
+        return new FileAddonSettings(configManager.dataDir());
+    }
+
+    /** After an addon was reloaded: reads the files again, so they use its new action types and placeholders. */
+    private void reloadForAddons() {
+        try {
+            configManager.reload();
+        } catch (ConfigException e) {
+            LOGGER.error("Reading the files again after reloading an addon failed: {}", e.getMessage());
+        }
     }
 
     /**
@@ -424,6 +506,17 @@ public final class LobbyServer implements ServerInfo {
         movement.register(playerEvents);
         clicks.register(playerEvents);
         wand.register(playerEvents, clicks);
+        // Last, so addons hear about a join after the lobby has set the player up.
+        playerEvents.addListener(PlayerSpawnEvent.class, event -> {
+            if (event.isFirstSpawn() && LobbyEvents.active()) {
+                LobbyEvents.fire(new LobbyJoinEvent(event.getPlayer()));
+            }
+        });
+        playerEvents.addListener(PlayerDisconnectEvent.class, event -> {
+            if (LobbyEvents.active()) {
+                LobbyEvents.fire(new LobbyQuitEvent(event.getPlayer()));
+            }
+        });
         new PlayerLimitListener(configManager, text).register(global);
         new ProtectionListener(configManager, permissions).register(global);
         new ServerListListener(configManager, text).register();
@@ -493,6 +586,16 @@ public final class LobbyServer implements ServerInfo {
                 LOGGER.info("{}", status.describe());
             }
         }
+        if (addons.any()) {
+            long enabled = addons.infos().stream().filter(addon -> addon.state() == AddonState.ENABLED).count();
+            long notRunning = addons.infos().size() - enabled;
+            String summary = enabled + " enabled" + (notRunning > 0 ? ", " + notRunning + " not running (/setup-lobby addons)" : "");
+            if (notRunning > 0) {
+                LOGGER.warn("Addons: {}", summary);
+            } else {
+                LOGGER.info("Addons: {}", summary);
+            }
+        }
         AuthFactory.logSafetyWarnings(config.connection(), config.server().port());
         logOperatorSafety(config);
         LOGGER.info("Ready in {} ms. Listening on {}:{}. Type 'stop' to shut down.",
@@ -529,6 +632,8 @@ public final class LobbyServer implements ServerInfo {
 
     /** Stops and saves every feature; package-private so tests can stop a lobby without stopping {@link Async}. */
     void stopFeatures() {
+        // First, while everything addons use still works.
+        addons.disableAll();
         wand.shutdown();
         effects.shutdown();
         ops.close();
@@ -679,6 +784,11 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public SetupChecks setupChecks() {
         return setupChecks;
+    }
+
+    /** The addons, for tests. */
+    public AddonManager addons() {
+        return addons;
     }
 
     /** The lobby instances of this server. */

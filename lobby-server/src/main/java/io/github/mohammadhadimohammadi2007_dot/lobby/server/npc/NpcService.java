@@ -1,5 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.npc;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.LobbyEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.ClickTypes;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
@@ -250,6 +253,9 @@ public final class NpcService implements ClientObjectClicks.Handler, NameTags {
         }
         if (data == null) {
             return false;
+        }
+        if (LobbyEvents.active() && LobbyEvents.fire(new NpcClickEvent(player, data.name(), ClickTypes.toApi(type))).isCancelled()) {
+            return true;
         }
         // "any click" runs on both buttons, next to the list of the button that was used.
         for (Map.Entry<NpcTrigger, NpcData.Actions> entry : data.allActions().entrySet()) {

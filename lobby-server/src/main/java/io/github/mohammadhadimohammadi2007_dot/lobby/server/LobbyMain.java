@@ -23,6 +23,9 @@ public final class LobbyMain {
         Path dataDir = Path.of("").toAbsolutePath();
 
         ConfigManager configManager = new ConfigManager(dataDir);
+        LobbyServer server = new LobbyServer(configManager);
+        // Before the files are read: addons may add action types and placeholders that the files use.
+        server.loadAddons();
         ConfigSnapshot snapshot;
         try {
             snapshot = configManager.load();
@@ -37,7 +40,7 @@ public final class LobbyMain {
         System.setProperty("minestom.chunk-view-distance", String.valueOf(snapshot.config().world().viewDistance()));
 
         try {
-            new LobbyServer(configManager).start();
+            server.start();
         } catch (RuntimeException e) {
             LOGGER.error("The server failed to start", e);
             System.exit(EXIT_STARTUP_ERROR);

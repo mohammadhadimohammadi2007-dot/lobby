@@ -136,6 +136,7 @@ arguments from the console, or say "This command can only be used in game".
 | `stop` | `lobby.command.stop` | yes |
 | `op`, `deop`, `ops` | `lobby.command.op` | yes |
 | `setup-lobby setspawn [x y z [yaw pitch]]` | `lobby.command.setspawn` | give the coordinates |
+| `setup-lobby addons`, `setup-lobby addons reload <id>` | `lobby.command.setup` | yes ([addons.md](addons.md)) |
 | `npc create <name> [x y z]`, `npc move_to <name> <x y z>` | `lobby.command.npc` | give the coordinates |
 | `hologram create <name> [x y z]`, `hologram moveto <name> <x y z>` | `lobby.command.hologram` | give the coordinates |
 | `npc teleport`, `hologram teleport`, `npc nearby`, `chat spy` | | in game only |

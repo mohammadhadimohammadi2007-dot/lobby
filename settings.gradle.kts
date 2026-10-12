@@ -1,6 +1,7 @@
 rootProject.name = "lobby"
 
 include("lobby-common")
+include("lobby-api")
 include("lobby-server")
 include("lobby-bridge-velocity")
 

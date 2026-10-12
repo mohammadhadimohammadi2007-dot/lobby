@@ -179,6 +179,7 @@ public final class PlaceholderService {
     private static PlaceholderScope scopeOf(@Nullable Placeholder placeholder) {
         return switch (placeholder) {
             case null -> PlaceholderScope.STATIC;
+            case Placeholder.Constant ignored -> PlaceholderScope.STATIC;
             case Placeholder.Global ignored -> PlaceholderScope.GLOBAL;
             case Placeholder.PerPlayer ignored -> PlaceholderScope.PER_PLAYER;
             case Placeholder.Relational ignored -> PlaceholderScope.RELATIONAL;
@@ -216,6 +217,7 @@ public final class PlaceholderService {
         }
         try {
             return switch (placeholder) {
+                case Placeholder.Constant constant -> Cached.of(constant.value(), constant.formatted(), Long.MAX_VALUE);
                 case Placeholder.Global global -> cached(globalValues, key, global.cacheTime().toMillis(),
                         () -> global.value().get(), global.formatted());
                 case Placeholder.PerPlayer perPlayer -> {

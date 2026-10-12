@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -39,7 +40,8 @@ public final class ActionParser {
         }
     }
 
-    private interface Factory {
+    /** Makes an action from the text after {@code type:}. */
+    public interface Factory {
         Action create(String argument) throws ActionException;
     }
 
@@ -55,6 +57,8 @@ public final class ActionParser {
     private static final int DEFAULT_STAY = 70;
     private static final int DEFAULT_FADE_OUT = 20;
     private static final Map<String, Factory> TYPES = new LinkedHashMap<>();
+    /** Types added by addons. */
+    private static final Map<String, Factory> CUSTOM = new ConcurrentHashMap<>();
 
     static {
         TYPES.put("message", argument -> new MessageAction(required(argument, "the text")));
@@ -81,7 +85,27 @@ public final class ActionParser {
     public static List<String> typeNames() {
         List<String> names = new ArrayList<>(TYPES.keySet());
         names.add(RANDOM);
+        CUSTOM.keySet().stream().sorted().forEach(names::add);
         return names;
+    }
+
+    /**
+     * Adds an action type of an addon.
+     *
+     * @throws IllegalArgumentException if the name is not lowercase letters, digits and {@code _}, or is taken
+     */
+    public static void registerCustom(String type, Factory factory) {
+        if (!type.matches("[a-z0-9_]{1,64}")) {
+            throw new IllegalArgumentException("Action type names are lowercase letters, digits and _: " + type);
+        }
+        if (TYPES.containsKey(type) || type.equals(RANDOM) || CUSTOM.putIfAbsent(type, factory) != null) {
+            throw new IllegalArgumentException("The action type '" + type + "' already exists");
+        }
+    }
+
+    /** Removes an addon's action type. True if it existed. */
+    public static boolean unregisterCustom(String type) {
+        return CUSTOM.remove(type) != null;
     }
 
     /**
@@ -134,6 +158,9 @@ public final class ActionParser {
             throw new ActionException("'random' needs a list of actions below it, not text on the same line");
         }
         Factory factory = TYPES.get(type);
+        if (factory == null) {
+            factory = CUSTOM.get(type);
+        }
         if (factory == null) {
             throw new ActionException("unknown action '" + type + "'" + suggestion(type));
         }

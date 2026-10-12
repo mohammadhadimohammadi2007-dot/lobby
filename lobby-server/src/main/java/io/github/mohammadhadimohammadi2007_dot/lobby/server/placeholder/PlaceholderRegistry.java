@@ -42,6 +42,21 @@ public final class PlaceholderRegistry {
         lookups.clear();
     }
 
+    /** Removes a namespace (an addon was disabled). True if it was registered. */
+    public boolean unregister(String namespace) {
+        boolean removed = namespaces.remove(namespace.toLowerCase(Locale.ROOT)) != null;
+        if (removed) {
+            lookups.clear();
+            reportedUnknown.clear();
+        }
+        return removed;
+    }
+
+    /** True if a namespace with this name is registered. */
+    public boolean isRegistered(String namespace) {
+        return namespaces.containsKey(namespace.toLowerCase(Locale.ROOT));
+    }
+
     /**
      * Finds the placeholder for a key like {@code luckperms_prefix} (without the {@code %} signs).
      * Unknown keys return {@code null} and are logged once at debug level.

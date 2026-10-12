@@ -11,8 +11,9 @@ import java.util.function.Supplier;
 /**
  * How to compute one placeholder, for example {@code %server_online%}.
  *
- * <p>There are three kinds, chosen for performance with hundreds of players:
+ * <p>There are four kinds, chosen for performance with hundreds of players:
  * <ul>
+ *   <li>{@link Constant}: never changes (an addon's fixed text); the text it is in is built once.</li>
  *   <li>{@link Global}: same value for everyone; computed once and cached for {@code cacheTime}.</li>
  *   <li>{@link PerPlayer}: one value per player; cached per player until {@code cacheTime} passes or the
  *       player's data changes (rank change, quit). {@code cacheTime} {@code null} means "until it changes".</li>
@@ -27,6 +28,13 @@ public sealed interface Placeholder {
 
     /** True if the value may contain colors and formatting. */
     boolean formatted();
+
+    /** A value that never changes while the server runs. */
+    record Constant(String value, boolean formatted) implements Placeholder {
+        public Constant {
+            Objects.requireNonNull(value, "value");
+        }
+    }
 
     /** Same value for everyone. */
     record Global(Supplier<String> value, Duration cacheTime, boolean formatted) implements Placeholder {

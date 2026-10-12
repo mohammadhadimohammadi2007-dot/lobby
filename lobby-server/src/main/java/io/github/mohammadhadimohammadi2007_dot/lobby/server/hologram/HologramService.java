@@ -1,5 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.LobbyEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.ClickTypes;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.HologramClickEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionList;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionServices;
@@ -189,6 +192,10 @@ public final class HologramService implements ClientObjectClicks.Handler {
         }
         if (data == null) {
             return false;
+        }
+        if (LobbyEvents.active()
+                && LobbyEvents.fire(new HologramClickEvent(player, data.name(), ClickTypes.toApi(type))).isCancelled()) {
+            return true;
         }
         // Both buttons run the same actions, like FancyHolograms: a hologram has one click action.
         data.actions().run(player, actions, "hologram '" + data.name() + "'");

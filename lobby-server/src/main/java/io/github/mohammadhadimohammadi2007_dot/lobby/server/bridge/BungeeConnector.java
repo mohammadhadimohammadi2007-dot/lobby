@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.ConnectEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.Connector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
@@ -41,6 +43,7 @@ public final class BungeeConnector implements Connector {
         player.sendMessage(text.message(MessageKey.CONNECTING, player, Messages.text("server", server)));
         player.sendPluginMessage(CHANNEL, message(server));
         // BungeeCord never answers, so a failure cannot be seen here.
+        ConnectEvents.fire(player, server, false, ServerConnectResultEvent.Outcome.CONNECTED);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -52,6 +55,7 @@ public final class BungeeConnector implements Connector {
                     + " BungeeCord does not tell the lobby about its servers. Use 'connect: <server>' instead.", group);
         }
         player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+        ConnectEvents.fire(player, group, true, ServerConnectResultEvent.Outcome.NOT_AVAILABLE);
         return CompletableFuture.completedFuture(false);
     }
 

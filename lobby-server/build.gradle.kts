@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":lobby-common"))
+    implementation(project(":lobby-api"))
 
     implementation(libs.minestom)
     implementation(libs.polar)

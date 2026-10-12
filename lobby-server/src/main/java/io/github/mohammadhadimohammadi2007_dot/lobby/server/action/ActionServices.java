@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.action;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.ConnectEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
@@ -43,12 +45,14 @@ public final class ActionServices {
             @Override
             public CompletableFuture<Boolean> connect(Player player, String server) {
                 player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+                ConnectEvents.fire(player, server, false, ServerConnectResultEvent.Outcome.NOT_AVAILABLE);
                 return CompletableFuture.completedFuture(false);
             }
 
             @Override
             public CompletableFuture<Boolean> connectGroup(Player player, String group) {
                 player.sendMessage(text.message(MessageKey.CONNECT_NOT_AVAILABLE, player));
+                ConnectEvents.fire(player, group, true, ServerConnectResultEvent.Outcome.NOT_AVAILABLE);
                 return CompletableFuture.completedFuture(false);
             }
         };

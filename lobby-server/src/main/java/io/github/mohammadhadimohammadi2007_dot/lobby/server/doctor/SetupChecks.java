@@ -28,10 +28,16 @@ public final class SetupChecks {
     private static final String LOBBIES_GROUP = "lobbies";
 
     private final List<Supplier<List<Check>>> extraSteps = new ArrayList<>();
+    private final List<Supplier<List<Check>>> extraProblems = new ArrayList<>();
 
     /** Adds checks of a feature (PvP...) to the end of {@code /setup-lobby setup}. */
     public void addSetupStep(Supplier<List<Check>> step) {
         extraSteps.add(step);
+    }
+
+    /** Adds problems a feature (addons...) finds to {@code /setup-lobby doctor}. */
+    public void addDoctorStep(Supplier<List<Check>> step) {
+        extraProblems.add(step);
     }
 
     /** The setup checklist, in the order an admin works through it. */
@@ -261,6 +267,9 @@ public final class SetupChecks {
             problems.add(Check.warn("Config files", otherWarnings + " problem(s) in the config files, e.g. "
                     + facts.configWarnings().stream().filter(w -> !w.contains("1.8")).findFirst().orElse("")
                     + ". Every one is in the startup log and after /setup-lobby reload.", null));
+        }
+        for (Supplier<List<Check>> step : extraProblems) {
+            problems.addAll(step.get());
         }
         if (problems.isEmpty()) {
             problems.add(Check.ok("Nothing wrong found", "run /setup-lobby setup to see what is not set up yet"));

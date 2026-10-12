@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * One step of the chat pipeline. Stages run in this order:
- * {@code mute -> cooldown -> anti-spam -> normalize -> filter -> channel -> format -> render -> deliver -> log}.
+ * {@code mute -> cooldown -> anti-spam -> normalize -> filter -> addons -> format -> render -> deliver -> log}.
  * Each stage does one thing and can be turned off by its own chat.yml option.
  */
 public interface ChatStage {

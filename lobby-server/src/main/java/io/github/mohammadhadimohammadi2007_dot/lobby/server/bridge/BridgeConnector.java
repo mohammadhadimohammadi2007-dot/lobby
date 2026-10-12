@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.ConnectEvents;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.common.bridge.BridgeMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.Connector;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
@@ -45,9 +47,17 @@ public final class BridgeConnector implements Connector {
                 LOGGER.warn("The proxy did not answer the request to send {} to '{}': {}",
                         player.getUsername(), target, error.getMessage());
                 tell(player, MessageKey.CONNECT_FAILED, target);
+                ConnectEvents.fire(player, target, group, ServerConnectResultEvent.Outcome.FAILED);
                 sent.complete(false);
                 return;
             }
+            ConnectEvents.fire(player, target, group, switch (result.outcome()) {
+                case CONNECTED -> ServerConnectResultEvent.Outcome.CONNECTED;
+                case FULL -> ServerConnectResultEvent.Outcome.FULL;
+                case OFFLINE -> ServerConnectResultEvent.Outcome.OFFLINE;
+                case UNKNOWN -> ServerConnectResultEvent.Outcome.UNKNOWN;
+                case REFUSED -> ServerConnectResultEvent.Outcome.FAILED;
+            });
             sent.complete(result.outcome() == BridgeMessage.ConnectResult.Outcome.CONNECTED);
             switch (result.outcome()) {
                 // The player is already on their way; nothing more to say.
