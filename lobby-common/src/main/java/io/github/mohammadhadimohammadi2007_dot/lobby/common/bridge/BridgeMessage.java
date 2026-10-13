@@ -378,6 +378,33 @@ public sealed interface BridgeMessage {
     }
 
     /**
+     * Lobby to proxy: this player is in combat in the lobby's PvP area for {@code remainingMillis} more; until
+     * then the proxy refuses to move them to another server (for example with {@code /server}) and shows
+     * {@code message}. 0 ends the combat early (the player died or left the area). Added in bridge 0.6; older
+     * bridges ignore it.
+     *
+     * @param playerId        the player; must be on the lobby that sent it
+     * @param remainingMillis how long the combat lasts from now, 0 to end it
+     * @param message         MiniMessage text shown when a switch is refused, {@code <seconds>} is the time left
+     */
+    record CombatTag(UUID playerId, long remainingMillis, String message) implements BridgeMessage {
+        public static final int TYPE_ID = 13;
+
+        public CombatTag {
+            Objects.requireNonNull(playerId, "playerId");
+            Objects.requireNonNull(message, "message");
+            if (remainingMillis < 0) {
+                throw new IllegalArgumentException("remainingMillis must not be negative");
+            }
+        }
+
+        @Override
+        public int typeId() {
+            return TYPE_ID;
+        }
+    }
+
+    /**
      * A message type this build does not know, from a newer proxy or lobby. Readers ignore it, so
      * mixing versions does not break anything.
      *

@@ -115,6 +115,7 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Hotbar items and player visibility](docs/hotbar.md)
 - [Menus and the server selector](docs/menus.md)
 - [Movement and portals](docs/movement-and-portals.md)
+- [PvP area](docs/pvp.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)

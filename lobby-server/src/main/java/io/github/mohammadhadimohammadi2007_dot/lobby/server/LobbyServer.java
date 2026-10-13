@@ -87,6 +87,16 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionSer
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.DatabasePvpStats;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.FilePvpStats;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpChecks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpPlaceholders;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpStatsService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpStatsStore;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.GuardedConnector;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.LobbySwitcher;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.protection.ProtectionListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionTracker;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
@@ -158,6 +168,9 @@ public final class LobbyServer implements ServerInfo {
     private HotbarService hotbar;
     private final RegionTracker regions = new RegionTracker();
     private MovementService movement;
+    private VisibilityService visibility;
+    private PvpService pvp;
+    private ProtectionListener protection;
     private PortalService portals;
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
@@ -235,6 +248,7 @@ public final class LobbyServer implements ServerInfo {
         startDisplays();
         startHotbar();
         startMovement();
+        startPvp();
         startNetworkCheck();
         registerListeners();
         registerCommands();
@@ -272,7 +286,7 @@ public final class LobbyServer implements ServerInfo {
             }
         });
         addons.enableAll(new AddonServices(text, MinecraftServer.getCommandManager(), commandWhitelist, permissions,
-                actions, menus, holograms, npcs, bridge, addonSettings(), this::reloadForAddons));
+                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, this::reloadForAddons));
     }
 
     /** Where addons keep per-player values: the shared database if there is one, otherwise files. */
@@ -448,7 +462,7 @@ public final class LobbyServer implements ServerInfo {
 
     /** Hotbar items and player visibility; the visibility choice is kept with the players' chat settings. */
     private void startHotbar() {
-        VisibilityService visibility = new VisibilityService(configManager, permissions, chat.settings(), text);
+        visibility = new VisibilityService(configManager, permissions, chat.settings(), text);
         hotbar = new HotbarService(configManager, text, actions, bridge, visibility);
     }
 
@@ -457,6 +471,46 @@ public final class LobbyServer implements ServerInfo {
         movement = new MovementService(configManager, permissions, regions);
         wand = new SetupWand(text, regions, this::objectPosition, effects);
         portals = PortalService.start(configManager.dataDir(), regions, actions, text, wand);
+    }
+
+    /**
+     * The PvP area. Fighters keep their kit (no lobby items), cannot double jump or fly, see every other fighter,
+     * may be hurt, and cannot switch servers or lobbies while in combat.
+     */
+    private void startPvp() {
+        PvpStatsService stats = new PvpStatsService(pvpStatsStore(), System::currentTimeMillis);
+        pvp = PvpService.start(configManager.dataDir(), configManager, text, bridge, regions, stats, actions,
+                System::currentTimeMillis);
+        pvp.hooks(new PvpService.Hooks(player -> {
+            hotbar.give(player);
+            movement.release(player);
+        }, movement::ground, visibility::recheck));
+        hotbar.exempt(pvp::inArea);
+        movement.grounded(pvp::inArea);
+        visibility.alwaysVisible((viewer, target) -> pvp.inArea(viewer) && pvp.inArea(target));
+        actions.connector(new GuardedConnector(actions.connector(), pvp::blocksSwitching));
+        LobbySwitcher switcher = actions.lobbies();
+        actions.lobbies((player, number) -> {
+            if (!pvp.blocksSwitching(player)) {
+                switcher.switchTo(player, number);
+            }
+        });
+        placeholders.registry().register("pvp", new PvpPlaceholders(pvp));
+        stats.onChange(placeholders::invalidate);
+        setupChecks.addSetupStep(() -> PvpChecks.setup(pvp.arena(), pvp.config(), bridge.enabled(),
+                bridge.bridgeKeepsCombatTags()));
+    }
+
+    /** PvP records in the shared database if there is one, otherwise in a file. */
+    private PvpStatsStore pvpStatsStore() {
+        if (database != null) {
+            try {
+                return DatabasePvpStats.create(database, configManager.current().chat().storage().tablePrefix());
+            } catch (SQLException e) {
+                LOGGER.error("Could not create the PvP stats table, using a file instead: {}", e.getMessage());
+            }
+        }
+        return new FilePvpStats(configManager.dataDir());
     }
 
     /**
@@ -504,6 +558,8 @@ public final class LobbyServer implements ServerInfo {
         teams.register(playerEvents);
         displays.register(playerEvents);
         hotbar.register(playerEvents);
+        // Before the regions: a fighter in combat who tries to walk out has the move cancelled first.
+        pvp.register(global, playerEvents);
         regions.register(playerEvents);
         movement.register(playerEvents);
         clicks.register(playerEvents);
@@ -520,7 +576,9 @@ public final class LobbyServer implements ServerInfo {
             }
         });
         new PlayerLimitListener(configManager, text).register(global);
-        new ProtectionListener(configManager, permissions).register(global);
+        protection = new ProtectionListener(configManager, permissions);
+        protection.allowDamage(pvp::inArea);
+        protection.register(global);
         new ServerListListener(configManager, text).register();
         tickStats.register();
     }
@@ -534,6 +592,7 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new NpcCommand(npcs, text, permissions, configManager.dataDir()));
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
+        commands.register(new PvpCommand(pvp, text, permissions, wand));
         commands.register(new StopCommand(text, permissions));
         new VanillaCommands(text, permissions, tickStats, StartupBanner.version(), hotbar::give).commands()
                 .forEach(commands::register);
@@ -559,6 +618,7 @@ public final class LobbyServer implements ServerInfo {
         holograms.reload();
         npcs.reload();
         portals.reload();
+        pvp.reload();
         movement.reload();
         // Async: it reads every hologram, NPC and portal, which can take a moment on a big lobby.
         Async.run(networkCheck::run);
@@ -644,6 +704,7 @@ public final class LobbyServer implements ServerInfo {
         npcs.shutdown();
         portals.shutdown();
         displays.shutdown();
+        pvp.shutdown();
         display.shutdown();
         permissions.shutdown();
         if (liteBans != null) {
@@ -744,6 +805,7 @@ public final class LobbyServer implements ServerInfo {
         broken.put("data/holograms.yml", holograms.brokenEntries());
         broken.put("data/npcs.yml", npcs.brokenEntries());
         broken.put("data/portals.yml", portals.brokenEntries());
+        broken.put("data/pvp.yml", pvp.brokenEntries());
         LobbyConfig.SpawnPoint point = config.spawn();
         boolean defaultSpawn = point.x() == 0.5 && point.y() == 65 && point.z() == 0.5;
         return new SetupFacts(config.connection().mode(), config.connection().onlineMode(),
@@ -786,6 +848,11 @@ public final class LobbyServer implements ServerInfo {
     @Override
     public SetupChecks setupChecks() {
         return setupChecks;
+    }
+
+    /** The PvP area, for tests. */
+    public PvpService pvp() {
+        return pvp;
     }
 
     /** The addons, for tests. */

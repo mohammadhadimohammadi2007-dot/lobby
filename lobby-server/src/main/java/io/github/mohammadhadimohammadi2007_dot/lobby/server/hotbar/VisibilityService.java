@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 
 /**
  * Who sees whom in the lobby: everybody, only staff, or nobody, chosen by each player with the hotbar
@@ -32,6 +33,7 @@ public final class VisibilityService {
     private final ChatSettingsService settings;
     private final LobbyText text;
     private final Map<UUID, Long> lastSwitch = new ConcurrentHashMap<>();
+    private volatile BiPredicate<Player, Player> alwaysVisible = (viewer, target) -> false;
 
     public VisibilityService(ConfigManager config, PermissionService permissions, ChatSettingsService settings,
                              LobbyText text) {
@@ -52,6 +54,17 @@ public final class VisibilityService {
         return config.current().hotbar().visibility();
     }
 
+    /** Pairs of players who always see each other, whatever they chose (two fighters in the PvP area). */
+    public void alwaysVisible(BiPredicate<Player, Player> rule) {
+        alwaysVisible = rule;
+    }
+
+    /** Works out again who sees {@code player} and whom they see, after {@link #alwaysVisible} changed. Tick thread. */
+    public void recheck(Player player) {
+        player.updateViewableRule();
+        player.updateViewerRule();
+    }
+
     /** What {@code viewer} chose, or the server's default if they never did. */
     public VisibilityMode mode(Player viewer) {
         VisibilityMode saved = VisibilityMode.fromName(settings.get(viewer.getUuid()).visibility());
@@ -60,7 +73,7 @@ public final class VisibilityService {
 
     /** True if {@code viewer} sees {@code target}. Everyone always sees themselves. */
     public boolean canSee(Player viewer, Player target) {
-        if (viewer == target) {
+        if (viewer == target || alwaysVisible.test(viewer, target)) {
             return true;
         }
         return switch (mode(viewer)) {

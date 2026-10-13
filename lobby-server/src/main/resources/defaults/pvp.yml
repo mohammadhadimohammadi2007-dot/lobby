@@ -1,0 +1,48 @@
+# =====================================================================
+#  PvP - a fighting area in the lobby.
+#  Set it up in game (as an operator):
+#    /setup-lobby wand      then hit one corner of the area and right-click the opposite corner
+#    /pvp setregion         the selection becomes the PvP area
+#    /pvp setspawn          where players come back after dying (stand there)
+#    /pvp kit               your current inventory (with armor) becomes the kit
+#  Changes here apply with /setup-lobby reload. Guide: docs/pvp.md
+# =====================================================================
+
+# false: the area does nothing, nobody can be hit.
+enabled: true
+
+# Combat follows the ATTACKER's game version: 1.8 players hit like in 1.8 (no attack cooldown, so they can
+# click as fast as they like), players on 1.19.4 or newer hit like in modern Minecraft (a cooldown after each
+# swing, sweep attacks with swords). In a mixed fight the 1.8 player's fast clicking is usually stronger.
+# true: players can only hurt players on the same kind of version (1.8 with 1.8, modern with modern).
+same-version-only: false
+
+# ---------------- Combat tag ----------------
+# Seconds a player stays "in combat" after hitting or being hit (0-120, 0 = off). While in combat they cannot
+# leave the area, switch servers (NPCs, portals, menus, and /server on the proxy with lobby-bridge 0.6+),
+# switch lobbies, or use the commands below.
+combat-tag-seconds: 10
+# Commands blocked while in combat (without "/").
+combat-blocked-commands: ["spawn", "lobbies", "fly"]
+# Commands blocked inside the area, in combat or not.
+area-blocked-commands: ["fly"]
+# Leaving the game while in combat counts as a death (and a kill for the last attacker).
+combat-log-counts-as-death: true
+
+# ---------------- Fighting ----------------
+# Modern players' sword sweep attacks also hit players right next to the target.
+sweep-attacks: true
+# Hits from further away than this (blocks) are ignored. Players reach about 3 blocks; a little more allows
+# for lag.
+max-reach: 6.0
+
+# Actions run for the killer and for the player who died, like the actions of NPCs and menus
+# (message, sound, title, console_command...). Placeholders: %player_name% is that player.
+kill-actions:
+  - "sound: entity.experience_orb.pickup"
+death-actions: []
+
+# ---------------- Leaderboard ----------------
+# How many places the %pvp_top_...% placeholders have (1-100), and how often they are read again (seconds).
+leaderboard-size: 10
+leaderboard-refresh: 60

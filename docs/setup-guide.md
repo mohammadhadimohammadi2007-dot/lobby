@@ -194,6 +194,7 @@ name shows up there).
 - Chat formats, filter, anti-spam: [chat.md](chat.md)
 - What players may type: [commands.md](commands.md) (`commands.yml`)
 - Server list text and player limit: `config.yml` `server:`
+- A PvP area with kits and leaderboards: [pvp.md](pvp.md)
 
 Every change applies with `/setup-lobby reload`, which also says if something needs a restart.
 

@@ -9,6 +9,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpService;
 import net.minestom.server.command.CommandManager;
 
 /**
@@ -21,5 +22,5 @@ import net.minestom.server.command.CommandManager;
 public record AddonServices(LobbyText text, CommandManager commands, CommandWhitelist whitelist,
                             PermissionService permissions, ActionServices actions, MenuService menus,
                             HologramService holograms, NpcService npcs, BridgeService bridge,
-                            AddonSettingsStore settings, Runnable reloadData) {
+                            AddonSettingsStore settings, PvpService pvp, Runnable reloadData) {
 }

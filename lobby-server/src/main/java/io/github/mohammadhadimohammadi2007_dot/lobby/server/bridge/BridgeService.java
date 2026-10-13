@@ -46,6 +46,8 @@ public final class BridgeService {
     private static final long PLAYER_COMMAND_TIMEOUT_SECONDS = 10;
     /** The first bridge version that runs commands as a player ({@link BridgeMessage.PlayerCommandRequest}). */
     public static final String PLAYER_COMMANDS_SINCE = "0.5.0";
+    /** The first bridge version that keeps players in combat on their lobby ({@link BridgeMessage.CombatTag}). */
+    public static final String COMBAT_TAG_SINCE = "0.6.0";
 
     private final boolean listening;
     private final NetworkState networkState = new NetworkState();
@@ -176,6 +178,24 @@ public final class BridgeService {
         return true;
     }
 
+    /**
+     * Tells the proxy that {@code player} is in combat for {@code remainingMillis} (0: no longer), so it refuses
+     * to move them to another server meanwhile. Does nothing without the bridge.
+     *
+     * @param message MiniMessage text the proxy shows when it refuses; {@code <seconds>} is the time left
+     */
+    public void sendCombatTag(Player player, long remainingMillis, String message) {
+        if (listening) {
+            send(player, new BridgeMessage.CombatTag(player.getUuid(), remainingMillis, message));
+        }
+    }
+
+    /** True unless the bridge is known to be older than {@link #COMBAT_TAG_SINCE} (or there is none). */
+    public boolean bridgeKeepsCombatTags() {
+        BridgeMessage.ProxyInfo info = proxyInfo;
+        return listening && (info == null || atLeast(info.bridgeVersion(), COMBAT_TAG_SINCE));
+    }
+
     /** Runs {@code listener} when the proxy reports a changed skin. Called on a network thread. */
     public void onSkinUpdate(Consumer<BridgeMessage.SkinUpdate> listener) {
         skinListeners.add(listener);
@@ -210,6 +230,7 @@ public final class BridgeService {
             case BridgeMessage.CommandRequest ignored -> LOGGER.debug("Ignored a command request sent to the lobby");
             case BridgeMessage.ConnectRequest ignored -> LOGGER.debug("Ignored a connect request sent to the lobby");
             case BridgeMessage.PlayerCommandRequest ignored -> LOGGER.debug("Ignored a player command request sent to the lobby");
+            case BridgeMessage.CombatTag ignored -> LOGGER.debug("Ignored a combat tag sent to the lobby");
             case BridgeMessage.Unknown unknown -> LOGGER.debug("Ignored unknown bridge message type {}", unknown.typeId());
         }
     }

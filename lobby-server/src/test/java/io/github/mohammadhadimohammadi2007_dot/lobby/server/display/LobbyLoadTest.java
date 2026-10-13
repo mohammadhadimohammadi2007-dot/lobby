@@ -19,7 +19,17 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcSkins;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.RegionTracker;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.FilePvpStats;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.Kit;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpStatsService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.Region;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.EquipmentSlot;
+import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.event.entity.EntityAttackEvent;
+import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.Material;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventNode;
@@ -50,7 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The whole lobby under load: 200 players walking in circles for five minutes (real time, 20 ticks a
  * second), with 50 holograms and 30 NPCs (some with per-player text), the bundled scoreboard, tab list,
- * nametags and boss bar, hotbar items, player visibility, regions, jump pads and portals all running.
+ * nametags and boss bar, hotbar items, player visibility, regions, jump pads and portals all running. 20 of the
+ * players are in the PvP area instead, each hitting another about twice a second (kills, respawns and combat tags
+ * included).
  * Reports the tick time per minute (to see it does not grow), the display thread, and allocation and GC.
  *
  * <p>Off by default, like the chat load test: {@code LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test
@@ -66,6 +78,13 @@ class LobbyLoadTest {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
     private static final int TICKS_PER_MINUTE = 20 * 60;
     private static final double CIRCLE_RADIUS = 6;
+    /** Players 0 to 19 fight in the PvP area instead of walking. */
+    private static final int FIGHTERS = 20;
+    /** Ticks between two hits of the same fighter. */
+    private static final int HIT_EVERY_TICKS = 10;
+    private static final Pos ARENA = DisplayTestServer.ORIGIN.add(0, 0, 60);
+    /** LOBBY_LOAD_TEST_PVP=0 runs the same test without the PvP area, for comparison. */
+    private static final boolean PVP = !"0".equals(System.getenv("LOBBY_LOAD_TEST_PVP"));
 
     @TempDir
     Path dir;
@@ -117,6 +136,20 @@ class LobbyLoadTest {
         server.renderer.register(node);
         server.displays.register(node);
         hotbar.register(node);
+        PvpService pvp = PvpService.start(dir, server.config, server.text, bridge, regions,
+                new PvpStatsService(new FilePvpStats(dir), System::currentTimeMillis), actions, System::currentTimeMillis);
+        cleanup.add(pvp::shutdown);
+        pvp.hooks(new PvpService.Hooks(hotbar::give, movement::ground, visibility::recheck));
+        hotbar.exempt(pvp::inArea);
+        movement.grounded(pvp::inArea);
+        visibility.alwaysVisible((viewer, target) -> pvp.inArea(viewer) && pvp.inArea(target));
+        if (PVP) {
+            pvp.setRegion(new Region("wand", "selection", ARENA.blockX() - 12, ARENA.blockY() - 2, ARENA.blockZ() - 12,
+                    ARENA.blockX() + 12, ARENA.blockY() + 6, ARENA.blockZ() + 12));
+            pvp.setKit(new Kit(java.util.Map.of(0, ItemStack.of(Material.IRON_SWORD)),
+                    java.util.Map.of(EquipmentSlot.CHESTPLATE, ItemStack.of(Material.IRON_CHESTPLATE))));
+        }
+        pvp.register(env.process().eventHandler(), node);
         regions.register(node);
         movement.register(node);
 
@@ -130,7 +163,7 @@ class LobbyLoadTest {
             };
             UUID id = UUID.randomUUID();
             settings.load(id);
-            players.add(env.createConnection(new GameProfile(id, "P" + tier + i)).connect(map, spot(i, 4)));
+            players.add(env.createConnection(new GameProfile(id, "P" + tier + i)).connect(map, home(i)));
             // One join per tick, as when a full lobby fills up, with everyone already there walking.
             walk(players, i);
             long joinStart = System.nanoTime();
@@ -179,6 +212,7 @@ class LobbyLoadTest {
         int tick = 0;
         while (System.nanoTime() < end) {
             walk(players, tick);
+            fight(players, tick);
             long tickStart = System.nanoTime();
             long gcAtStart = gcMillis();
             env.tick();
@@ -204,7 +238,10 @@ class LobbyLoadTest {
         double allocatedMb = (allocated() - allocatedBefore) / (1024.0 * 1024.0);
 
         String report = report(ticks, displayPerMinute, boardPerMinute, server.renderer.load(), server.displays.load(),
-                wallSeconds, gc, allocatedMb, server.displays.skippedRefreshes() - skippedBefore, skippedBefore);
+                wallSeconds, gc, allocatedMb, server.displays.skippedRefreshes() - skippedBefore, skippedBefore)
+                + String.format(Locale.ROOT, "  PvP: %d of %d fighters in the area at the end, %d kills%n", pvp.playersInArea(),
+                FIGHTERS, players.subList(0, FIGHTERS).stream()
+                        .mapToInt(player -> pvp.stats().get(player.getUuid(), player.getUsername()).kills()).sum());
         System.out.println(report);
         System.out.println("  ticks over 50 ms: " + spikes.size() + (spikes.isEmpty() ? "" : " - " + String.join("; ",
                 spikes.subList(0, Math.min(10, spikes.size())))));
@@ -215,12 +252,31 @@ class LobbyLoadTest {
         PerfReport.report("LobbyLoadTest: average tick (MSPT)", average, 25, "ms");
     }
 
+    /** Where a player joins and walks around: fighters in the PvP area, everyone else on the grid. */
+    private static Pos home(int index) {
+        if (index < FIGHTERS) {
+            return ARENA.add((index % 4 - 1.5) * 3.0, 0, (index / 4 - 2) * 3.0);
+        }
+        return spot(index, 4);
+    }
+
+    /** Fighters fight in pairs (0 and 1, 2 and 3...), each hitting every {@link #HIT_EVERY_TICKS} ticks. */
+    private static void fight(List<Player> players, int tick) {
+        for (int i = 0; i < Math.min(FIGHTERS, players.size()); i++) {
+            if ((tick + i) % HIT_EVERY_TICKS == 0) {
+                EventDispatcher.call(new EntityAttackEvent(players.get(i), players.get(i ^ 1)));
+            }
+        }
+    }
+
     /** Every player walks a small circle around their own spot, one step per tick, looking ahead. */
     private static void walk(List<Player> players, int tick) {
         for (int i = 0; i < players.size(); i++) {
-            Pos centre = spot(i, 4);
+            Pos centre = home(i);
             double angle = (tick + i * 7) * 0.05;
-            Pos to = centre.add(Math.cos(angle) * CIRCLE_RADIUS, 0, Math.sin(angle) * CIRCLE_RADIUS)
+            // Fighters move a little on their spot, staying close to the one they hit.
+            double radius = i < FIGHTERS ? 1 : CIRCLE_RADIUS;
+            Pos to = centre.add(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
                     .withView((float) Math.toDegrees(angle), 0);
             players.get(i).addPacketToQueue(new ClientPlayerPositionAndRotationPacket(to, true, false));
         }

@@ -132,6 +132,18 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
       With `player-commands = false` in the bridge's config.toml you get "Could not run ... right now", and
       the proxy log says why.
 - [ ] Standalone: the same NPC says the command needs the network's proxy; the console explains it once.
+## 5b. PvP area
+
+- [ ] `/setup-lobby wand`, select an area, `/pvp setregion`, `/pvp setspawn`, put a sword and armor on,
+      `/pvp kit`. Walk in: you get the kit, no double jump, `/fly` is refused. Walk out: lobby items back.
+- [ ] Two players, 1.8.9 and the latest version, both with a diamond sword: the 1.8 player can click fast
+      and every hit counts (with the short protection after a hit); the modern player's hits are weak
+      until the cooldown bar is full. Critical hits when falling show the stars.
+- [ ] Hit someone: both see "In combat" above the hotbar. Walking out stops at the edge; `/spawn`, an NPC
+      with `connect`, and (behind Velocity with bridge 0.6) `/server` are refused until it ends.
+- [ ] The last hit: the victim is back at the PvP spawn with full health and a new kit; everyone in the area
+      sees the kill message; `%pvp_kills%` goes up. Quit while in combat: counted as a death.
+- [ ] With `same-version-only: true`, the 1.8 player cannot hurt the modern one.
 ## 6. Network names
 
 - [ ] Behind Velocity with the bridge, rename a group in the bridge's `[groups]` and restart the proxy:

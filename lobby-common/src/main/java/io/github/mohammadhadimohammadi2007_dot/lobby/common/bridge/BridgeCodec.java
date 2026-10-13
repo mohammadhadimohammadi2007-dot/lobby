@@ -129,6 +129,11 @@ public final class BridgeCodec {
                     writeUuid(out, msg.playerId());
                     out.writeByte(msg.outcome().id());
                 }
+                case BridgeMessage.CombatTag msg -> {
+                    writeUuid(out, msg.playerId());
+                    out.writeLong(msg.remainingMillis());
+                    writeText(out, msg.message());
+                }
                 case BridgeMessage.Unknown msg ->
                         throw new IllegalArgumentException("Cannot encode unknown message type " + msg.unknownTypeId());
             }
@@ -180,6 +185,7 @@ public final class BridgeCodec {
                         new BridgeMessage.PlayerCommandRequest(readString(in), readUuid(in), readText(in));
                 case BridgeMessage.PlayerCommandResult.TYPE_ID -> new BridgeMessage.PlayerCommandResult(readString(in),
                         readUuid(in), BridgeMessage.PlayerCommandResult.Outcome.fromId(in.readUnsignedByte()));
+                case BridgeMessage.CombatTag.TYPE_ID -> readCombatTag(in);
                 default -> new BridgeMessage.Unknown(typeId);
             };
             if (!(message instanceof BridgeMessage.Unknown) && in.available() > 0) {
@@ -240,6 +246,15 @@ public final class BridgeCodec {
         String message = readText(in);
         return new BridgeMessage.ChatRelay(messageId, channel, origin, senderId, senderName, prefix, suffix,
                 primaryGroup, meta, message);
+    }
+
+    private static BridgeMessage.CombatTag readCombatTag(DataInputStream in) throws IOException, BridgeFormatException {
+        UUID player = readUuid(in);
+        long remaining = in.readLong();
+        if (remaining < 0) {
+            throw new BridgeFormatException("Negative combat time: " + remaining);
+        }
+        return new BridgeMessage.CombatTag(player, remaining, readText(in));
     }
 
     private static void writeUuid(DataOutputStream out, UUID uuid) throws IOException {

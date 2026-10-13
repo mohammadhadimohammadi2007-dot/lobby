@@ -334,5 +334,32 @@ proxy-command-not-available: "<prefix><red><white>/<command></white> is not avai
 proxy-command-unknown: "<prefix><red><white>/<command></white> is not available to you on this network."
 # The proxy did not run it (it did not answer, its bridge is too old, or it turned player commands off). <command>
 proxy-command-failed: "<prefix><red>Could not run <white>/<command></white> right now. Please try again later."
+
+# ---------------- PvP (docs/pvp.md) ----------------
+# /pvp, for admins. <blocks> <max> <items> <size> <spawn> <players> <mode>
+pvp-usage: "<prefix><gray>/pvp setregion | setspawn | kit | info | delete"
+pvp-no-selection: "<prefix><red>Select two corners with the setup wand first (/setup-lobby wand)."
+pvp-too-big: "<prefix><red>That area has <blocks> blocks; at most <max> are allowed."
+pvp-region-set: "<prefix><green>The PvP area is set (<blocks> blocks). Next: <white>/pvp setspawn</white> and <white>/pvp kit</white>."
+pvp-no-area: "<prefix><red>There is no PvP area yet. Select it with the setup wand and run <white>/pvp setregion</white>."
+pvp-spawn-set: "<prefix><green>Players come back here after dying in the PvP area."
+pvp-spawn-outside: "<prefix><red>Stand inside the PvP area to set its spawn."
+pvp-kit-saved: "<prefix><green>Your inventory is the PvP kit now (<items> items)."
+pvp-deleted: "<prefix><green>The PvP area is removed."
+pvp-info: "<prefix><gray>PvP area: <white><size></white> blocks, spawn <white><spawn></white>, kit <white><items></white> items, <white><players></white> fighting now, combat <white><mode></white>."
+# For players. pvp-kill: <killer> <victim> <streak> (the killer's), to everyone in the area.
+pvp-entered: "<prefix><red>You are in the PvP area. Leave it to get your lobby items back."
+pvp-left: "<prefix><gray>You left the PvP area."
+pvp-kill: "<prefix><red><killer></red> <gray>killed</gray> <red><victim></red> <dark_gray>(streak <streak>)"
+pvp-combat-log: "<prefix><red><victim></red> <gray>left the game during a fight."
+# pvp-combat-tagged and pvp-combat-ended are shown above the hotbar. <seconds>
+pvp-combat-tagged: "<red>In combat: <white><seconds>s</white>"
+pvp-combat-ended: "<green>You are no longer in combat."
+pvp-in-combat: "<prefix><red>You are in combat for <white><seconds></white> more seconds."
+pvp-command-blocked: "<prefix><red>You cannot use that in the PvP area."
+# Above the hotbar, when same-version-only in pvp.yml stops a hit.
+pvp-same-version-only: "<red>Here you can only fight players on your kind of Minecraft version."
+# Shown by the proxy (lobby-bridge 0.6+) when a player in combat tries /server. <seconds>; no <prefix> here.
+pvp-proxy-blocked: "<red>You cannot switch servers during a fight (<seconds>s left)."
 # A "transfer" action for a client older than 1.20.5, which cannot be transferred. <host>
 transfer-not-supported: "<prefix><red>Your Minecraft version cannot switch servers this way. Join <white><host></white> directly."

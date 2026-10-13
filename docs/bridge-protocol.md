@@ -4,7 +4,7 @@ The Velocity plugin (`lobby-bridge.jar`) and the lobby servers talk over the plu
 **`lobby:bridge`**. You only need this page if you want to write your own bridge (for example for another
 proxy). The reference implementation is `BridgeCodec` in the `lobby-common` module.
 
-Protocol version **1**, message types 1 to 12.
+Protocol version **1**, message types 1 to 13.
 
 ## Directions
 
@@ -22,6 +22,7 @@ Protocol version **1**, message types 1 to 12.
 | 10 | ProxyInfo | proxy → lobby (bridge 0.4+) |
 | 11 | PlayerCommandRequest | lobby → proxy (bridge 0.5+) |
 | 12 | PlayerCommandResult | proxy → lobby (bridge 0.5+) |
+| 13 | CombatTag | lobby → proxy (bridge 0.6+) |
 
 Plugin messages travel through a player's connection. Messages from the lobby to the proxy are sent
 through any player on that lobby; a lobby with nobody online can neither send nor receive (harmless:
@@ -44,6 +45,8 @@ A player could try to send a fake `lobby:bridge` message, so:
   runs **as that player**, so the player's own permissions on the proxy decide; a lobby can make a player
   run only what that player could type. The lobby only sends it for actions its admins set up (NPCs,
   holograms, menus, hotbar items, portals), never for text a player typed;
+- a `CombatTag` only applies while the player is on the lobby that sent it, and only blocks switching away
+  from it;
 - the lobby ignores the channel completely in `standalone` mode (there is no proxy to trust);
 - the decoder rejects messages that are too large or malformed.
 
@@ -210,6 +213,23 @@ it does not know yet). A 0.4 bridge would ignore it and never answer.
 | FAILED | 2 | Not run: `player-commands` is false, the player is not on that lobby, the command was empty or too long, or it threw an error. |
 
 A value this build does not know is read as `FAILED`.
+
+## Type 13 – CombatTag
+
+The lobby tells the proxy that a player is in combat in its [PvP area](pvp.md). Until the time is over (or a
+tag with 0 arrives), the proxy refuses every switch to another server for that player (`/server`, other
+plugins, connect requests) and shows the message.
+
+| Field           | Type   | Notes                                                                 |
+|-----------------|--------|-----------------------------------------------------------------------|
+| playerId        | uuid   | the player in combat                                                  |
+| remainingMillis | i64    | how long from now, 0 to end it; never negative                        |
+| message         | text   | MiniMessage shown when a switch is refused; `<seconds>` is the time left |
+
+The proxy counts the time on its own clock, so the two machines' clocks do not have to agree. The lobby sends
+it when a fight starts and again only when the tag grew by more than two seconds, so a long fight does not
+send a message per hit. A 0.5 bridge ignores it: then `/setup-lobby setup` warns that `/server` is not
+blocked.
 
 ## Without the bridge
 

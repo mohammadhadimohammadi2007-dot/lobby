@@ -13,6 +13,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -86,4 +87,7 @@ public interface AddonContext {
 
     /** Which Minecraft version each player's client runs. */
     Clients clients();
+
+    /** The PvP area: who is in it, who is in combat, and players' records. */
+    Pvp pvp();
 }

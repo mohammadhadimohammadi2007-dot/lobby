@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * Double jump, {@code /fly}, jump pads and launch pads from {@code movement.yml}.
@@ -46,6 +47,7 @@ public final class MovementService implements RegionListener {
     private static final float PARTICLE_SPEED = 0.05f;
     private static final Vec PARTICLE_SPREAD = new Vec(0.3, 0.1, 0.3);
 
+    private volatile Predicate<Player> grounded = player -> false;
     private final ConfigManager config;
     private final PermissionService permissions;
     private final RegionTracker regions;
@@ -61,6 +63,23 @@ public final class MovementService implements RegionListener {
 
     private MovementConfig settings() {
         return config.current().movement();
+    }
+
+    /** Players who may not double jump or fly (fighters in the PvP area). */
+    public void grounded(Predicate<Player> rule) {
+        grounded = rule;
+    }
+
+    /** Takes away /fly and double jump from a player who just became {@link #grounded}. Tick thread. */
+    public void ground(Player player) {
+        flying.remove(player.getUuid());
+        player.setFlying(false);
+        player.setAllowFlying(false);
+    }
+
+    /** Gives double jump back to a player who is no longer grounded. Tick thread. */
+    public void release(Player player) {
+        allowDoubleJump(player);
     }
 
     public void register(EventNode<PlayerEvent> node) {
@@ -119,7 +138,7 @@ public final class MovementService implements RegionListener {
 
     private boolean mayDoubleJump(Player player) {
         MovementConfig.DoubleJump doubleJump = settings().doubleJump();
-        return doubleJump.enabled() && !ownFlight(player)
+        return doubleJump.enabled() && !ownFlight(player) && !grounded.test(player)
                 && (doubleJump.permission().isEmpty() || permissions.hasPermission(player, doubleJump.permission()));
     }
 

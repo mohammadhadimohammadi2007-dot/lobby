@@ -10,7 +10,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.api;
 public final class ApiVersion {
 
     /** The version of the API in this lobby. */
-    public static final String CURRENT = "0.1.0";
+    public static final String CURRENT = "0.2.0";
 
     private ApiVersion() {
     }

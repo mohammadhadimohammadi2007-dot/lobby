@@ -94,6 +94,16 @@ These work without the bridge: they are about the lobbies of **this** server.
 | `%litebans_mute_reason%` | Reason of the active mute, or empty |
 | `%litebans_mute_expires%` | Expiry date, `ban-never-expires` from messages.yml for permanent mutes, or empty |
 
+### PvP (`pvp_`, [guide](pvp.md))
+
+| Placeholder | Value |
+|---|---|
+| `%pvp_kills%`, `%pvp_deaths%`, `%pvp_kdr%` | The player's kills, deaths, and kills per death |
+| `%pvp_streak%`, `%pvp_best_streak%` | Kills since their last death, and the longest streak ever |
+| `%pvp_in_area%`, `%pvp_in_combat%`, `%pvp_combat_seconds%` | In the PvP area, in combat (`yes`/`no`), seconds of combat left |
+| `%pvp_players%` | Players in the PvP area |
+| `%pvp_top_<board>_<place>_name%`, `..._value%` | Leaderboards: `<board>` is `kills`, `deaths`, `streak` or `best_streak` |
+
 ## Adding your own (for developers)
 
 ```java

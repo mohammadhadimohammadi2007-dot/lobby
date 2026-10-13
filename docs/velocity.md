@@ -99,7 +99,11 @@ NPCs, menus, hotbar items and portals can also run proxy commands **as the playe
 (`player_command: server bedwars`, a queue plugin's `player_command: queue bedwars`, or `proxy_command:`;
 see [npcs.md](npcs.md#sending-players-to-servers-and-proxy-commands)). The player's own permissions on the
 proxy apply, so they can only run what they could type themselves. `player-commands = false` turns this
-off. Wire format and security details: [bridge-protocol.md](bridge-protocol.md).
+off.
+
+A player in combat in the lobby's [PvP area](pvp.md) cannot leave their lobby with `/server` either: the
+lobby tells the bridge (0.6 or newer), which refuses the switch until the fight is over. Wire format and
+security details: [bridge-protocol.md](bridge-protocol.md).
 
 ## Skins
 

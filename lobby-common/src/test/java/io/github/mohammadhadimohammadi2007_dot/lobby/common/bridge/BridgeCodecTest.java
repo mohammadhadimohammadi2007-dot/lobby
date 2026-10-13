@@ -173,6 +173,23 @@ class BridgeCodecTest {
     }
 
     @Test
+    void combatTagRoundTrip() throws BridgeFormatException {
+        BridgeMessage.CombatTag tag = new BridgeMessage.CombatTag(UUID.randomUUID(), 10_000,
+                "<red>You cannot switch servers during a fight (<seconds>s left).");
+        assertEquals(tag, BridgeCodec.decode(BridgeCodec.encode(tag)));
+        BridgeMessage.CombatTag end = new BridgeMessage.CombatTag(UUID.randomUUID(), 0, "");
+        assertEquals(end, BridgeCodec.decode(BridgeCodec.encode(end)));
+    }
+
+    @Test
+    void negativeCombatTimeIsRejected() {
+        byte[] data = BridgeCodec.encode(new BridgeMessage.CombatTag(new UUID(1, 2), 5, ""));
+        // The time sits after the header (2 bytes) and the UUID (16 bytes).
+        data[2 + 16] = (byte) 0x80;
+        assertThrows(BridgeFormatException.class, () -> BridgeCodec.decode(data));
+    }
+
+    @Test
     void skinUpdateRoundTripWithLongTextures() throws BridgeFormatException {
         BridgeMessage.SkinUpdate update = new BridgeMessage.SkinUpdate(UUID.randomUUID(),
                 "e".repeat(1000), "s".repeat(700));

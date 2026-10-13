@@ -15,6 +15,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -47,7 +48,8 @@ final class AddonContextImpl implements AddonContext {
 
     /** The services that only exist once the lobby runs. */
     private record Enabled(ApiCommands commands, ApiMenus menus, Holograms holograms, Npcs npcs,
-                           Permissions permissions, PlayerSettings settings, Network network, Clients clients) {
+                           Permissions permissions, PlayerSettings settings, Network network, Clients clients,
+                           Pvp pvp) {
     }
 
     AddonContextImpl(Addon addon, AddonDescription description, AddonManager manager, Path dataFolder,
@@ -80,7 +82,8 @@ final class AddonContextImpl implements AddonContext {
         enabled = new Enabled(new ApiCommands(this, services), new ApiMenus(this, services),
                 new ApiHolograms(services.holograms()), new ApiNpcs(services.npcs()),
                 new ApiPermissions(services.permissions()), new ApiPlayerSettings(this, services.settings()),
-                new ApiNetwork(services.bridge(), services.actions()), new ApiClients(services.bridge()));
+                new ApiNetwork(services.bridge(), services.actions()), new ApiClients(services.bridge()),
+                new ApiPvp(services.pvp()));
     }
 
     /** True while the addon may run code (its listeners, actions and placeholders check this). */
@@ -207,6 +210,11 @@ final class AddonContextImpl implements AddonContext {
     @Override
     public Clients clients() {
         return services().clients();
+    }
+
+    @Override
+    public Pvp pvp() {
+        return services().pvp();
     }
 
     private Enabled services() {

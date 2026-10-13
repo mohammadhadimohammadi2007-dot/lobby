@@ -4,6 +4,13 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **PvP area** ([pvp.md](pvp.md)): a new `pvp.yml` is created on the first start; nothing changes until an
+  area is set with `/pvp setregion`. Update `lobby-bridge.jar` to **0.6.0** so `/server` is blocked during a
+  fight. New placeholders `%pvp_...%`, new messages `pvp-*`, a new table `<prefix>pvp_stats` (made
+  automatically) or `data/pvp-stats.json`.
+- **Addon API 0.2.0**: adds the PvP events and `pvp()`. Addons made for 0.1 must be rebuilt (while the API is
+  0.x, the minor version must match).
+
 - **`player_command` actions with a command the lobby does not have now run on the proxy**, as the player
   (for example `player_command: server bedwars`, which used to answer "unknown command"). New action
   `proxy_command: <command>` for commands both have. This needs **lobby-bridge 0.5.0** on the proxy: update

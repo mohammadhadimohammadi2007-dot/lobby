@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * The hotbar items from {@code hotbar.yml}: given on join and whenever a player changes lobby instance,
@@ -49,6 +50,7 @@ public final class HotbarService {
     private static final long DOUBLE_USE_MILLIS = 150;
     private static final Logger LOGGER = LoggerFactory.getLogger(HotbarService.class);
 
+    private volatile Predicate<Player> exempt = player -> false;
     private final ConfigManager config;
     private final LobbyText text;
     private final ActionServices actions;
@@ -65,6 +67,11 @@ public final class HotbarService {
         this.actions = actions;
         this.bridge = bridge;
         this.visibility = visibility;
+    }
+
+    /** Players who do not get the lobby items (fighters in the PvP area have their kit). */
+    public void exempt(Predicate<Player> rule) {
+        exempt = rule;
     }
 
     public void register(EventNode<PlayerEvent> node) {
@@ -120,7 +127,7 @@ public final class HotbarService {
      */
     public void give(Player player) {
         HotbarConfig hotbar = config.current().hotbar();
-        if (!hotbar.enabled()) {
+        if (!hotbar.enabled() || exempt.test(player)) {
             return;
         }
         long request = gives.merge(player.getUuid(), 1L, Long::sum);
@@ -130,7 +137,8 @@ public final class HotbarService {
                 return;
             }
             Async.onTickThread(() -> {
-                if (player.isOnline() && gives.getOrDefault(player.getUuid(), 0L) == request) {
+                // Checked again: the player may have walked into the PvP area while the items were built.
+                if (player.isOnline() && gives.getOrDefault(player.getUuid(), 0L) == request && !exempt.test(player)) {
                     apply(player, hotbar, items);
                 }
             });

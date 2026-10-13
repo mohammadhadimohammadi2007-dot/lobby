@@ -7,7 +7,7 @@ plugins {
 }
 
 // The API's own version, independent of the lobby's. Keep ApiVersion.CURRENT equal to it (a test checks).
-version = "0.1.0"
+version = "0.2.0"
 
 dependencies {
     // Addons compile against Minestom and get it from the server at runtime.

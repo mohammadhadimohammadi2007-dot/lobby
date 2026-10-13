@@ -27,10 +27,16 @@ public final class ProtectionListener {
 
     private final ConfigManager configManager;
     private final PermissionService permissions;
+    private volatile Predicate<Player> damageAllowed = player -> false;
 
     public ProtectionListener(ConfigManager configManager, PermissionService permissions) {
         this.configManager = configManager;
         this.permissions = permissions;
+    }
+
+    /** Players who may take damage even where the lobby protects them (fighters in the PvP area). */
+    public void allowDamage(Predicate<Player> allowed) {
+        damageAllowed = allowed;
     }
 
     /** Registers the listeners on {@code node}. */
@@ -51,7 +57,8 @@ public final class ProtectionListener {
             }
         });
         node.addListener(EntityDamageEvent.class, event -> {
-            if (event.getEntity() instanceof Player player && blocked(player, LobbyConfig.Protection::damage)) {
+            if (event.getEntity() instanceof Player player && blocked(player, LobbyConfig.Protection::damage)
+                    && !damageAllowed.test(player)) {
                 event.setCancelled(true);
             }
         });

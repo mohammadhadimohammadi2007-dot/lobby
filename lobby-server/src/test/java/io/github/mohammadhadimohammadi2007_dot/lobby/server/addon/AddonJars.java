@@ -21,7 +21,7 @@ final class AddonJars {
     static Path addon(Path folder, String id, Class<?> main, String extraJson, Map<String, String> files)
             throws IOException {
         String json = "{\"id\": \"" + id + "\", \"name\": \"" + id + "\", \"version\": \"1.0\", \"main\": \""
-                + main.getName() + "\", \"api-version\": \"0.1\"" + (extraJson.isEmpty() ? "" : ", " + extraJson) + "}";
+                + main.getName() + "\", \"api-version\": \"0.2\"" + (extraJson.isEmpty() ? "" : ", " + extraJson) + "}";
         Path jar = folder.resolve(id + ".jar");
         Files.createDirectories(folder);
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {

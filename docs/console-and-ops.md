@@ -140,6 +140,7 @@ arguments from the console, or say "This command can only be used in game".
 | `npc create <name> [x y z]`, `npc move_to <name> <x y z>` | `lobby.command.npc` | give the coordinates |
 | `hologram create <name> [x y z]`, `hologram moveto <name> <x y z>` | `lobby.command.hologram` | give the coordinates |
 | `npc teleport`, `hologram teleport`, `npc nearby`, `chat spy` | | in game only |
+| `pvp setregion`, `pvp setspawn`, `pvp kit` | `lobby.command.pvp` | in game only; `pvp info` and `pvp delete` work from the console |
 
 Operators and the console have every permission. Players only see the commands `commands.yml` lists for
 their group ([commands.md](commands.md)).

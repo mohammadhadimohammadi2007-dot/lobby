@@ -1,5 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.bridge.velocity;
 
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -54,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 public final class LobbyBridgePlugin {
 
     /** This plugin's version, also sent to the lobbies (ProxyInfo). */
-    static final String VERSION = "0.5.0";
+    static final String VERSION = "0.6.0";
 
     private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(BridgeProtocol.CHANNEL);
     private static final long PING_TIMEOUT_SECONDS = 3;
@@ -66,6 +69,7 @@ public final class LobbyBridgePlugin {
     private final Path dataDir;
     private final Map<String, BridgeMessage.ServerStatus.Status> statuses = new ConcurrentHashMap<>();
     private final Map<UUID, SkinsRestorerHook.Skin> skins = new ConcurrentHashMap<>();
+    private final ProxyCombatTags combatTags = new ProxyCombatTags(System::currentTimeMillis);
     private BridgeConfig config;
     private CommandGate commandGate;
     private volatile boolean viaVersion;
@@ -109,8 +113,11 @@ public final class LobbyBridgePlugin {
         proxy.getScheduler().buildTask(this, this::checkSkins)
                 .repeat(SKIN_CHECK_SECONDS, TimeUnit.SECONDS)
                 .schedule();
-        proxy.getEventManager().register(this, DisconnectEvent.class,
-                disconnect -> skins.remove(disconnect.getPlayer().getUniqueId()));
+        proxy.getEventManager().register(this, DisconnectEvent.class, disconnect -> {
+            skins.remove(disconnect.getPlayer().getUniqueId());
+            combatTags.forget(disconnect.getPlayer().getUniqueId());
+        });
+        proxy.getEventManager().register(this, ServerPreConnectEvent.class, this::onServerPreConnect);
 
         logger.info("Lobby bridge ready: lobbies {}, {} group(s), counts every {}s, status every {}s,"
                         + " client versions from {}, allowed commands {}.",
@@ -167,6 +174,7 @@ public final class LobbyBridgePlugin {
             case BridgeMessage.CommandRequest request -> runCommand(connection, origin, request);
             case BridgeMessage.ConnectRequest request -> connectPlayer(connection, origin, request);
             case BridgeMessage.PlayerCommandRequest request -> runPlayerCommand(connection, origin, request);
+            case BridgeMessage.CombatTag tag -> combatTags.update(tag.playerId(), origin, tag.remainingMillis(), tag.message());
             default -> logger.debug("Ignored bridge message type {} from '{}'", message.typeId(), origin);
         }
     }
@@ -239,6 +247,27 @@ public final class LobbyBridgePlugin {
             }
             send(connection, result(request, ok ? Outcome.CONNECTED : Outcome.REFUSED, chosen));
         });
+    }
+
+    /**
+     * Keeps a player who is in combat on their lobby: /server, other plugins and the lobby's own requests are all
+     * refused until the combat ends, with the lobby's message.
+     */
+    private void onServerPreConnect(ServerPreConnectEvent event) {
+        Player player = event.getPlayer();
+        String current = player.getCurrentServer().map(connection -> connection.getServerInfo().getName()).orElse(null);
+        if (current == null || !event.getResult().isAllowed()) {
+            return;
+        }
+        ProxyCombatTags.Tag tag = combatTags.blocking(player.getUniqueId(), current);
+        if (tag == null) {
+            return;
+        }
+        event.setResult(ServerPreConnectEvent.ServerResult.denied());
+        if (!tag.message().isBlank()) {
+            player.sendMessage(MiniMessage.miniMessage().deserialize(tag.message(),
+                    Placeholder.unparsed("seconds", String.valueOf(combatTags.secondsLeft(tag)))));
+        }
     }
 
     /**
