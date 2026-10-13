@@ -67,7 +67,10 @@ change between minor versions, and addons must name the exact minor version they
 
 ### Project setup
 
-Build the API once into your local Maven repository:
+Download [`lobby-api.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-api.jar) (and
+[`lobby-api-sources.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-api-sources.jar) for your IDE) from the release your
+lobby runs, and compile against it: `compileOnly(files("libs/lobby-api.jar"))`. Or build the API into
+your local Maven repository:
 
 ```bash
 ./gradlew :lobby-api:publishToMavenLocal

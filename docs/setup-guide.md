@@ -17,7 +17,8 @@ Steps 1-5 give you a working lobby on its own. Steps 6-10 put it in a network be
 
 ## 1. Get the jars
 
-From a release, or build it yourself:
+From the newest release: [`lobby-server.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-server.jar) and
+[`lobby-bridge.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-bridge.jar). Or build them yourself:
 
 ```bash
 git clone --recursive https://github.com/mohammadhadimohammadi2007-dot/lobby.git

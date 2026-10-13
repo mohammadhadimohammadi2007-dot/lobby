@@ -41,7 +41,8 @@ The bridge plugin tells the lobby each player's **real client version** (importa
 and **live player counts** of all servers, which later phases use for the server selector,
 scoreboards and holograms.
 
-1. Copy `lobby-bridge.jar` into Velocity's `plugins/` folder and restart Velocity.
+1. Download [`lobby-bridge.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-bridge.jar) (newest release), copy it into Velocity's
+   `plugins/` folder and restart Velocity.
    It works on Velocity 3.5 (Java 21) and Velocity 4 (Java 25).
 2. Edit `plugins/lobby-bridge/config.toml`:
    ```toml

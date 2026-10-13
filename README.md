@@ -41,7 +41,8 @@ network, and it also runs completely on its own for testing or small servers.
 
 You need **Java 25**.
 
-1. Download `lobby-server.jar` from the [releases page](../../releases) (or [build it](#building-from-source)).
+1. Download [`lobby-server.jar`](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-server.jar) of the newest release (all versions are on
+   the [releases page](../../releases)), or [build it](#building-from-source).
 2. Put it in an empty folder with [`deploy/start.sh`](deploy/start.sh) (or `start.bat` on Windows) and run
    `./start.sh` (or simply `java -Xms1G -Xmx1G -jar lobby-server.jar`).
 3. Join `localhost` in Minecraft, then type `op <your name>` in the console and follow the

@@ -1,7 +1,9 @@
 # The lobby with a MariaDB database, for testing or a small network.
 #
-#   ./gradlew build
 #   docker compose -f deploy/docker/docker-compose.yml up -d --build
+#
+# This uses lobby-server.jar of the newest release. For your own build, run ./gradlew build and set
+# LOBBY_JAR under build > args below to lobby-server/build/libs/lobby-server.jar.
 #   docker compose -f deploy/docker/docker-compose.yml logs -f lobby
 #
 # The lobby's files are in the "lobby-data" volume (or bind-mount a folder instead, see below). To use the
@@ -16,6 +18,8 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile
+      # args:
+      #   LOBBY_JAR: lobby-server/build/libs/lobby-server.jar
     environment:
       MEMORY: "2G"
     ports:

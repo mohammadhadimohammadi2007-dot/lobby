@@ -40,9 +40,9 @@
         },
         {
             "name": "Download URL",
-            "description": "Where the installer downloads lobby-server.jar from (for example a GitHub release asset). Empty: upload the jar yourself.",
+            "description": "Where the installer downloads lobby-server.jar from. The default is always the newest release; a URL with /releases/download/v0.2.0/ instead of /releases/latest/download/ keeps one version. Empty: upload the jar yourself.",
             "env_variable": "DOWNLOAD_URL",
-            "default_value": "",
+            "default_value": "https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-server.jar",
             "user_viewable": true,
             "user_editable": true,
             "rules": "nullable|url",

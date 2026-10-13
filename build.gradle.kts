@@ -3,7 +3,8 @@ subprojects {
     apply(plugin = "java")
 
     group = "io.github.mohammadhadimohammadi2007-dot"
-    version = "0.1.0-SNAPSHOT"
+    // The release workflow passes the tag's version (-PlobbyVersion=0.2.0); local builds are snapshots.
+    version = (rootProject.findProperty("lobbyVersion") as String?) ?: "0.1.0-SNAPSHOT"
 
     repositories {
         mavenCentral()

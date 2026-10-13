@@ -90,4 +90,24 @@ regular build only prints it; with `LOBBY_LOAD_TEST=1` it is also written to
 - One logical change per commit, with a clear message: a short summary line, a blank line, then why.
 - Keep `./gradlew build` green.
 - Update the docs in `docs/` and the README when behavior or options change.
-- If you change the bridge message format, bump `BridgeProtocol.VERSION` and update `docs/bridge-protocol.md`.
+- If you change the layout of an existing bridge message, bump `BridgeProtocol.VERSION` and update
+  `docs/bridge-protocol.md`. New message types do not need a new version: older readers ignore them.
+- Never rewrite history that is already pushed (no amend, rebase or force-push of `main`); fix a mistake
+  with a new commit.
+
+## Releasing
+
+Releases are made by the maintainer by pushing a tag; the [Release workflow](.github/workflows/release.yml)
+does the rest:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+It builds and tests everything (with the database tests), sets the lobby's version to the tag's
+(`-PlobbyVersion=0.2.0`, shown by `/version`), and publishes a GitHub Release with `lobby-server.jar`,
+`lobby-bridge.jar`, `lobby-api.jar`, `lobby-api-sources.jar` and `SHA256SUMS.txt`, with notes listing the
+commits since the previous tag. A tag with a suffix (`v0.3.0-alpha`, `v1.0.0-rc.1`) becomes a pre-release,
+which `/releases/latest/download/...` skips. Before tagging: `docs/upgrading.md` is up to date, and the
+bridge's `VERSION` and `ApiVersion.CURRENT` are raised if they changed.

@@ -1,0 +1,112 @@
+# Publishes a GitHub Release when a version tag is pushed: v0.2.0 (a release) or v0.2.0-alpha, v1.0.0-rc.1...
+# (a pre-release: anything after a "-"). It builds and tests everything like the Build workflow, then
+# attaches the jars under fixed names, so the newest release can always be downloaded from
+#   https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-server.jar
+# ("latest" skips pre-releases). The release notes list the commits since the previous tag.
+#
+# Releasing: git tag v0.2.0 && git push origin v0.2.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:12.3.2
+        env:
+          MARIADB_ROOT_PASSWORD: lobbytest
+          MARIADB_DATABASE: lobbytest
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      LOBBY_TEST_DB_HOST: 127.0.0.1
+      LOBBY_TEST_DB_PORT: 3306
+      LOBBY_TEST_DB_USER: root
+      LOBBY_TEST_DB_PASSWORD: lobbytest
+      LOBBY_TEST_DB_NAME: lobbytest
+      LOBBY_REQUIRE_DB_TESTS: 1
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          # Every commit and tag, for the notes since the previous tag.
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Check the tag
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::The tag must look like v1.2.3 or v1.2.3-alpha, not $TAG"
+            exit 1
+          fi
+
+      - name: Build and test
+        # The lobby's version (shown by /version) is the tag without the "v".
+        run: ./gradlew build -PlobbyVersion="${TAG#v}"
+
+      - name: Collect the files
+        run: |
+          mkdir release
+          cp lobby-server/build/libs/lobby-server.jar release/
+          cp lobby-bridge-velocity/build/libs/lobby-bridge.jar release/
+          # The addon API under fixed names too; its own version is in the release notes.
+          cp lobby-api/build/libs/lobby-api-*-sources.jar release/lobby-api-sources.jar
+          cp "$(ls lobby-api/build/libs/lobby-api-*.jar | grep -v -- -sources)" release/lobby-api.jar
+          (cd release && sha256sum *.jar > SHA256SUMS.txt)
+          ls -l release
+
+      - name: Write the release notes
+        run: |
+          api_version=$(grep -oP 'CURRENT = "\K[^"]+' lobby-api/src/main/java/io/github/mohammadhadimohammadi2007_dot/lobby/api/ApiVersion.java)
+          bridge_version=$(grep -oP 'VERSION = "\K[^"]+' lobby-bridge-velocity/src/main/java/io/github/mohammadhadimohammadi2007_dot/lobby/bridge/velocity/LobbyBridgePlugin.java)
+          previous=$(git describe --tags --abbrev=0 --match 'v*' "$TAG^" 2>/dev/null || true)
+          {
+            echo "| File | What it is |"
+            echo "|---|---|"
+            echo "| \`lobby-server.jar\` | The lobby server ${TAG#v} (Java 25) |"
+            echo "| \`lobby-bridge.jar\` | The Velocity plugin, bridge version $bridge_version |"
+            echo "| \`lobby-api.jar\`, \`lobby-api-sources.jar\` | The addon API $api_version, to compile addons against |"
+            echo "| \`SHA256SUMS.txt\` | Checksums of the jars |"
+            echo
+            echo "Before updating an existing lobby, read [upgrading.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAG}/docs/upgrading.md)."
+            echo
+            if [ -n "$previous" ]; then
+              echo "## Changes since $previous"
+              range="$previous..$TAG"
+            else
+              echo "## Changes"
+              range="$TAG"
+            fi
+            echo
+            git log --no-merges --pretty='- %s (%h)' "$range"
+          } > notes.md
+          cat notes.md
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [[ "$TAG" == *-* ]]; then
+            flags+=(--prerelease)
+          else
+            flags+=(--latest)
+          fi
+          gh release create "$TAG" release/* --title "$TAG" --notes-file notes.md --verify-tag "${flags[@]}"

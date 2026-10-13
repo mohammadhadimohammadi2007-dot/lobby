@@ -69,8 +69,9 @@ commands in game, or stop the service and run `./start.sh` in `screen`/`tmux` wh
 
 1. Admin panel → Nests → Import Egg → [`deploy/pterodactyl/egg-minestom-lobby.json`](../deploy/pterodactyl/egg-minestom-lobby.json).
 2. Create a server with that egg, image "Java 25", at least 1.5 GB of memory.
-3. Leave "Download URL" empty and upload `lobby-server.jar` with the file manager (or give a URL to a
-   release jar).
+3. "Download URL" is the newest release by default. To stay on one version, use
+   `https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/download/v0.2.0/lobby-server.jar`
+   (with that version); to upload your own build, empty it and use the file manager.
 4. Start it. The panel writes the allocation's port into `config.yml` on every start; the console accepts
    commands, the "stop" button runs `stop`.
 
@@ -86,13 +87,31 @@ cannot ([firewall](../examples/network/firewall.md)).
 [`deploy/docker/docker-compose.yml`](../deploy/docker/docker-compose.yml) (with MariaDB):
 
 ```bash
-./gradlew build
 docker compose -f deploy/docker/docker-compose.yml up -d --build
 docker compose -f deploy/docker/docker-compose.yml logs -f lobby
 ```
 
+The image gets `lobby-server.jar` of the newest release. For a fixed version or your own build, set the
+build argument `LOBBY_JAR` (see the comments in both files). To update, rebuild:
+`docker compose -f deploy/docker/docker-compose.yml build --no-cache lobby`, then `up -d`.
+
 The server's folder is the `lobby-data` volume (or bind-mount a folder, see the comments in the file).
 `docker compose stop lobby` saves first. Change the database passwords in the file before using it.
+
+## Releases
+
+Every release on the [releases page](https://github.com/mohammadhadimohammadi2007-dot/lobby/releases) has:
+
+| File | What it is |
+|---|---|
+| `lobby-server.jar` | the lobby |
+| `lobby-bridge.jar` | the Velocity plugin |
+| `lobby-api.jar`, `lobby-api-sources.jar` | the API for [addon](addons.md) developers |
+| `SHA256SUMS.txt` | checksums |
+
+The newest release is always at `https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/<file>`, for example
+`https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/latest/download/lobby-server.jar`; pre-releases (versions such as `v0.3.0-alpha`) are not
+"latest". A fixed version is at `https://github.com/mohammadhadimohammadi2007-dot/lobby/releases/download/v0.2.0/<file>`.
 
 ## Updating
 
