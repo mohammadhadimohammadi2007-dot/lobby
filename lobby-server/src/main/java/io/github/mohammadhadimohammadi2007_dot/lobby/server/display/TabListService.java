@@ -107,8 +107,15 @@ final class TabListService {
         List<PlayerInfoUpdatePacket.Entry> entries = new ArrayList<>(targets.size());
         for (Player target : targets) {
             Name name = names.get(target.getUuid());
+            if (name == null) {
+                // Joined (or left) while this refresh ran; the next refresh sends their name as a changed one.
+                continue;
+            }
             Component shown = group.legacy() ? name.legacy() : name.modern();
             entries.add(entry(target, true, shown));
+        }
+        if (entries.isEmpty()) {
+            return;
         }
         PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket(PlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME,
                 entries);
