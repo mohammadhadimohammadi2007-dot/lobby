@@ -240,6 +240,10 @@ public record LobbyConfig(
         Console console = new Console(colors, reader.integer("logging.keep-days", 1, MAX_LOG_KEEP_DAYS, 14));
 
         String protectionText = reader.string("ops.protection", "code-and-ip").strip().toLowerCase(Locale.ROOT);
+        if (protectionText.equals("false")) {
+            // YAML reads an unquoted "off" as false.
+            protectionText = "off";
+        }
         OpList.Protection opProtection = switch (protectionText) {
             case "code-and-ip" -> OpList.Protection.CODE_AND_IP;
             case "code" -> OpList.Protection.CODE;

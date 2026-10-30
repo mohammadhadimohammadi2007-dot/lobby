@@ -150,6 +150,16 @@ class ConfigLoadingTest {
     }
 
     @Test
+    void anUnquotedOffForOperatorProtectionMeansOff() throws Exception {
+        // YAML reads off as false; the documented "protection: off" must still work.
+        writeConfigReplacing("protection: code-and-ip", "protection: off");
+        ConfigSnapshot snapshot = new ConfigManager(dir).load();
+        assertEquals(io.github.mohammadhadimohammadi2007_dot.lobby.server.player.OpList.Protection.OFF,
+                snapshot.config().ops().protection());
+        assertEquals(List.of(), snapshot.warnings().stream().filter(w -> w.contains("ops.protection")).toList());
+    }
+
+    @Test
     void unsafeTablePrefixIsRejected() throws Exception {
         new ConfigManager(dir).load();
         replace("integrations.yml", "table-prefix: \"litebans_\"", "table-prefix: \"x; DROP TABLE y\"");
