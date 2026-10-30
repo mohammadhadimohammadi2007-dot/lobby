@@ -96,6 +96,12 @@ Replace `bedwars`, `skywars` and `duels` with your own groups.
 Its texts are the `lobby-selector-*` lines of `messages.yml`. A menu called `lobbies` in `menus.yml`
 replaces it completely.
 
+## The cosmetics menu
+
+`open_menu: cosmetics` (or `/cosmetics`) opens the lobby's own [cosmetics menu](cosmetics.md#the-menu): trails,
+hats and gadgets, with left-click to use and right-click to preview. It needs no entry in `menus.yml`; a menu
+called `cosmetics` there replaces it.
+
 ## Items on 1.8
 
 An item that does not exist in Minecraft 1.8 (such as `red_bed`) is reported once in the console with

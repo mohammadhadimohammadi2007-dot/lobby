@@ -144,6 +144,23 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 - [ ] The last hit: the victim is back at the PvP spawn with full health and a new kit; everyone in the area
       sees the kill message; `%pvp_kills%` goes up. Quit while in combat: counted as a death.
 - [ ] With `same-version-only: true`, the 1.8 player cannot hurt the modern one.
+## 5c. Cosmetics
+
+- [ ] On join, slot 7 has the ender chest; right-click opens the cosmetics menu, on 1.8 and on the latest client.
+- [ ] Trails page on 1.8: "Sparkles" is not listed; on the latest client it is (locked).
+- [ ] Use "Flames" and walk: flames at your feet; the other player sees them on both clients. Stand still: none.
+- [ ] Use "Halo of Hearts": a ring above your head, also standing still; 1.8 through ViaRewind shows hearts too.
+- [ ] Right-click a locked trail: the menu closes, a preview for 5 seconds that the other player does not see.
+- [ ] "Glass Helmet": glass on your head for everyone; it cannot be taken off in the inventory (1.8 too).
+- [ ] With an operator, "Cake Head" (head-owner MHF_Cake) shows the cake skin on both clients.
+- [ ] Gadgets: "Firework" in the middle slot; right-click: a firework goes up and explodes, seen by the other
+      player; again at once: "is ready in ...s" above the hotbar. "Leap" throws you forward on both clients.
+- [ ] The other player switches "Other players' cosmetics" to hidden: they no longer see your trail or firework,
+      but still see your hat.
+- [ ] Walk into the PvP area: no trail, the kit's helmet instead of the hat, no gadget. Walk out: all back.
+- [ ] Rejoin (and, with a shared database, join another lobby server): the same cosmetics are on.
+- [ ] 30+ players at the spawn with trails: `/setup-lobby info` shows the effects thread busy % and dropped
+      particle packets; the 1.8 client stays smooth.
 ## 6. Network names
 
 - [ ] Behind Velocity with the bridge, rename a group in the bridge's `[groups]` and restart the proxy:

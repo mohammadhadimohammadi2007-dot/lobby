@@ -5,7 +5,11 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatSettingsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.storage.FileSettingsStore;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticType;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.WorldScope;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.Hologram;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramService;
@@ -62,7 +66,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * second), with 50 holograms and 30 NPCs (some with per-player text), the bundled scoreboard, tab list,
  * nametags and boss bar, hotbar items, player visibility, regions, jump pads and portals all running. 20 of the
  * players are in the PvP area instead, each hitting another about twice a second (kills, respawns and combat tags
- * included).
+ * included). Every walking player has a trail and every other one a hat (LOBBY_LOAD_TEST_COSMETICS=0 turns that
+ * off, for comparison).
  * Reports the tick time per minute (to see it does not grow), the display thread, and allocation and GC.
  *
  * <p>Off by default, like the chat load test: {@code LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test
@@ -85,6 +90,34 @@ class LobbyLoadTest {
     private static final Pos ARENA = DisplayTestServer.ORIGIN.add(0, 0, 60);
     /** LOBBY_LOAD_TEST_PVP=0 runs the same test without the PvP area, for comparison. */
     private static final boolean PVP = !"0".equals(System.getenv("LOBBY_LOAD_TEST_PVP"));
+    /** LOBBY_LOAD_TEST_COSMETICS=0 runs the same test without cosmetics, for comparison. */
+    private static final boolean COSMETICS = !"0".equals(System.getenv("LOBBY_LOAD_TEST_COSMETICS"));
+    /** One trail of each style and a hat, free for everyone, so every walking player can use them. */
+    private static final String LOAD_COSMETICS = """
+            trails:
+              feet:
+                particle: flame
+                style: feet
+                amount: 3
+                permission: ""
+              halo:
+                particle: heart
+                style: halo
+                permission: ""
+              spiral:
+                particle: note
+                style: spiral
+                permission: ""
+            hats:
+              glass:
+                material: glass
+                permission: ""
+            gadgets:
+              leap:
+                type: leap
+                permission: ""
+            """;
+    private static final List<String> TRAILS = List.of("feet", "halo", "spiral");
 
     @TempDir
     Path dir;
@@ -100,6 +133,9 @@ class LobbyLoadTest {
     void twoHundredPlayersWalkingWithEverythingOn(Env env) throws Exception {
         int seconds = Integer.parseInt(System.getenv().getOrDefault("LOBBY_LOAD_TEST_SECONDS", "300"));
         InstanceContainer map = (InstanceContainer) env.createFlatInstance();
+        if (COSMETICS) {
+            Files.writeString(dir.resolve(ConfigManager.COSMETICS_FILE), LOAD_COSMETICS);
+        }
         // The bundled display.yml: what a server gets out of the box.
         DisplayTestServer server = new DisplayTestServer(env, dir, map, null);
         cleanup.add(server::shutdown);
@@ -143,6 +179,16 @@ class LobbyLoadTest {
         hotbar.exempt(pvp::inArea);
         movement.grounded(pvp::inArea);
         visibility.alwaysVisible((viewer, target) -> pvp.inArea(viewer) && pvp.inArea(target));
+        MeasuredThread effects = new MeasuredThread("load-effects");
+        cleanup.add(effects::shutdown);
+        CosmeticsService cosmetics = new CosmeticsService(new CosmeticsService.Dependencies(server.config, server.text,
+                server.permissions, settings, DisplayTestServer::protocolOf, visibility::canSee, effects,
+                System::currentTimeMillis));
+        cleanup.add(0, cosmetics::shutdown);
+        cosmetics.suppressWhen(pvp::inArea);
+        cosmetics.onItemsChanged(hotbar::give);
+        hotbar.extras(cosmetics.hotbarExtras());
+        cosmetics.register(node);
         if (PVP) {
             pvp.setRegion(new Region("wand", "selection", ARENA.blockX() - 12, ARENA.blockY() - 2, ARENA.blockZ() - 12,
                     ARENA.blockX() + 12, ARENA.blockY() + 6, ARENA.blockZ() + 12));
@@ -164,6 +210,14 @@ class LobbyLoadTest {
             UUID id = UUID.randomUUID();
             settings.load(id);
             players.add(env.createConnection(new GameProfile(id, "P" + tier + i)).connect(map, home(i)));
+            if (COSMETICS && i >= FIGHTERS) {
+                // Every walking player has a trail (the three styles in turn), every other one a hat.
+                Player joined = players.getLast();
+                cosmetics.equip(joined, cosmetics.config().find(CosmeticType.TRAIL, TRAILS.get(i % TRAILS.size())));
+                if (i % 2 == 0) {
+                    cosmetics.equip(joined, cosmetics.config().find(CosmeticType.HAT, "glass"));
+                }
+            }
             // One join per tick, as when a full lobby fills up, with everyone already there walking.
             walk(players, i);
             long joinStart = System.nanoTime();
@@ -207,6 +261,8 @@ class LobbyLoadTest {
         List<Long> ticks = new ArrayList<>();
         List<DisplayLoad.Snapshot> displayPerMinute = new ArrayList<>();
         List<DisplayLoad.Snapshot> boardPerMinute = new ArrayList<>();
+        List<DisplayLoad.Snapshot> effectsPerMinute = new ArrayList<>();
+        long droppedBefore = cosmetics.droppedParticles();
         long nextTick = System.nanoTime();
         long end = start + TimeUnit.SECONDS.toNanos(seconds);
         int tick = 0;
@@ -226,6 +282,7 @@ class LobbyLoadTest {
             if (tick % TICKS_PER_MINUTE == 0) {
                 displayPerMinute.add(server.renderer.load());
                 boardPerMinute.add(server.displays.load());
+                effectsPerMinute.add(effects.load());
             }
             nextTick += TICK_NANOS;
             long sleep = nextTick - System.nanoTime();
@@ -241,7 +298,8 @@ class LobbyLoadTest {
                 wallSeconds, gc, allocatedMb, server.displays.skippedRefreshes() - skippedBefore, skippedBefore)
                 + String.format(Locale.ROOT, "  PvP: %d of %d fighters in the area at the end, %d kills%n", pvp.playersInArea(),
                 FIGHTERS, players.subList(0, FIGHTERS).stream()
-                        .mapToInt(player -> pvp.stats().get(player.getUuid(), player.getUsername()).kills()).sum());
+                        .mapToInt(player -> pvp.stats().get(player.getUuid(), player.getUsername()).kills()).sum())
+                + effectsReport(effectsPerMinute, effects.load(), cosmetics.droppedParticles() - droppedBefore);
         System.out.println(report);
         System.out.println("  ticks over 50 ms: " + spikes.size() + (spikes.isEmpty() ? "" : " - " + String.join("; ",
                 spikes.subList(0, Math.min(10, spikes.size())))));
@@ -250,6 +308,22 @@ class LobbyLoadTest {
         Files.writeString(out, report);
         double average = ticks.stream().mapToLong(Long::longValue).average().orElse(0) / 1e6;
         PerfReport.report("LobbyLoadTest: average tick (MSPT)", average, 25, "ms");
+    }
+
+    /** The cosmetics part of the report: the effects thread per minute, and particles the limits dropped. */
+    private static String effectsReport(List<DisplayLoad.Snapshot> perMinute, DisplayLoad.Snapshot last, long dropped) {
+        if (!COSMETICS) {
+            return "  cosmetics: off (LOBBY_LOAD_TEST_COSMETICS=0)\n";
+        }
+        StringBuilder text = new StringBuilder(String.format(Locale.ROOT, "  cosmetics: %d walking players with a"
+                + " trail, half with a hat; effects thread last minute %.1f%% busy, longest cycle %.1f ms; %d particle"
+                + " packets dropped by the limits%n", PLAYERS - FIGHTERS, last.busyPercent(), last.longestCycleMillis(),
+                dropped));
+        for (int minute = 0; minute < perMinute.size(); minute++) {
+            text.append(String.format(Locale.ROOT, "    minute %d: effects thread %.1f%% busy, longest %.1f ms%n",
+                    minute + 1, perMinute.get(minute).busyPercent(), perMinute.get(minute).longestCycleMillis()));
+        }
+        return text.toString();
     }
 
     /** Where a player joins and walks around: fighters in the PvP area, everyone else on the grid. */

@@ -7,6 +7,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuItems;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.Async;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.EventNode;
@@ -50,7 +51,43 @@ public final class HotbarService {
     private static final long DOUBLE_USE_MILLIS = 150;
     private static final Logger LOGGER = LoggerFactory.getLogger(HotbarService.class);
 
+    /** The item on the head of a player who wears a hat (locked like the hotbar items). */
+    public static final String HAT_ITEM = "cosmetic:hat";
+
+    /**
+     * Items that come from elsewhere: the hat a player wears and their gadget, from the cosmetics. Called while
+     * the items are built, on a virtual thread; {@link #useGadget} on the tick thread.
+     */
+    public interface Extras {
+        Extras NONE = new Extras() {
+            @Override
+            public @Nullable ItemStack hat(Player player) {
+                return null;
+            }
+
+            @Override
+            public @Nullable ItemStack gadget(Player player, boolean legacyClient) {
+                return null;
+            }
+
+            @Override
+            public void useGadget(Player player) {
+            }
+        };
+
+        @Nullable ItemStack hat(Player player);
+
+        @Nullable ItemStack gadget(Player player, boolean legacyClient);
+
+        void useGadget(Player player);
+    }
+
+    /** What {@link #give} puts in the inventory: hotbar items by slot, and the hat (or {@code null}). */
+    private record Built(Map<Integer, ItemStack> items, @Nullable ItemStack hat) {
+    }
+
     private volatile Predicate<Player> exempt = player -> false;
+    private volatile Extras extras = Extras.NONE;
     private final ConfigManager config;
     private final LobbyText text;
     private final ActionServices actions;
@@ -72,6 +109,11 @@ public final class HotbarService {
     /** Players who do not get the lobby items (fighters in the PvP area have their kit). */
     public void exempt(Predicate<Player> rule) {
         exempt = rule;
+    }
+
+    /** Where hats and gadgets come from. */
+    public void extras(Extras value) {
+        extras = value;
     }
 
     public void register(EventNode<PlayerEvent> node) {
@@ -131,7 +173,7 @@ public final class HotbarService {
             return;
         }
         long request = gives.merge(player.getUuid(), 1L, Long::sum);
-        Async.supply(() -> build(player, hotbar)).whenComplete((items, error) -> {
+        Async.supply(() -> build(player, hotbar)).whenComplete((built, error) -> {
             if (error != null) {
                 LOGGER.error("Could not build the hotbar items of {}", player.getUsername(), error);
                 return;
@@ -139,14 +181,14 @@ public final class HotbarService {
             Async.onTickThread(() -> {
                 // Checked again: the player may have walked into the PvP area while the items were built.
                 if (player.isOnline() && gives.getOrDefault(player.getUuid(), 0L) == request && !exempt.test(player)) {
-                    apply(player, hotbar, items);
+                    apply(player, hotbar, built);
                 }
             });
         });
     }
 
-    /** The items {@code player} gets, by slot. */
-    private Map<Integer, ItemStack> build(Player player, HotbarConfig hotbar) {
+    /** The items {@code player} gets, by slot, and their hat. */
+    private Built build(Player player, HotbarConfig hotbar) {
         boolean legacy = bridge.capabilities(player).legacy();
         VisibilityMode mode = visibility.mode(player);
         Map<Integer, ItemStack> items = new LinkedHashMap<>();
@@ -154,12 +196,20 @@ public final class HotbarService {
             if (!item.permission().isEmpty() && !actions.permissions().hasPermission(player, item.permission())) {
                 continue;
             }
+            if (item.gadget()) {
+                ItemStack gadget = extras.gadget(player, legacy);
+                if (gadget != null) {
+                    items.put(item.slot(), gadget.withTag(ITEM_TAG, item.id()));
+                }
+                continue;
+            }
             items.put(item.slot(), MenuItems.build(item.look(mode), player, text, legacy).withTag(ITEM_TAG, item.id()));
         }
-        return items;
+        ItemStack hat = extras.hat(player);
+        return new Built(items, hat == null ? null : hat.withTag(ITEM_TAG, HAT_ITEM));
     }
 
-    private static void apply(Player player, HotbarConfig hotbar, Map<Integer, ItemStack> items) {
+    private static void apply(Player player, HotbarConfig hotbar, Built built) {
         PlayerInventory inventory = player.getInventory();
         if (hotbar.clearInventory()) {
             inventory.clear();
@@ -171,7 +221,14 @@ public final class HotbarService {
                 }
             }
         }
-        items.forEach(inventory::setItemStack);
+        built.items().forEach(inventory::setItemStack);
+        ItemStack helmet = player.getEquipment(EquipmentSlot.HELMET);
+        if (built.hat() != null) {
+            player.setEquipment(EquipmentSlot.HELMET, built.hat());
+        } else if (isHotbarItem(helmet)) {
+            // The hat of before, if the inventory was not cleared.
+            player.setEquipment(EquipmentSlot.HELMET, ItemStack.AIR);
+        }
     }
 
     /** Gives every online player their items again (after a reload). */
@@ -187,6 +244,10 @@ public final class HotbarService {
         long now = System.currentTimeMillis();
         Long last = lastUse.put(player.getUuid(), now);
         if (last != null && now - last < DOUBLE_USE_MILLIS) {
+            return;
+        }
+        if (item.gadget()) {
+            extras.useGadget(player);
             return;
         }
         if (item.visibilityToggle()) {

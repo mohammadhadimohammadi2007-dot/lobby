@@ -4,6 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpConfig;
 
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatConfig;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.display.DisplayConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarConfig;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuConfig;
@@ -22,12 +23,13 @@ import java.util.List;
  * @param hotbar       hotbar.yml
  * @param movement     movement.yml
  * @param pvp          pvp.yml
+ * @param cosmetics    cosmetics.yml
  * @param messages     messages.yml
  * @param warnings     non-fatal problems found while loading, ready to be logged
  */
 public record ConfigSnapshot(LobbyConfig config, IntegrationsConfig integrations, ChatConfig chat, MenuConfig menus,
                              DisplayConfig display, HotbarConfig hotbar, MovementConfig movement, PvpConfig pvp,
-                             CommandsConfig commands,
+                             CosmeticsConfig cosmetics, CommandsConfig commands,
                              Messages messages,
                              List<String> warnings) {
     public ConfigSnapshot {

@@ -104,6 +104,13 @@ These work without the bridge: they are about the lobbies of **this** server.
 | `%pvp_players%` | Players in the PvP area |
 | `%pvp_top_<board>_<place>_name%`, `..._value%` | Leaderboards: `<board>` is `kills`, `deaths`, `streak` or `best_streak` |
 
+### Cosmetics (`cosmetics_`, [guide](cosmetics.md))
+
+| Placeholder | Value |
+|---|---|
+| `%cosmetics_trail%`, `%cosmetics_hat%`, `%cosmetics_gadget%` | The name of the player's trail, hat or gadget (without colors), or `none` |
+| `%cosmetics_unlocked%`, `%cosmetics_total%` | How many cosmetics the player has unlocked, and how many their version can show |
+
 ## Adding your own (for developers)
 
 ```java

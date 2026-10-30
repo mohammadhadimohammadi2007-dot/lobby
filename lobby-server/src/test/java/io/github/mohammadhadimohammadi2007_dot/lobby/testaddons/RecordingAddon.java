@@ -3,10 +3,12 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.testaddons;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.item.Material;
 
@@ -49,6 +51,13 @@ public final class RecordingAddon implements LobbyAddon {
                 event.setCancelled(true);
             }
         });
+        context.events().listen(CosmeticChangeEvent.class, event -> {
+            System.setProperty("recording.cosmetic", event.kind() + " " + event.previous() + " -> " + event.next());
+            if ("hearts".equals(event.next())) {
+                event.setCancelled(true);
+            }
+        });
+        System.setProperty("recording.trails", String.valueOf(context.cosmetics().ids(Cosmetics.Kind.TRAIL).size()));
         context.scheduler().repeat(Duration.ofSeconds(60), () -> { });
         context.menus().register("recording-menu", player -> new MenuView("Recording", 1, List.of(
                 MenuButton.of(4, Material.DIAMOND, "Click", List.of(), clicker ->

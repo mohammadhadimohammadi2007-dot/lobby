@@ -4,6 +4,17 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **Cosmetics** ([cosmetics.md](cosmetics.md)): a new `cosmetics.yml` is created on the first start. Your
+  existing `hotbar.yml` is not changed, so add the two new items yourself (the menu item with
+  `open_menu: cosmetics`, and an item with `type: gadget`; see [cosmetics.md](cosmetics.md#the-hotbar)), or
+  delete `hotbar.yml` to get the new default. Add `cosmetics` to the default group in `commands.yml` so players
+  can type `/cosmetics`, and with LuckPerms give the default group `lobby.command.cosmetics`. The settings table
+  `<prefix>chat_settings` gets a `cosmetics` column automatically. New placeholders `%cosmetics_...%`, new
+  messages `cosmetics-*`. In `hotbar.yml`, an unknown `type:` is now reported and the item left out (before, it
+  became a normal item).
+- **Addon API 0.3.0**: adds `cosmetics()`, `CosmeticChangeEvent` and `GadgetUseEvent`. Addons made for 0.2 must be
+  rebuilt with `api-version: "0.3"`.
+
 - **PvP area** ([pvp.md](pvp.md)): a new `pvp.yml` is created on the first start; nothing changes until an
   area is set with `/pvp setregion`. Update `lobby-bridge.jar` to **0.6.0** so `/server` is blocked during a
   fight. New placeholders `%pvp_...%`, new messages `pvp-*`, a new table `<prefix>pvp_stats` (made

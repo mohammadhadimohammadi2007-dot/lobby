@@ -15,6 +15,10 @@ clear-inventory: true
 #   permission:          needed to get the item ("" = everyone)
 #   actions:             what right-clicking with it does (the same actions as everywhere else)
 #   click-cooldown:      milliseconds before the same player may use it again
+# Two special kinds (type:):
+#   visibility:  the player-visibility switch (see "visibility" below)
+#   gadget:      holds the gadget the player picked in the cosmetics menu, empty until they pick one
+#                (only slot and permission are read)
 items:
   games:
     slot: 0
@@ -32,6 +36,17 @@ items:
       - "<gray>Switch to another lobby."
     actions:
       - "open_menu: lobbies"
+  gadget:
+    slot: 4
+    type: gadget
+  cosmetics:
+    slot: 6
+    material: ender_chest
+    name: "<light_purple><bold>Cosmetics</bold> <gray>(right-click)"
+    lore:
+      - "<gray>Trails, hats and gadgets."
+    actions:
+      - "open_menu: cosmetics"
   # type: visibility makes the player-visibility switch. Each click goes to the next mode
   # (all -> staff -> none -> all), and the item shows the current one.
   visibility:

@@ -42,9 +42,10 @@ public record HotbarConfig(boolean enabled, boolean clearInventory, List<Item> i
      * @param look        how it looks (name, lore, glow), with {@code slots} holding {@link #slot}
      * @param actions     what right-clicking with it does
      * @param modeLooks   for the visibility toggle: its look in each mode; empty for a normal item
+     * @param gadget      true for the slot that holds the player's gadget (cosmetics.yml); its look is the gadget's
      */
     public record Item(String id, int slot, String permission, MenuItem look, ActionList actions,
-                       Map<VisibilityMode, MenuItem> modeLooks) {
+                       Map<VisibilityMode, MenuItem> modeLooks, boolean gadget) {
 
         public Item {
             modeLooks = Map.copyOf(modeLooks);
@@ -105,7 +106,18 @@ public record HotbarConfig(boolean enabled, boolean clearInventory, List<Item> i
             reader.reportInvalid(path + ".slot", "nothing", "a hotbar slot from 0 (left) to 8 (right)");
             return null;
         }
-        boolean toggle = "visibility".equalsIgnoreCase(reader.string(path + ".type", "item").strip());
+        String type = reader.string(path + ".type", "item").strip().toLowerCase(Locale.ROOT);
+        if (type.equals("gadget")) {
+            // Empty until the player picks a gadget; the gadget brings its own look and use.
+            return new Item(id.toLowerCase(Locale.ROOT), slot, reader.string(path + ".permission", "").strip(),
+                    new MenuItem(List.of(slot), Material.BARRIER, 1, "", List.of(), false, List.of(), ActionList.EMPTY),
+                    ActionList.EMPTY, Map.of(), true);
+        }
+        if (!type.equals("item") && !type.equals("visibility")) {
+            reader.reportInvalid(path + ".type", type, "item, visibility or gadget");
+            return null;
+        }
+        boolean toggle = type.equals("visibility");
         Map<VisibilityMode, MenuItem> modeLooks = new EnumMap<>(VisibilityMode.class);
         if (toggle) {
             for (VisibilityMode mode : VisibilityMode.values()) {
@@ -125,7 +137,7 @@ public record HotbarConfig(boolean enabled, boolean clearInventory, List<Item> i
         ActionList actions = ActionParser.parseList(reader.entryList(path + ".actions"), cooldown, where + ".actions",
                 reader::addWarning);
         return new Item(id.toLowerCase(Locale.ROOT), slot, reader.string(path + ".permission", "").strip(), look,
-                actions, modeLooks);
+                actions, modeLooks, false);
     }
 
     /** {@code material}, {@code amount}, {@code name}, {@code lore} and {@code glow} at {@code path}. */

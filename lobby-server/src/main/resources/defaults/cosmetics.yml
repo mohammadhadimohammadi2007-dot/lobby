@@ -1,0 +1,134 @@
+# =====================================================================
+#  Cosmetics - trails, hats and gadgets players pick in the cosmetics menu
+#  (the hotbar's "cosmetics" item, "open_menu: cosmetics" anywhere, or /cosmetics).
+#  A player uses one of each kind at a time; their choice is saved.
+#  Changes apply with /setup-lobby reload. Guide: docs/cosmetics.md
+# =====================================================================
+
+# false turns every cosmetic off (the menu says so, nothing is shown).
+enabled: true
+
+# Players further away than this (blocks) do not get someone's trail and gadget effects.
+view-distance: 24
+
+# Particles are packets: these limits keep a crowd at the spawn from flooding clients or the connection.
+# What does not fit in a tick is skipped (a trail that skips a tick looks the same).
+limits:
+  # Most trail particle packets one player receives per tick (10 is about 9 KB/s at most).
+  per-viewer: 10
+  # Most trail particle packets the whole server sends per tick.
+  per-tick: 1000
+
+# How long a preview from the menu (right-click a trail or gadget) lasts, in seconds.
+preview-seconds: 5
+
+# true: cosmetics a player has not unlocked are listed as "Locked" (so they know what exists).
+# false: players only see the ones they can use.
+show-locked: true
+
+# ---------------------------------------------------------------------
+# Every cosmetic:
+#   name, lore:   shown in the menu (MiniMessage)
+#   permission:   needed to use it. Leave it out for "lobby.cosmetic.<kind>.<name>"
+#                 (e.g. lobby.cosmetic.trail.notes), give it with LuckPerms or your store.
+#                 "" = everyone can use it.
+#   min-version:  the oldest Minecraft version that can show it, e.g. "1.9". Older clients do not
+#                 see it in the menu. Leave it out for every version (1.8 included).
+# The name of a cosmetic (flame, glass...) is what is saved for players: renaming it takes it off
+# everyone who uses it.
+# ---------------------------------------------------------------------
+
+trails:
+  # particle: any particle name ("flame", "heart", "note", "dust"...)
+  # style:    feet (behind you while walking), halo (a ring above your head) or spiral (around you)
+  # amount, spread, speed: how many particles per puff, how far they scatter, how fast they move
+  # color:    for the particle "dust" only, e.g. "#ff55ff"
+  # icon:     the menu item
+  flame:
+    name: "<gold>Flames"
+    lore:
+      - "<gray>Little flames where you walk."
+    icon: blaze_powder
+    particle: flame
+    style: feet
+    amount: 3
+    spread: 0.15
+    speed: 0.01
+    permission: ""
+  hearts:
+    name: "<red>Halo of Hearts"
+    lore:
+      - "<gray>Hearts circling above your head."
+    icon: apple
+    particle: heart
+    style: halo
+    permission: ""
+  notes:
+    name: "<green>Music"
+    lore:
+      - "<gray>Notes spinning around you."
+    icon: note_block
+    particle: note
+    style: spiral
+  pink:
+    name: "<light_purple>Pink Dust"
+    icon: sugar
+    particle: dust
+    color: "#ff77ff"
+    style: spiral
+    amount: 2
+  # End rods do not exist in Minecraft 1.8, so 1.8 players do not see this one.
+  sparkle:
+    name: "<white>Sparkles"
+    icon: end_rod
+    particle: end_rod
+    style: halo
+    min-version: "1.9"
+
+hats:
+  # material: any item or block. A block shows as a block on the head.
+  # For a player head (material: player_head) either:
+  #   head-owner: a player name (the game shows that player's skin), or
+  #   texture:    a skin "value" (base64), as head websites give it.
+  glass:
+    name: "<aqua>Glass Helmet"
+    material: glass
+    permission: ""
+  melon:
+    name: "<green>Melon Head"
+    material: melon
+  cake:
+    name: "<yellow>Cake Head"
+    material: player_head
+    head-owner: MHF_Cake
+
+gadgets:
+  # type:     firework (a firework goes up and explodes), leap (throws you forward and up) or
+  #           burst (a ring of particles around you)
+  # cooldown: seconds between two uses
+  # power:    leap: how far it throws (1 = a big jump); burst: the ring's size in blocks
+  # particle: leap and burst; colors and shape: firework (shape: small_ball, large_ball, star, creeper, burst)
+  # sound:    played where it is used, e.g. "entity.player.levelup" ("" = none)
+  # The gadget shows in the hotbar slot of the item with "type: gadget" in hotbar.yml.
+  firework:
+    name: "<red>Firework"
+    type: firework
+    cooldown: 10
+    colors: ["#ff5555", "#ffff55", "#55ffff"]
+    shape: large_ball
+    permission: ""
+  leap:
+    name: "<aqua>Leap"
+    type: leap
+    cooldown: 6
+    power: 1.2
+    particle: cloud
+    sound: "entity.bat.takeoff"
+    permission: ""
+  love:
+    name: "<light_purple>Love Burst"
+    type: burst
+    cooldown: 8
+    power: 1.5
+    particle: heart
+    sound: "entity.player.levelup"

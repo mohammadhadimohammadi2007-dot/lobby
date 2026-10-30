@@ -12,6 +12,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
@@ -49,7 +50,7 @@ final class AddonContextImpl implements AddonContext {
     /** The services that only exist once the lobby runs. */
     private record Enabled(ApiCommands commands, ApiMenus menus, Holograms holograms, Npcs npcs,
                            Permissions permissions, PlayerSettings settings, Network network, Clients clients,
-                           Pvp pvp) {
+                           Pvp pvp, Cosmetics cosmetics) {
     }
 
     AddonContextImpl(Addon addon, AddonDescription description, AddonManager manager, Path dataFolder,
@@ -83,7 +84,7 @@ final class AddonContextImpl implements AddonContext {
                 new ApiHolograms(services.holograms()), new ApiNpcs(services.npcs()),
                 new ApiPermissions(services.permissions()), new ApiPlayerSettings(this, services.settings()),
                 new ApiNetwork(services.bridge(), services.actions()), new ApiClients(services.bridge()),
-                new ApiPvp(services.pvp()));
+                new ApiPvp(services.pvp()), new ApiCosmetics(services.cosmetics()));
     }
 
     /** True while the addon may run code (its listeners, actions and placeholders check this). */
@@ -215,6 +216,11 @@ final class AddonContextImpl implements AddonContext {
     @Override
     public Pvp pvp() {
         return services().pvp();
+    }
+
+    @Override
+    public Cosmetics cosmetics() {
+        return services().cosmetics();
     }
 
     private Enabled services() {

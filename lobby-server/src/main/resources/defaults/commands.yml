@@ -39,6 +39,7 @@ groups:
       - lobbies
       - chat
       - ignore
+      - cosmetics
 
   # Examples (remove the # to use them):
   # mod:

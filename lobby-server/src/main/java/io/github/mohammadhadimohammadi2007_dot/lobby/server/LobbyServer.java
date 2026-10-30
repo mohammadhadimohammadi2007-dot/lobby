@@ -87,6 +87,11 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionSer
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalCommand;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.portal.PortalService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticChecks;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsMenu;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsPlaceholders;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.DatabasePvpStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.FilePvpStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpChecks;
@@ -170,13 +175,15 @@ public final class LobbyServer implements ServerInfo {
     private MovementService movement;
     private VisibilityService visibility;
     private PvpService pvp;
+    private CosmeticsService cosmetics;
+    private CosmeticsMenu cosmeticsMenu;
     private ProtectionListener protection;
     private PortalService portals;
     private NetworkCheckService networkCheck;
     private CommandWhitelist commandWhitelist;
     private OpList ops;
     private SetupWand wand;
-    /** Particles and other visual effects (the wand outline now; cosmetics later), never on the tick thread. */
+    /** Particles and other visual effects (the wand outline, cosmetics), never on the tick thread. */
     private final MeasuredThread effects = new MeasuredThread("lobby-effects");
     private final SetupChecks setupChecks = new SetupChecks();
     private final java.util.concurrent.atomic.AtomicInteger playersJoined = new java.util.concurrent.atomic.AtomicInteger();
@@ -249,6 +256,7 @@ public final class LobbyServer implements ServerInfo {
         startHotbar();
         startMovement();
         startPvp();
+        startCosmetics();
         startNetworkCheck();
         registerListeners();
         registerCommands();
@@ -286,7 +294,7 @@ public final class LobbyServer implements ServerInfo {
             }
         });
         addons.enableAll(new AddonServices(text, MinecraftServer.getCommandManager(), commandWhitelist, permissions,
-                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, this::reloadForAddons));
+                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, cosmetics, this::reloadForAddons));
     }
 
     /** Where addons keep per-player values: the shared database if there is one, otherwise files. */
@@ -501,6 +509,26 @@ public final class LobbyServer implements ServerInfo {
                 bridge.bridgeKeepsCombatTags()));
     }
 
+    /**
+     * Trails, hats and gadgets. The choices are kept with the players' other settings; the effects run on the
+     * lobby-effects thread; hats and gadgets come with the hotbar items; everything is off in the PvP area.
+     */
+    private void startCosmetics() {
+        cosmetics = new CosmeticsService(new CosmeticsService.Dependencies(configManager, text, permissions,
+                chat.settings(), player -> bridge.capabilities(player).protocolVersion(), visibility::canSee, effects,
+                System::currentTimeMillis));
+        cosmetics.suppressWhen(pvp::inArea);
+        cosmetics.onItemsChanged(hotbar::give);
+        hotbar.extras(cosmetics.hotbarExtras());
+        cosmeticsMenu = new CosmeticsMenu(cosmetics, text, player -> bridge.capabilities(player).legacy());
+        menus.addCustom(CosmeticsMenu.NAME, cosmeticsMenu::open);
+        placeholders.registry().register("cosmetics", new CosmeticsPlaceholders(cosmetics));
+        boolean ranksPlugin = integrations.stream().anyMatch(status -> status.name().equals(LUCKPERMS)
+                && status.state() == IntegrationStatus.State.ACTIVE);
+        setupChecks.addSetupStep(() -> CosmeticChecks.setup(configManager.current().cosmetics(),
+                configManager.current().hotbar(), ranksPlugin));
+    }
+
     /** PvP records in the shared database if there is one, otherwise in a file. */
     private PvpStatsStore pvpStatsStore() {
         if (database != null) {
@@ -560,6 +588,8 @@ public final class LobbyServer implements ServerInfo {
         hotbar.register(playerEvents);
         // Before the regions: a fighter in combat who tries to walk out has the move cancelled first.
         pvp.register(global, playerEvents);
+        cosmetics.register(playerEvents);
+        cosmeticsMenu.register(playerEvents);
         regions.register(playerEvents);
         movement.register(playerEvents);
         clicks.register(playerEvents);
@@ -593,6 +623,7 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new FlyCommand(configManager, text, permissions, movement));
         commands.register(new PortalCommand(portals, text, permissions));
         commands.register(new PvpCommand(pvp, text, permissions, wand));
+        commands.register(new CosmeticsCommand(cosmeticsMenu, text, permissions));
         commands.register(new StopCommand(text, permissions));
         new VanillaCommands(text, permissions, tickStats, StartupBanner.version(), hotbar::give).commands()
                 .forEach(commands::register);
@@ -619,6 +650,7 @@ public final class LobbyServer implements ServerInfo {
         npcs.reload();
         portals.reload();
         pvp.reload();
+        cosmetics.reload();
         movement.reload();
         // Async: it reads every hologram, NPC and portal, which can take a moment on a big lobby.
         Async.run(networkCheck::run);
@@ -697,6 +729,8 @@ public final class LobbyServer implements ServerInfo {
         // First, while everything addons use still works.
         addons.disableAll();
         wand.shutdown();
+        // Before the effects thread stops, so nothing is handed to it afterwards.
+        cosmetics.shutdown();
         effects.shutdown();
         ops.close();
         chat.shutdown();
@@ -778,10 +812,14 @@ public final class LobbyServer implements ServerInfo {
     public String displayLoad() {
         DisplayLoad.Snapshot objects = display.load();
         DisplayLoad.Snapshot board = displays.load();
+        DisplayLoad.Snapshot particles = effects.load();
         return String.format(Locale.ROOT, "holograms and NPCs %.1f%% busy, longest cycle %.1f ms (%d holograms, %d NPCs);"
-                        + " scoreboard and tab %.1f%% busy, longest cycle %.1f ms, %d refreshes skipped (last minute)",
+                        + " scoreboard and tab %.1f%% busy, longest cycle %.1f ms, %d refreshes skipped (last minute);"
+                        + " effects (cosmetics, wand) %.1f%% busy, longest cycle %.1f ms, %d particle packets dropped by"
+                        + " the limits",
                 objects.busyPercent(), objects.longestCycleMillis(), holograms.count(), npcs.count(),
-                board.busyPercent(), board.longestCycleMillis(), displays.skippedRefreshes());
+                board.busyPercent(), board.longestCycleMillis(), displays.skippedRefreshes(),
+                particles.busyPercent(), particles.longestCycleMillis(), cosmetics.droppedParticles());
     }
 
     @Override
@@ -853,6 +891,11 @@ public final class LobbyServer implements ServerInfo {
     /** The PvP area, for tests. */
     public PvpService pvp() {
         return pvp;
+    }
+
+    /** The cosmetics, for tests. */
+    public CosmeticsService cosmetics() {
+        return cosmetics;
     }
 
     /** The addons, for tests. */

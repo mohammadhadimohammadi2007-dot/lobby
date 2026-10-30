@@ -28,7 +28,14 @@ Names and lore are MiniMessage with placeholders. The actions are the same as ev
 slot; the second one is reported and left out.
 
 The bundled hotbar has the game selector (compass, `servers` menu), the lobby selector (nether star,
-`lobbies` menu), the visibility switch and the lobby menu (chest). See [menus](menus.md).
+`lobbies` menu), the player's gadget (middle slot), the cosmetics menu (ender chest), the visibility switch and
+the lobby menu (chest). See [menus](menus.md) and [cosmetics](cosmetics.md).
+
+Two kinds of items are special (`type:`): `visibility` is the switch below, and `gadget` holds the gadget the
+player picked in the [cosmetics menu](cosmetics.md#the-hotbar): it is empty until they pick one, and only its
+`slot` and `permission` are read. Any other `type` is reported and the item left out.
+
+A player's [hat](cosmetics.md#hats) is put on together with the hotbar items, and is locked the same way.
 
 ### Locked
 

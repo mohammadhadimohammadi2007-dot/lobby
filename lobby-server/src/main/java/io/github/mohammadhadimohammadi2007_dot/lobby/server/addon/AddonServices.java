@@ -4,6 +4,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.addon.settings.AddonSettingsStore;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.CommandWhitelist;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.hologram.HologramService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.npc.NpcService;
@@ -22,5 +23,6 @@ import net.minestom.server.command.CommandManager;
 public record AddonServices(LobbyText text, CommandManager commands, CommandWhitelist whitelist,
                             PermissionService permissions, ActionServices actions, MenuService menus,
                             HologramService holograms, NpcService npcs, BridgeService bridge,
-                            AddonSettingsStore settings, PvpService pvp, Runnable reloadData) {
+                            AddonSettingsStore settings, PvpService pvp, CosmeticsService cosmetics,
+                            Runnable reloadData) {
 }

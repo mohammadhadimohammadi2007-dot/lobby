@@ -220,6 +220,19 @@ public final class ConfigReader {
         return value.intValue();
     }
 
+    /** Number at {@code path}; the bundled value if the user has none, else {@code fallback}. */
+    public double decimal(String path, double min, double max, double fallback) {
+        Object raw = optionalValue(path);
+        if (raw == null) {
+            return fallback;
+        }
+        Double value = asDouble(raw);
+        if (value == null || value.isNaN() || value < min || value > max) {
+            return invalid(path, raw, "a number from " + format(min) + " to " + format(max), fallback);
+        }
+        return value;
+    }
+
     /** {@code true}/{@code false} at {@code path}; the bundled value if the user has none, else {@code fallback}. */
     public boolean bool(String path, boolean fallback) {
         Object raw = optionalValue(path);

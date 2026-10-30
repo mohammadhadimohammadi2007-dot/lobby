@@ -34,6 +34,8 @@ public final class Permissions {
     /** Create, edit and delete portals with {@code /portal}. */
     public static final String COMMAND_PORTAL = "lobby.command.portal";
     public static final String COMMAND_PVP = "lobby.command.pvp";
+    /** {@code /cosmetics}: open the cosmetics menu. Everyone has it. */
+    public static final String COMMAND_COSMETICS = "lobby.command.cosmetics";
     /** Join a lobby instance that already holds {@code lobbies.players-per-instance} players. */
     public static final String LOBBY_JOIN_FULL = "lobby.lobbies.join-full";
     /** Ignore the protection settings in config.yml (break and place blocks, drop items...). */
@@ -43,7 +45,7 @@ public final class Permissions {
      * Permissions every player has when LuckPerms is disabled. With LuckPerms, give these to your
      * default group instead.
      */
-    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBIES, COMMAND_LIST,
+    public static final Set<String> EVERYONE = Set.of(COMMAND_SPAWN, COMMAND_LOBBIES, COMMAND_LIST, COMMAND_COSMETICS,
             "lobby.command.chat", "lobby.command.ignore", "lobby.chat.emoji");
 
     private Permissions() {

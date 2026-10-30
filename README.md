@@ -86,6 +86,9 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.hologram` | `/hologram` (create, edit and delete holograms) |
 | `lobby.command.npc` | `/npc` (create, edit and delete NPCs) |
 | `lobby.command.portal` | `/portal` (create, edit and delete portals) |
+| `lobby.command.pvp` | `/pvp` (set up the PvP area) |
+| `lobby.command.cosmetics` | `/cosmetics` (everyone has it when LuckPerms is off) |
+| `lobby.cosmetic.<kind>.<name>` | Use a locked cosmetic, e.g. `lobby.cosmetic.trail.notes` ([cosmetics](docs/cosmetics.md#permissions)) |
 | `lobby.fly` | `/fly` (set in `movement.yml`) |
 | `lobby.visibility.staff` | Shown to players whose visibility switch is on "staff" (set in `hotbar.yml`) |
 | `lobby.hologram.see.<name>` | See a hologram whose `visibility` is `permission` and that has no permission of its own |
@@ -116,6 +119,7 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Menus and the server selector](docs/menus.md)
 - [Movement and portals](docs/movement-and-portals.md)
 - [PvP area](docs/pvp.md)
+- [Cosmetics: trails, hats and gadgets](docs/cosmetics.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)

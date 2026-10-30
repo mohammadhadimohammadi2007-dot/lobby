@@ -67,4 +67,63 @@ public final class ProtocolVersions {
         String name = NAMES.get(protocolVersion);
         return name != null ? name : "protocol " + protocolVersion;
     }
+
+    /**
+     * The protocol version of a release name, for options like {@code min-version: 1.9}: the oldest protocol
+     * whose releases include it ({@code 1.20.5} and {@code 1.20.6} are both 766). A release between the known
+     * ones (a patch that changed nothing) gives the next known one. A plain number is taken as a protocol
+     * version.
+     *
+     * @return the protocol version, or -1 if the text is not a version or is newer than every known one
+     */
+    public static int fromName(String name) {
+        String text = name.strip();
+        if (text.matches("\\d{2,5}")) {
+            return Integer.parseInt(text);
+        }
+        int[] wanted = parts(text);
+        if (wanted.length == 0) {
+            return -1;
+        }
+        for (Map.Entry<Integer, String> entry : NAMES.entrySet()) {
+            String release = entry.getValue();
+            String last = release.substring(release.lastIndexOf('-') + 1);
+            // "1.8.x" covers every 1.8 release.
+            int[] newest = last.endsWith(".x") ? parts(last.substring(0, last.length() - 2) + "." + Integer.MAX_VALUE)
+                    : parts(last);
+            if (compare(wanted, newest) <= 0) {
+                return entry.getKey();
+            }
+        }
+        return -1;
+    }
+
+    /** {@code 1.20.5} as {@code [1, 20, 5]}; empty if it is not made of numbers and dots. */
+    private static int[] parts(String version) {
+        if (!version.matches("\\d+(\\.\\d+){1,3}")) {
+            return new int[0];
+        }
+        String[] pieces = version.split("\\.");
+        int[] numbers = new int[pieces.length];
+        for (int i = 0; i < pieces.length; i++) {
+            try {
+                numbers[i] = Integer.parseInt(pieces[i]);
+            } catch (NumberFormatException e) {
+                return new int[0];
+            }
+        }
+        return numbers;
+    }
+
+    /** Compares two versions part by part; a missing part counts as 0, so 1.9 equals 1.9.0. */
+    private static int compare(int[] a, int[] b) {
+        for (int i = 0; i < Math.max(a.length, b.length); i++) {
+            int left = i < a.length ? a[i] : 0;
+            int right = i < b.length ? b[i] : 0;
+            if (left != right) {
+                return Integer.compare(left, right);
+            }
+        }
+        return 0;
+    }
 }

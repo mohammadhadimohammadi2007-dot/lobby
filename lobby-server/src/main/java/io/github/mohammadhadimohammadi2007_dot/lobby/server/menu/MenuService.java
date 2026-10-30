@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -53,6 +54,7 @@ public final class MenuService implements MenuHandler {
     private final BridgeService bridge;
     private final Map<UUID, OpenMenu> open = new ConcurrentHashMap<>();
     private final Map<String, Function<Player, MenuDefinition>> builtIn = new ConcurrentHashMap<>();
+    private final Map<String, Consumer<Player>> custom = new ConcurrentHashMap<>();
     private long ticks;
 
     public MenuService(Supplier<MenuConfig> config, LobbyText text, ActionServices actions, BridgeService bridge) {
@@ -95,15 +97,29 @@ public final class MenuService implements MenuHandler {
         builtIn.remove(name.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Adds a menu with its own inventory and clicks (the cosmetics menu), opened by {@code open_menu: <name>}. A
+     * menu of that name in menus.yml or a built-in one wins.
+     */
+    public void addCustom(String name, Consumer<Player> opener) {
+        custom.put(name.toLowerCase(Locale.ROOT), opener);
+    }
+
     /** True if menus.yml has this menu or it is built in. */
     public boolean exists(String name) {
-        return config.get().menu(name) != null || builtIn.containsKey(name.toLowerCase(Locale.ROOT));
+        String key = name.toLowerCase(Locale.ROOT);
+        return config.get().menu(name) != null || builtIn.containsKey(key) || custom.containsKey(key);
     }
 
     @Override
     public void open(Player player, String name) {
         MenuDefinition definition = definition(player, name);
         if (definition == null) {
+            Consumer<Player> opener = custom.get(name.toLowerCase(Locale.ROOT));
+            if (opener != null) {
+                opener.accept(player);
+                return;
+            }
             LOGGER.warn("Tried to open the menu '{}', which is not in menus.yml", name);
             return;
         }

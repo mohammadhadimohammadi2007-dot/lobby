@@ -7,6 +7,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.action.ActionParser;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.ChatMessage;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticType;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.testaddons.ChatChangingAddon;
 import io.github.mohammadhadimohammadi2007_dot.lobby.testaddons.DependentAddon;
 import io.github.mohammadhadimohammadi2007_dot.lobby.testaddons.FailingListenerAddon;
@@ -123,6 +125,14 @@ class AddonEnvTest {
         assertEquals("for Steve", System.getProperty("recording.mark"));
         assertTrue(MinecraftServer.getCommandManager().commandExists("recording"));
         assertTrue(lobby.menus().exists("recording-menu"));
+        assertEquals("5", System.getProperty("recording.trails"), "context.cosmetics() lists the bundled trails");
+        var cosmetics = lobby.cosmetics();
+        assertEquals(CosmeticsService.Change.DONE,
+                cosmetics.equip(steve, cosmetics.config().find(CosmeticType.TRAIL, "flame")));
+        assertEquals("TRAIL null -> flame", System.getProperty("recording.cosmetic"));
+        assertEquals(CosmeticsService.Change.CANCELLED,
+                cosmetics.equip(steve, cosmetics.config().find(CosmeticType.TRAIL, "hearts")), "the addon cancels it");
+        assertEquals("flame", cosmetics.equipped(steve, CosmeticType.TRAIL).id());
         assertEquals(List.of("addon-recording"), addonNodes());
         assertTrue(LobbyEvents.active());
 

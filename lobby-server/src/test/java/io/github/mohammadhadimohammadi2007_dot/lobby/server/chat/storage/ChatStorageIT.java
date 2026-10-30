@@ -59,7 +59,8 @@ class ChatStorageIT {
 
         assertEquals(Optional.empty(), store.load(player));
 
-        PlayerChatSettings first = new PlayerChatSettings(false, true, ignored, "staff");
+        PlayerChatSettings first = new PlayerChatSettings(false, true, ignored, "staff",
+                "trail=flame,hat=glass,gadget=leap,hide-others");
         store.save(player, first);
         assertEquals(Optional.of(first), store.load(player));
 
@@ -72,7 +73,7 @@ class ChatStorageIT {
     }
 
     @Test
-    void aTableFromBeforeTheVisibilitySettingGetsItsColumn() throws Exception {
+    void aTableFromBeforeTheVisibilityAndCosmeticsSettingsGetsTheColumns() throws Exception {
         String prefix = PREFIX + "old_";
         String table = prefix + "chat_settings";
         execute("DROP TABLE IF EXISTS " + table);
@@ -88,8 +89,10 @@ class ChatStorageIT {
             PlayerChatSettings loaded = store.load(player).orElseThrow();
             assertEquals(false, loaded.chatVisible(), "the old row is kept");
             assertEquals(null, loaded.visibility(), "no choice yet, so the server default applies");
-            store.save(player, loaded.withVisibility("none"));
+            assertEquals(null, loaded.cosmetics());
+            store.save(player, loaded.withVisibility("none").withCosmetics("hat=glass"));
             assertEquals("none", store.load(player).orElseThrow().visibility());
+            assertEquals("hat=glass", store.load(player).orElseThrow().cosmetics());
         } finally {
             execute("DROP TABLE IF EXISTS " + table);
         }

@@ -10,6 +10,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
@@ -90,4 +91,7 @@ public interface AddonContext {
 
     /** The PvP area: who is in it, who is in combat, and players' records. */
     Pvp pvp();
+
+    /** Trails, hats and gadgets: what players use, and putting cosmetics on or off. */
+    Cosmetics cosmetics();
 }
