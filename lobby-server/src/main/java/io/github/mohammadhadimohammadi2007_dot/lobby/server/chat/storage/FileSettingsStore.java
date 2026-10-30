@@ -29,7 +29,7 @@ public final class FileSettingsStore implements SettingsStore {
 
     /** The JSON shape on disk; kept separate so the format stays readable and stable. */
     private record Stored(Boolean chatVisible, Boolean mentions, List<String> ignored, String visibility,
-                          String cosmetics) {
+                          String cosmetics, Boolean vanished) {
     }
 
     @Override
@@ -48,6 +48,7 @@ public final class FileSettingsStore implements SettingsStore {
             settings = settings.withMentions(stored.mentions() == null || stored.mentions());
             settings = settings.withVisibility(stored.visibility());
             settings = settings.withCosmetics(stored.cosmetics());
+            settings = settings.withVanished(Boolean.TRUE.equals(stored.vanished()));
             if (stored.ignored() != null) {
                 for (String id : stored.ignored()) {
                     try {
@@ -67,7 +68,8 @@ public final class FileSettingsStore implements SettingsStore {
     public void save(UUID player, PlayerChatSettings settings) throws IOException {
         Files.createDirectories(folder);
         Stored stored = new Stored(settings.chatVisible(), settings.mentions(),
-                settings.ignored().stream().map(UUID::toString).toList(), settings.visibility(), settings.cosmetics());
+                settings.ignored().stream().map(UUID::toString).toList(), settings.visibility(), settings.cosmetics(),
+                settings.vanished() ? Boolean.TRUE : null);
         Path file = file(player);
         Path temp = file.resolveSibling(file.getFileName() + ".tmp");
         Files.writeString(temp, GSON.toJson(stored), StandardCharsets.UTF_8);

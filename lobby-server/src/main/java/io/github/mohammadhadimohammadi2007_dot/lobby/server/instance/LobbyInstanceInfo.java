@@ -31,7 +31,8 @@ public interface LobbyInstanceInfo {
 
         @Override
         public int onlineIn(int number) {
-            return number == 1 ? net.minestom.server.MinecraftServer.getConnectionManager().getOnlinePlayerCount() : 0;
+            return number == 1 ? io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished.visibleCount(
+                    net.minestom.server.MinecraftServer.getConnectionManager().getOnlinePlayers()) : 0;
         }
     };
 }

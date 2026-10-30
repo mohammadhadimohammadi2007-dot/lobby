@@ -142,6 +142,7 @@ arguments from the console, or say "This command can only be used in game".
 | `npc teleport`, `hologram teleport`, `npc nearby`, `chat spy` | | in game only |
 | `pvp setregion`, `pvp setspawn`, `pvp kit` | `lobby.command.pvp` | in game only; `pvp info` and `pvp delete` work from the console |
 | `cosmetics` | `lobby.command.cosmetics` (everyone) | in game only (it opens a menu) |
+| `vanish [player]` (`v`) | `lobby.command.vanish`; others need `lobby.command.vanish.others` | name a player |
 
 Operators and the console have every permission. Players only see the commands `commands.yml` lists for
 their group ([commands.md](commands.md)).

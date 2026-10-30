@@ -6,6 +6,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +75,14 @@ public final class VisibilityService {
 
     /** True if {@code viewer} sees {@code target}. Everyone always sees themselves. */
     public boolean canSee(Player viewer, Player target) {
-        if (viewer == target || alwaysVisible.test(viewer, target)) {
+        if (viewer == target) {
+            return true;
+        }
+        // Vanished staff are seen only by those allowed to, whatever else applies.
+        if (Vanished.is(target)) {
+            return permissions.hasPermission(viewer, Permissions.VANISH_SEE);
+        }
+        if (alwaysVisible.test(viewer, target)) {
             return true;
         }
         return switch (mode(viewer)) {

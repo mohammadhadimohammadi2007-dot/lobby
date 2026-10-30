@@ -1,6 +1,8 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.display;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.MessageKey;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -19,10 +21,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 
 /**
  * The tab list: header and footer per player, every player's name with their rank, and, if wanted, only
- * the players of the viewer's own lobby instance.
+ * the players of the viewer's own lobby instance. Vanished players are left out for viewers who may not see them,
+ * and marked for those who may.
  *
  * <p>Names are the same for every viewer, so each is rendered once per refresh (once more for 1.8-1.12
  * clients), and only names that changed are sent: all of them in one packet per group of viewers.
@@ -40,15 +44,18 @@ final class TabListService {
 
     private final ClientTiers tiers;
     private final LobbyText text;
+    private final BiPredicate<Player, Player> hidden;
     private final Map<UUID, Name> names = new HashMap<>();
     private final Set<UUID> knowNames = new HashSet<>();
     private final Map<UUID, Component[]> headers = new HashMap<>();
     private final Map<UUID, Set<UUID>> unlisted = new HashMap<>();
     private int namePackets;
 
-    TabListService(ClientTiers tiers, LobbyText text) {
+    /** @param hidden true if the viewer (first) must never see the target (second) listed: a vanished player */
+    TabListService(ClientTiers tiers, LobbyText text, BiPredicate<Player, Player> hidden) {
         this.tiers = tiers;
         this.text = text;
+        this.hidden = hidden;
     }
 
     /** Names and who is listed: every tab interval, for everybody at once, so the names go in one packet. */
@@ -85,6 +92,11 @@ final class TabListService {
         for (Player target : online) {
             Name name = new Name(cache.about(config.nameFormat().template(false), target, false),
                     cache.about(config.nameFormat().template(true), target, true));
+            if (Vanished.is(target)) {
+                // Only viewers who may see vanished players have them listed, so everyone who sees this sees the mark.
+                Component marker = text.message(MessageKey.VANISH_TAB_MARKER, (Player) null);
+                name = new Name(marker.append(name.modern()), marker.append(name.legacy()));
+            }
             if (!name.equals(names.put(target.getUuid(), name))) {
                 changed.add(target);
             }
@@ -127,12 +139,11 @@ final class TabListService {
     private void listing(boolean sameInstanceOnly, Collection<Player> online) {
         for (Player viewer : online) {
             Set<UUID> wanted = new HashSet<>();
-            if (sameInstanceOnly) {
-                Instance own = viewer.getInstance();
-                for (Player target : online) {
-                    if (target != viewer && !Objects.equals(target.getInstance(), own)) {
-                        wanted.add(target.getUuid());
-                    }
+            Instance own = viewer.getInstance();
+            for (Player target : online) {
+                if (target != viewer && ((sameInstanceOnly && !Objects.equals(target.getInstance(), own))
+                        || hidden.test(viewer, target))) {
+                    wanted.add(target.getUuid());
                 }
             }
             Set<UUID> current = unlisted.getOrDefault(viewer.getUuid(), Set.of());

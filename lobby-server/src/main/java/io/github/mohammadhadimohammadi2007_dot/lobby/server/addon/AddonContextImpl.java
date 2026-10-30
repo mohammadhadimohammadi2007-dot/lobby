@@ -17,6 +17,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ final class AddonContextImpl implements AddonContext {
     /** The services that only exist once the lobby runs. */
     private record Enabled(ApiCommands commands, ApiMenus menus, Holograms holograms, Npcs npcs,
                            Permissions permissions, PlayerSettings settings, Network network, Clients clients,
-                           Pvp pvp, Cosmetics cosmetics) {
+                           Pvp pvp, Cosmetics cosmetics, Vanish vanish) {
     }
 
     AddonContextImpl(Addon addon, AddonDescription description, AddonManager manager, Path dataFolder,
@@ -84,7 +85,8 @@ final class AddonContextImpl implements AddonContext {
                 new ApiHolograms(services.holograms()), new ApiNpcs(services.npcs()),
                 new ApiPermissions(services.permissions()), new ApiPlayerSettings(this, services.settings()),
                 new ApiNetwork(services.bridge(), services.actions()), new ApiClients(services.bridge()),
-                new ApiPvp(services.pvp()), new ApiCosmetics(services.cosmetics()));
+                new ApiPvp(services.pvp()), new ApiCosmetics(services.cosmetics()),
+                new ApiVanish(services.vanish()));
     }
 
     /** True while the addon may run code (its listeners, actions and placeholders check this). */
@@ -221,6 +223,11 @@ final class AddonContextImpl implements AddonContext {
     @Override
     public Cosmetics cosmetics() {
         return services().cosmetics();
+    }
+
+    @Override
+    public Vanish vanish() {
+        return services().vanish();
     }
 
     private Enabled services() {

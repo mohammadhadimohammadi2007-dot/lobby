@@ -22,7 +22,8 @@ luckperms:
 - Give your default group `lobby.command.spawn` so players can use `/spawn`, `lobby.command.lobbies` and
   `lobby.command.cosmetics`, and the chat basics `lobby.command.chat`, `lobby.command.ch`, `lobby.command.ignore`
   and `lobby.chat.emoji` ([all chat permissions](../chat.md#permissions)). Locked cosmetics are
-  `lobby.cosmetic.<kind>.<name>` ([cosmetics](../cosmetics.md#permissions)).
+  `lobby.cosmetic.<kind>.<name>` ([cosmetics](../cosmetics.md#permissions)). Staff: `lobby.command.vanish` and
+  `lobby.vanish.see` ([vanish](../vanish.md)).
 - The **primary group** (used to pick chat formats) is LuckPerms' stored primary group, as on your other
   servers: `/lp user Steve parent set vip` changes it, `parent add` does not.
 

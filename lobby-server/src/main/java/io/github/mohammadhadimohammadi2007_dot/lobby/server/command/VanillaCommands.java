@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.Messages;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.util.TickStats;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandSender;
@@ -65,8 +66,12 @@ public final class VanillaCommands {
         Command command = new Command("list");
         command.setCondition(CommandSupport.requireAny(text, permissions, Permissions.COMMAND_LIST));
         command.setDefaultExecutor((sender, context) -> {
-            Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers();
-            String names = online.stream().map(Player::getUsername).sorted(String.CASE_INSENSITIVE_ORDER)
+            // Vanished players are only listed for those who may see them (and the console).
+            boolean seesVanished = !(sender instanceof Player viewer)
+                    || permissions.hasPermission(viewer, Permissions.VANISH_SEE);
+            Collection<Player> online = MinecraftServer.getConnectionManager().getOnlinePlayers().stream()
+                    .filter(player -> seesVanished || !Vanished.is(player)).toList();
+            String names = online.stream().map(player -> (Vanished.is(player) ? "[V] " : "") + player.getUsername()).sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.joining(", "));
             sender.sendMessage(text.message(MessageKey.LIST, sender, Messages.text("count", online.size()),
                     Messages.text("names", names.isEmpty() ? "-" : names)));

@@ -34,6 +34,12 @@ public final class Permissions {
     /** Create, edit and delete portals with {@code /portal}. */
     public static final String COMMAND_PORTAL = "lobby.command.portal";
     public static final String COMMAND_PVP = "lobby.command.pvp";
+    /** {@code /vanish}: hide yourself from players. Kept after rejoining. */
+    public static final String COMMAND_VANISH = "lobby.command.vanish";
+    /** {@code /vanish <player>}: vanish someone else. */
+    public static final String COMMAND_VANISH_OTHERS = "lobby.command.vanish.others";
+    /** See vanished players (marked in the tab list). */
+    public static final String VANISH_SEE = "lobby.vanish.see";
     /** {@code /cosmetics}: open the cosmetics menu. Everyone has it. */
     public static final String COMMAND_COSMETICS = "lobby.command.cosmetics";
     /** Join a lobby instance that already holds {@code lobbies.players-per-instance} players. */

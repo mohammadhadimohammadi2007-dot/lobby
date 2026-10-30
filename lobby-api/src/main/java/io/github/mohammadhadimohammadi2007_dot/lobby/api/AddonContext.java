@@ -15,6 +15,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -94,4 +95,7 @@ public interface AddonContext {
 
     /** Trails, hats and gadgets: what players use, and putting cosmetics on or off. */
     Cosmetics cosmetics();
+
+    /** Vanished staff: who is vanished, who sees them, and vanishing players. */
+    Vanish vanish();
 }

@@ -88,6 +88,8 @@ and invalid values are reported with the option name and the allowed values.
 | `lobby.command.portal` | `/portal` (create, edit and delete portals) |
 | `lobby.command.pvp` | `/pvp` (set up the PvP area) |
 | `lobby.command.cosmetics` | `/cosmetics` (everyone has it when LuckPerms is off) |
+| `lobby.command.vanish`, `lobby.command.vanish.others` | `/vanish`, `/vanish <player>` ([vanish](docs/vanish.md)) |
+| `lobby.vanish.see` | See vanished players |
 | `lobby.cosmetic.<kind>.<name>` | Use a locked cosmetic, e.g. `lobby.cosmetic.trail.notes` ([cosmetics](docs/cosmetics.md#permissions)) |
 | `lobby.fly` | `/fly` (set in `movement.yml`) |
 | `lobby.visibility.staff` | Shown to players whose visibility switch is on "staff" (set in `hotbar.yml`) |
@@ -120,6 +122,7 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Movement and portals](docs/movement-and-portals.md)
 - [PvP area](docs/pvp.md)
 - [Cosmetics: trails, hats and gadgets](docs/cosmetics.md)
+- [Vanish for staff](docs/vanish.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
@@ -137,8 +140,8 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 2. **Placeholders and chat** - placeholder engine, full chat system (pipeline, anti-spam, filter) ← *done*
 3. **Lobby experience** - NPCs and holograms (FancyNpcs/FancyHolograms-style commands), scoreboard, tab list,
    server selector, portals, multiple lobby instances, hotbar items, double jump, jump pads ← *done*
-4. **Fun, social and staff tools** - addon API, PvP area, cosmetics, coins and daily rewards,
-   staff tools
+4. **Lobby activities and setup** - console and operators, setup checklist and wand, addon API, PvP area,
+   cosmetics, vanish
 5. **Production** - load testing (250-300 bots, mixed versions), Prometheus metrics, graceful shutdown, CI and Docker
 
 ## Known issues

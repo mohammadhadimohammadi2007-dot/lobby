@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.command.ServerInfo;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.config.ConfigManager;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.Placeholder;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderNamespace;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import net.minestom.server.MinecraftServer;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,7 @@ final class ServerNamespace implements PlaceholderNamespace {
     public @Nullable Placeholder lookup(String params) {
         return switch (params) {
             case "online" -> Placeholder.global(BuiltinPlaceholders.SHORT_CACHE,
-                    () -> String.valueOf(MinecraftServer.getConnectionManager().getOnlinePlayerCount()));
+                    () -> String.valueOf(Vanished.visibleCount(MinecraftServer.getConnectionManager().getOnlinePlayers())));
             case "max_players" -> Placeholder.global(BuiltinPlaceholders.SHORT_CACHE,
                     () -> String.valueOf(config.current().config().server().maxPlayers()));
             case "name" -> Placeholder.global(BuiltinPlaceholders.SHORT_CACHE, () -> config.current().config().server().name());

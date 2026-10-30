@@ -93,6 +93,7 @@ public final class PvpService implements RegionListener {
     private final LongSupplier clock;
     private final CombatTags tags = new CombatTags();
     private final Set<UUID> inArea = ConcurrentHashMap.newKeySet();
+    private volatile Predicate<Player> excluded = player -> false;
     private final Map<UUID, HurtTimer> hurt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSwing = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> falling = new ConcurrentHashMap<>();
@@ -307,9 +308,14 @@ public final class PvpService implements RegionListener {
         }
     }
 
+    /** Players who never enter the area while this holds (vanished staff walk through it). */
+    public void exclude(Predicate<Player> rule) {
+        excluded = rule;
+    }
+
     @Override
     public void entered(Player player, Region region) {
-        if (!available() || !inArea.add(player.getUuid())) {
+        if (!available() || excluded.test(player) || !inArea.add(player.getUuid())) {
             return;
         }
         PvpArena current = arena;

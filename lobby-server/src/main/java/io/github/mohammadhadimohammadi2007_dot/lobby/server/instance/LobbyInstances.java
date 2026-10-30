@@ -12,6 +12,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.world.WorldRules;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
@@ -121,7 +122,8 @@ public final class LobbyInstances implements LobbyInstanceInfo, LobbySwitcher {
     @Override
     public int onlineIn(int number) {
         Instance instance = byNumber(number);
-        return instance == null ? 0 : instance.getPlayers().size();
+        // What players are shown: vanished staff are left out. Joining and full lobbies count everyone.
+        return instance == null ? 0 : Vanished.visibleCount(instance.getPlayers());
     }
 
     /** The instance a joining player should spawn in, following {@code lobbies.join}. */

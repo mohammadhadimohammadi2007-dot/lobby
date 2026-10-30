@@ -5,6 +5,7 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.event.VanishChangeEvent;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue;
@@ -57,6 +58,8 @@ public final class RecordingAddon implements LobbyAddon {
                 event.setCancelled(true);
             }
         });
+        context.events().listen(VanishChangeEvent.class, event -> System.setProperty("recording.vanish",
+                event.getPlayer().getUsername() + " " + event.vanishing() + " " + context.vanish().vanished(event.getPlayer())));
         System.setProperty("recording.trails", String.valueOf(context.cosmetics().ids(Cosmetics.Kind.TRAIL).size()));
         context.scheduler().repeat(Duration.ofSeconds(60), () -> { });
         context.menus().register("recording-menu", player -> new MenuView("Recording", 1, List.of(

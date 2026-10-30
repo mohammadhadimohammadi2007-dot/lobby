@@ -41,9 +41,11 @@ public final class ChatSettingsService {
         return store.describe();
     }
 
-    /** Loads a player's settings in the background. */
+    /** Loads a player's settings in the background, unless they are already loaded or loading. */
     public void load(UUID player) {
-        online.put(player, PlayerChatSettings.DEFAULTS);
+        if (online.putIfAbsent(player, PlayerChatSettings.DEFAULTS) != null) {
+            return;
+        }
         CompletableFuture<Void> done = whenLoaded(player);
         Async.run(() -> {
             try {

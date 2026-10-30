@@ -133,6 +133,9 @@ class AddonEnvTest {
         assertEquals(CosmeticsService.Change.CANCELLED,
                 cosmetics.equip(steve, cosmetics.config().find(CosmeticType.TRAIL, "hearts")), "the addon cancels it");
         assertEquals("flame", cosmetics.equipped(steve, CosmeticType.TRAIL).id());
+        lobby.vanish().set(steve, true);
+        assertEquals("Steve true false", System.getProperty("recording.vanish"), "told before it happens");
+        lobby.vanish().set(steve, false);
         assertEquals(List.of("addon-recording"), addonNodes());
         assertTrue(LobbyEvents.active());
 

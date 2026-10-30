@@ -93,6 +93,10 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsMe
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsPlaceholders;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.cosmetic.CosmeticsService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.DatabasePvpStats;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.VanishCommand;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.VanishPlaceholders;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.VanishService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.FilePvpStats;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpChecks;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.PvpCommand;
@@ -177,6 +181,7 @@ public final class LobbyServer implements ServerInfo {
     private PvpService pvp;
     private CosmeticsService cosmetics;
     private CosmeticsMenu cosmeticsMenu;
+    private VanishService vanish;
     private ProtectionListener protection;
     private PortalService portals;
     private NetworkCheckService networkCheck;
@@ -257,6 +262,7 @@ public final class LobbyServer implements ServerInfo {
         startMovement();
         startPvp();
         startCosmetics();
+        startVanish();
         startNetworkCheck();
         registerListeners();
         registerCommands();
@@ -294,7 +300,7 @@ public final class LobbyServer implements ServerInfo {
             }
         });
         addons.enableAll(new AddonServices(text, MinecraftServer.getCommandManager(), commandWhitelist, permissions,
-                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, cosmetics, this::reloadForAddons));
+                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, cosmetics, vanish, this::reloadForAddons));
     }
 
     /** Where addons keep per-player values: the shared database if there is one, otherwise files. */
@@ -529,6 +535,18 @@ public final class LobbyServer implements ServerInfo {
                 configManager.current().hotbar(), ranksPlugin));
     }
 
+    /**
+     * Vanish for staff: hidden by the visibility rules and the tab list, left out of the counts, kept out of the PvP
+     * area, without cosmetics.
+     */
+    private void startVanish() {
+        vanish = new VanishService(text, permissions, chat.settings());
+        vanish.hooks(new VanishService.Hooks(visibility::recheck, pvp::inArea));
+        pvp.exclude(Vanished::is);
+        cosmetics.suppressWhen(Vanished::is);
+        placeholders.registry().register("vanish", new VanishPlaceholders());
+    }
+
     /** PvP records in the shared database if there is one, otherwise in a file. */
     private PvpStatsStore pvpStatsStore() {
         if (database != null) {
@@ -590,6 +608,8 @@ public final class LobbyServer implements ServerInfo {
         pvp.register(global, playerEvents);
         cosmetics.register(playerEvents);
         cosmeticsMenu.register(playerEvents);
+        // After the chat, whose quit message must still see a vanished player as vanished.
+        vanish.register(playerEvents);
         regions.register(playerEvents);
         movement.register(playerEvents);
         clicks.register(playerEvents);
@@ -624,6 +644,7 @@ public final class LobbyServer implements ServerInfo {
         commands.register(new PortalCommand(portals, text, permissions));
         commands.register(new PvpCommand(pvp, text, permissions, wand));
         commands.register(new CosmeticsCommand(cosmeticsMenu, text, permissions));
+        commands.register(new VanishCommand(vanish, text, permissions));
         commands.register(new StopCommand(text, permissions));
         new VanillaCommands(text, permissions, tickStats, StartupBanner.version(), hotbar::give).commands()
                 .forEach(commands::register);
@@ -732,6 +753,7 @@ public final class LobbyServer implements ServerInfo {
         // Before the effects thread stops, so nothing is handed to it afterwards.
         cosmetics.shutdown();
         effects.shutdown();
+        vanish.shutdown();
         ops.close();
         chat.shutdown();
         holograms.shutdown();
@@ -896,6 +918,11 @@ public final class LobbyServer implements ServerInfo {
     /** The cosmetics, for tests. */
     public CosmeticsService cosmetics() {
         return cosmetics;
+    }
+
+    /** Vanish, for tests. */
+    public VanishService vanish() {
+        return vanish;
     }
 
     /** The addons, for tests. */

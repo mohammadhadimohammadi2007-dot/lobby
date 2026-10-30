@@ -4,6 +4,12 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **Vanish** ([vanish.md](vanish.md)): `/vanish` for staff. Give your staff group `lobby.command.vanish` and
+  `lobby.vanish.see` with LuckPerms (operators have them). The settings table `<prefix>chat_settings` gets a
+  `vanished` column automatically. `%server_online%`, `%lobby_online%`, the server list and `/list` no longer count
+  vanished players. New messages `vanish-*`; the Addon API 0.3.0 also has `vanish()` and `VanishChangeEvent`.
+- **`ops.protection: off`** written without quotes works now (YAML read it as `false`, which was rejected and
+  left protection on).
 - **Cosmetics** ([cosmetics.md](cosmetics.md)): a new `cosmetics.yml` is created on the first start. Your
   existing `hotbar.yml` is not changed, so add the two new items yourself (the menu item with
   `open_menu: cosmetics`, and an item with `type: gadget`; see [cosmetics.md](cosmetics.md#the-hotbar)), or

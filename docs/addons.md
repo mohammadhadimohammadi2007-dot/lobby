@@ -158,7 +158,7 @@ requests, and `context.scheduler().nextTick(...)` to touch players and the world
 | Placeholders | `placeholders()` | `%namespace_...%` everywhere; scopes constant, global, per player, relational, cached like the built-in ones |
 | Actions | `actionTypes()` | `type: argument` entries for NPCs, holograms, menus, portals and the hotbar |
 | Commands | `commands()` | Minestom commands that follow commands.yml and an optional permission |
-| Events | `events()` | join, quit, chat (change or cancel), region enter and leave, NPC, hologram and menu clicks, server connect results, PvP (damage, kills, area, combat tag), cosmetics (put on or off, gadget used), and every Minestom event |
+| Events | `events()` | join, quit, chat (change or cancel), region enter and leave, NPC, hologram and menu clicks, server connect results, PvP (damage, kills, area, combat tag), cosmetics (put on or off, gadget used), vanish, and every Minestom event |
 | Menus | `menus()` | open menus.yml menus, register menus built in code |
 | Holograms and NPCs | `holograms()`, `npcs()` | create, change and remove; saved like the ones made with commands |
 | Permissions | `permissions()` | checks and rank (prefix, suffix, group, meta, weight) |
@@ -167,6 +167,7 @@ requests, and `context.scheduler().nextTick(...)` to touch players and the world
 | Clients | `clients()` | each player's real Minecraft version (1.8 or modern) |
 | PvP | `pvp()` | who is in the [PvP area](pvp.md) or in combat, and players' records |
 | Cosmetics | `cosmetics()` | what players use of the [cosmetics](cosmetics.md), and putting them on or off |
+| Vanish | `vanish()` | who is [vanished](vanish.md), who sees them, vanishing players |
 | Scheduler | `scheduler()` | async, next tick, later, repeating; cancelled when the addon stops |
 | Files | `dataFolder()`, `config(name)` | `addons/<id>/`; YAML files copied from the jar on the first run |
 

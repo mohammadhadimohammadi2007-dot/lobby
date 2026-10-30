@@ -104,6 +104,15 @@ These work without the bridge: they are about the lobbies of **this** server.
 | `%pvp_players%` | Players in the PvP area |
 | `%pvp_top_<board>_<place>_name%`, `..._value%` | Leaderboards: `<board>` is `kills`, `deaths`, `streak` or `best_streak` |
 
+### Vanish (`vanish_`, [guide](vanish.md))
+
+| Placeholder | Value |
+|---|---|
+| `%vanish_vanished%` | `yes` or `no`, about the player |
+| `%vanish_count%` | How many players are vanished |
+
+`%server_online%` and `%lobby_online...%` do not count vanished players.
+
 ### Cosmetics (`cosmetics_`, [guide](cosmetics.md))
 
 | Placeholder | Value |

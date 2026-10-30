@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.chat;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.bridge.BridgeService;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.pipeline.ChatPipeline;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.chat.stage.AddonStage;
@@ -179,6 +180,10 @@ public final class ChatService {
     private void onJoin(Player player) {
         services.players().joined(player.getUuid(), player.getUsername());
         services.settings().load(player.getUuid());
+        if (Vanished.is(player)) {
+            // A vanished staff member joins quietly.
+            return;
+        }
         ChatConfig config = services.chat();
         if (config.joinMessage()) {
             broadcastAbout(player, services.config().current().messages().template(MessageKey.JOIN_MESSAGE));
@@ -196,7 +201,7 @@ public final class ChatService {
         services.settings().forget(player.getUuid());
         services.moderation().forget(player.getUuid());
         services.violations().reset(player.getUuid());
-        if (services.chat().quitMessage()) {
+        if (services.chat().quitMessage() && !Vanished.is(player)) {
             broadcastAbout(player, services.config().current().messages().template(MessageKey.QUIT_MESSAGE));
         }
     }

@@ -400,3 +400,17 @@ cosmetics-not-here: "<prefix><red>You cannot use that here."
 cosmetics-gadget-use: "<gray>Right-click to use (every <seconds>s)."
 # Above the hotbar while the gadget is not ready. <name> <seconds>
 cosmetics-gadget-cooldown: "<name> <gray>is ready in <white><seconds>s"
+
+# ---------------- Vanish (docs/vanish.md) ----------------
+vanish-on: "<prefix><gray>You are <white>vanished</white>: only staff with lobby.vanish.see see you. <white>/vanish</white> again to show yourself."
+vanish-off: "<prefix><gray>You are <white>visible</white> again."
+# For staff who switch someone else. <player>
+vanish-other-on: "<prefix><gray><player> is vanished."
+vanish-other-off: "<prefix><gray><player> is visible again."
+vanish-in-pvp: "<prefix><red><player> is in the PvP area; leave it before vanishing."
+# On joining while still vanished from last time.
+vanish-still: "<prefix><gray>You are still <white>vanished</white>."
+# Above the hotbar of vanished players, every two seconds.
+vanish-reminder: "<gray>You are <white>vanished"
+# In front of a vanished player's name in the tab list of staff who see them.
+vanish-tab-marker: "<dark_gray>[V] "

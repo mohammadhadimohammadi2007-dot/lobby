@@ -60,7 +60,7 @@ class ChatStorageIT {
         assertEquals(Optional.empty(), store.load(player));
 
         PlayerChatSettings first = new PlayerChatSettings(false, true, ignored, "staff",
-                "trail=flame,hat=glass,gadget=leap,hide-others");
+                "trail=flame,hat=glass,gadget=leap,hide-others", true);
         store.save(player, first);
         assertEquals(Optional.of(first), store.load(player));
 
@@ -90,9 +90,11 @@ class ChatStorageIT {
             assertEquals(false, loaded.chatVisible(), "the old row is kept");
             assertEquals(null, loaded.visibility(), "no choice yet, so the server default applies");
             assertEquals(null, loaded.cosmetics());
-            store.save(player, loaded.withVisibility("none").withCosmetics("hat=glass"));
+            assertEquals(false, loaded.vanished());
+            store.save(player, loaded.withVisibility("none").withCosmetics("hat=glass").withVanished(true));
             assertEquals("none", store.load(player).orElseThrow().visibility());
             assertEquals("hat=glass", store.load(player).orElseThrow().cosmetics());
+            assertEquals(true, store.load(player).orElseThrow().vanished());
         } finally {
             execute("DROP TABLE IF EXISTS " + table);
         }

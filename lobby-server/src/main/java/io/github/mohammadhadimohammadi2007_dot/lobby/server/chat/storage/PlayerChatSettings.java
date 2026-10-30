@@ -15,12 +15,13 @@ import java.util.UUID;
  * @param visibility  which players this player sees in the lobby ({@code all}, {@code staff}, {@code none}), or
  *                    {@code null} for the server default
  * @param cosmetics   the chosen cosmetics, as written by {@code CosmeticChoices}, or {@code null} for none
+ * @param vanished    true if the player (staff) is vanished; kept when they rejoin
  */
 public record PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored, @Nullable String visibility,
-                                 @Nullable String cosmetics) {
+                                 @Nullable String cosmetics, boolean vanished) {
 
     /** Settings of a player who never changed anything. */
-    public static final PlayerChatSettings DEFAULTS = new PlayerChatSettings(true, true, Set.of(), null, null);
+    public static final PlayerChatSettings DEFAULTS = new PlayerChatSettings(true, true, Set.of(), null, null, false);
 
     /** Most players a player can ignore, so one player cannot grow the settings without limit. */
     public static final int MAX_IGNORED = 200;
@@ -29,28 +30,37 @@ public record PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID
         ignored = Set.copyOf(ignored);
     }
 
+    public PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored, @Nullable String visibility,
+                              @Nullable String cosmetics) {
+        this(chatVisible, mentions, ignored, visibility, cosmetics, false);
+    }
+
     public PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored, @Nullable String visibility) {
-        this(chatVisible, mentions, ignored, visibility, null);
+        this(chatVisible, mentions, ignored, visibility, null, false);
     }
 
     public PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID> ignored) {
-        this(chatVisible, mentions, ignored, null, null);
+        this(chatVisible, mentions, ignored, null, null, false);
     }
 
     public PlayerChatSettings withVisibility(@Nullable String mode) {
-        return new PlayerChatSettings(chatVisible, mentions, ignored, mode, cosmetics);
+        return new PlayerChatSettings(chatVisible, mentions, ignored, mode, cosmetics, vanished);
     }
 
     public PlayerChatSettings withChatVisible(boolean visible) {
-        return new PlayerChatSettings(visible, mentions, ignored, visibility, cosmetics);
+        return new PlayerChatSettings(visible, mentions, ignored, visibility, cosmetics, vanished);
     }
 
     public PlayerChatSettings withMentions(boolean enabled) {
-        return new PlayerChatSettings(chatVisible, enabled, ignored, visibility, cosmetics);
+        return new PlayerChatSettings(chatVisible, enabled, ignored, visibility, cosmetics, vanished);
     }
 
     public PlayerChatSettings withCosmetics(@Nullable String value) {
-        return new PlayerChatSettings(chatVisible, mentions, ignored, visibility, value);
+        return new PlayerChatSettings(chatVisible, mentions, ignored, visibility, value, vanished);
+    }
+
+    public PlayerChatSettings withVanished(boolean value) {
+        return new PlayerChatSettings(chatVisible, mentions, ignored, visibility, cosmetics, value);
     }
 
     /** Adds or removes {@code player} from the ignore list. */
@@ -61,6 +71,6 @@ public record PlayerChatSettings(boolean chatVisible, boolean mentions, Set<UUID
         } else {
             updated.remove(player);
         }
-        return new PlayerChatSettings(chatVisible, mentions, updated, visibility, cosmetics);
+        return new PlayerChatSettings(chatVisible, mentions, updated, visibility, cosmetics, vanished);
     }
 }

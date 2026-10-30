@@ -6,6 +6,8 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.DisplayLoad;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.entity.MeasuredThread;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.LobbyText;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.PermissionService;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.Permissions;
+import io.github.mohammadhadimohammadi2007_dot.lobby.server.vanish.Vanished;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.team.TeamManager;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -63,7 +65,9 @@ public final class DisplayService {
         ClientTiers tiers = new ClientTiers(protocolOf);
         this.text = new TextCache(text, tiers);
         this.sidebar = new SidebarService(new SidebarPackets(teams), tiers, permissions);
-        this.tab = new TabListService(tiers, text);
+        // Vanished players stay out of the tab list of everyone who may not see them.
+        this.tab = new TabListService(tiers, text, (viewer, target) -> Vanished.is(target)
+                && !permissions.hasPermission(viewer, Permissions.VANISH_SEE));
         this.playerTeams = new PlayerTeams(teams, permissions);
         this.bars = new BarsService(permissions);
         this.applied = config.current().display();

@@ -161,6 +161,14 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 - [ ] Rejoin (and, with a shared database, join another lobby server): the same cosmetics are on.
 - [ ] 30+ players at the spawn with trails: `/setup-lobby info` shows the effects thread busy % and dropped
       particle packets; the 1.8 client stays smooth.
+## 5d. Vanish
+
+- [ ] An operator types `/vanish`: the other player (no permissions, 1.8 and latest) no longer sees them or their
+      tab entry, and `%server_online%` on the scoreboard drops by one. A second operator sees them with `[V]`.
+- [ ] The vanished operator rejoins: no join message, they never flash into view for the other player.
+- [ ] `/vanish` again: they appear for everyone, back in the tab list with their skin (1.8 too).
+- [ ] Behind Velocity: the proxy's `/glist` still counts them (expected; see docs/vanish.md).
+
 ## 6. Network names
 
 - [ ] Behind Velocity with the bridge, rename a group in the bridge's `[groups]` and restart the proxy:
