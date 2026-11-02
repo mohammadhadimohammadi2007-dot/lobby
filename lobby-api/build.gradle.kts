@@ -7,7 +7,9 @@ plugins {
 }
 
 // The API's own version, independent of the lobby's. Keep ApiVersion.CURRENT equal to it (a test checks).
-version = "0.3.0"
+// A new class or method needs the next minor version, a removed or changed one the next major version:
+// ApiCompatibilityTest compares the API with api/lobby-api.api and says what to do (docs/addon-development.md).
+version = "1.0.0"
 
 dependencies {
     // Addons compile against Minestom and get it from the server at runtime.
@@ -22,10 +24,42 @@ dependencies {
 
 java {
     withSourcesJar()
+    withJavadocJar()
 }
+
+tasks.javadoc {
+    (options as StandardJavadocDocletOptions).apply {
+        // Missing comments are not errors; broken references and HTML still are.
+        addStringOption("Xdoclint:all,-missing", "-quiet")
+        links("https://docs.oracle.com/en/java/javase/25/docs/api/")
+    }
+}
+
+val apiFile = layout.projectDirectory.file("api/lobby-api.api")
 
 tasks.test {
     systemProperty("lobby.api.version", project.version.toString())
+    systemProperty("lobby.api.file", apiFile.asFile.absolutePath)
+    inputs.file(apiFile).optional()
+    // The dump is written by apiDump, never by the normal tests.
+    filter {
+        excludeTestsMatching("*ApiCompatibilityTest.writeTheApiFile")
+    }
+}
+
+// Records the current API in api/lobby-api.api, after checking the version was raised as the changes need.
+tasks.register<Test>("apiDump") {
+    description = "Writes the current public API to api/lobby-api.api (checks the version first)."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform()
+    systemProperty("lobby.api.version", project.version.toString())
+    systemProperty("lobby.api.file", apiFile.asFile.absolutePath)
+    filter {
+        includeTestsMatching("*ApiCompatibilityTest.writeTheApiFile")
+    }
+    outputs.upToDateWhen { false }
 }
 
 publishing {

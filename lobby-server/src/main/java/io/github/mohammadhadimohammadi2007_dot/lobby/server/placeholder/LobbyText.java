@@ -53,6 +53,12 @@ public final class LobbyText {
         return message(key, sender instanceof Player player ? player : null, resolvers);
     }
 
+    /** Trusted MiniMessage text with placeholders about {@code player} and {@code <prefix>} for the message prefix. */
+    public Component renderWithPrefix(String template, @Nullable Player player) {
+        Component prefix = placeholders.render(config.current().messages().template(MessageKey.PREFIX), player);
+        return placeholders.render(template, player, Placeholder.component("prefix", prefix));
+    }
+
     /** Any trusted MiniMessage text (for example the MOTD) with placeholders about {@code player}. */
     public Component render(String template, @Nullable Player player, TagResolver... resolvers) {
         return placeholders.render(template, player, resolvers);

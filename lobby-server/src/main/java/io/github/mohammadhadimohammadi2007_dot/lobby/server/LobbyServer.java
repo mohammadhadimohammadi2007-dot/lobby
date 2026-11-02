@@ -300,7 +300,7 @@ public final class LobbyServer implements ServerInfo {
             }
         });
         addons.enableAll(new AddonServices(text, MinecraftServer.getCommandManager(), commandWhitelist, permissions,
-                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, cosmetics, vanish, this::reloadForAddons));
+                actions, menus, holograms, npcs, bridge, addonSettings(), pvp, cosmetics, vanish, regions, this::reloadForAddons));
     }
 
     /** Where addons keep per-player values: the shared database if there is one, otherwise files. */
@@ -928,6 +928,11 @@ public final class LobbyServer implements ServerInfo {
     /** The addons, for tests. */
     public AddonManager addons() {
         return addons;
+    }
+
+    /** The regions of the map (portals, jump pads, the PvP area, addons' regions), for tests. */
+    public RegionTracker regions() {
+        return regions;
     }
 
     /** The lobby instances of this server. */

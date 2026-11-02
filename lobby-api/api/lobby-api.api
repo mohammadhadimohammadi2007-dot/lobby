@@ -1,0 +1,391 @@
+# lobby-api 1.0.0 - written by ./gradlew :lobby-api:apiDump; do not edit by hand
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription description()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionTypes actionTypes()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.command.AddonCommands commands()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig config()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig config(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.event.AddonEvents events()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms holograms()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus menus()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs npcs()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders placeholders()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler scheduler()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients clients()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics cosmetics()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network network()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions permissions()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings playerSettings()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp pvp()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions regions()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry services()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts texts()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish vanish()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public java.nio.file.Path dataFolder()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext method public org.slf4j.Logger logger()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription constructor public (java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.util.List<java.lang.String>, java.util.List<java.lang.String>, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription field public static final java.lang.String ID_PATTERN
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.lang.String apiVersion()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.lang.String id()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.lang.String mainClass()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.lang.String name()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.lang.String version()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.util.List<java.lang.String> authors()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.util.List<java.lang.String> depends()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription method public java.util.List<java.lang.String> softDepends()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonDescription record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.ApiVersion class final
+io.github.mohammadhadimohammadi2007_dot.lobby.api.ApiVersion field public static final java.lang.String CURRENT
+io.github.mohammadhadimohammadi2007_dot.lobby.api.ApiVersion method public static boolean supports(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.ApiVersion method public static boolean supports(java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon interface
+io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon method public void onDisable(io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext) throws java.lang.Exception
+io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon method public void onEnable(io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext) throws java.lang.Exception [addons implement]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.LobbyAddon method public void onLoad(io.github.mohammadhadimohammadi2007_dot.lobby.api.AddonContext) throws java.lang.Exception
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionFactory interface
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionFactory method public io.github.mohammadhadimohammadi2007_dot.lobby.api.action.CustomAction create(java.lang.String) throws io.github.mohammadhadimohammadi2007_dot.lobby.api.action.InvalidActionException [addons implement]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult constructor public (boolean, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult CONTINUE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult STOP
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public boolean stop()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public int waitTicks()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult waitTicks(int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionRun interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionRun method public java.lang.String fill(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionRun method public java.lang.String source()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionRun method public net.minestom.server.entity.Player player()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionTypes interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionTypes method public void register(java.lang.String, io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionFactory)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.CustomAction interface
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.CustomAction method public io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionResult run(io.github.mohammadhadimohammadi2007_dot.lobby.api.action.ActionRun) [addons implement]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.InvalidActionException class extends java.lang.Exception
+io.github.mohammadhadimohammadi2007_dot.lobby.api.action.InvalidActionException constructor public (java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.Experimental annotation
+io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable annotation
+io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.Since annotation
+io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.Since method public java.lang.String value()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.command.AddonCommands interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.command.AddonCommands method public void register(net.minestom.server.command.builder.Command)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.command.AddonCommands method public void register(net.minestom.server.command.builder.Command, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.command.AddonCommands method public void unregister(net.minestom.server.command.builder.Command)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public boolean contains(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public boolean getBoolean(java.lang.String, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public double getDouble(java.lang.String, double)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public int getInt(java.lang.String, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public java.lang.String getString(java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public java.util.List<java.lang.String> getStringList(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public java.util.Set<java.lang.String> keys(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public long getLong(java.lang.String, long)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public void reload() throws java.io.IOException
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public void save() throws java.io.IOException
+io.github.mohammadhadimohammadi2007_dot.lobby.api.config.AddonConfig method public void set(java.lang.String, java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.AddonEvents interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.AddonEvents method public <E extends net.minestom.server.event.Event> E fire(E)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.AddonEvents method public <E extends net.minestom.server.event.Event> void listen(java.lang.Class<E>, io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority, java.util.function.Consumer<E>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.AddonEvents method public <E extends net.minestom.server.event.Event> void listen(java.lang.Class<E>, java.util.function.Consumer<E>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent class abstract extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent implements net.minestom.server.event.trait.CancellableEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent constructor protected (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent method public boolean isCancelled()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent method public void setCancelled(boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType LEFT
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType RIGHT
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CombatTagEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CombatTagEvent constructor public (net.minestom.server.entity.Player, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CombatTagEvent method public boolean tagged()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent constructor public (net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind, java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind kind()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent method public java.lang.String next()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CosmeticChangeEvent method public java.lang.String previous()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority EARLY
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority LATE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority MONITOR
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority NORMAL
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.EventPriority[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.GadgetUseEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.GadgetUseEvent constructor public (net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.GadgetUseEvent method public java.lang.String gadget()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.HologramClickEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.HologramClickEvent constructor public (net.minestom.server.entity.Player, java.lang.String, io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.HologramClickEvent method public io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType click()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.HologramClickEvent method public java.lang.String hologram()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent constructor public (net.minestom.server.entity.Player, java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent method public java.lang.String message()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent method public java.lang.String original()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent method public net.kyori.adventure.text.Component cancelFeedback()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent method public void cancel(net.kyori.adventure.text.Component)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyChatEvent method public void message(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyJoinEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyJoinEvent constructor public (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent class abstract implements net.minestom.server.event.trait.PlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent constructor protected (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent method public net.minestom.server.entity.Player getPlayer()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyQuitEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyQuitEvent constructor public (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.MenuClickEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.MenuClickEvent constructor public (net.minestom.server.entity.Player, java.lang.String, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.MenuClickEvent method public int slot()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.MenuClickEvent method public java.lang.String menu()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent constructor public (net.minestom.server.entity.Player, java.lang.String, io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent method public io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ClickType click()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.NpcClickEvent method public java.lang.String npc()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpAreaEnterEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpAreaEnterEvent constructor public (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpAreaLeaveEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpAreaLeaveEvent constructor public (net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent constructor public (net.minestom.server.entity.Player, net.minestom.server.entity.Player, double, boolean, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent method public boolean critical()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent method public boolean legacyCombat()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent method public double damage()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent method public net.minestom.server.entity.Player attacker()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpDamageEvent method public void damage(double)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpKillEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpKillEvent constructor public (net.minestom.server.entity.Player, net.minestom.server.entity.Player, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpKillEvent method public boolean combatLog()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.PvpKillEvent method public net.minestom.server.entity.Player killer()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionEnterEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionEnterEvent constructor public (net.minestom.server.entity.Player, java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionEnterEvent method public java.lang.String owner()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionEnterEvent method public java.lang.String region()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionLeaveEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionLeaveEvent constructor public (net.minestom.server.entity.Player, java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionLeaveEvent method public java.lang.String owner()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.RegionLeaveEvent method public java.lang.String region()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.LobbyPlayerEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent constructor public (net.minestom.server.entity.Player, java.lang.String, boolean, io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent method public boolean group()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent method public io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome outcome()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent method public java.lang.String target()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome CONNECTED
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome FAILED
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome FULL
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome NOT_AVAILABLE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome OFFLINE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome UNKNOWN
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.event.ServerConnectResultEvent$Outcome[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.VanishChangeEvent class final extends io.github.mohammadhadimohammadi2007_dot.lobby.api.event.CancellableLobbyEvent
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.VanishChangeEvent constructor public (net.minestom.server.entity.Player, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.event.VanishChangeEvent method public boolean vanishing()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public boolean create(java.lang.String, net.minestom.server.coordinate.Pos, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public boolean delete(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public boolean exists(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public boolean move(java.lang.String, net.minestom.server.coordinate.Pos)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public boolean setLines(java.lang.String, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public java.util.List<java.lang.String> setActions(java.lang.String, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram.Holograms method public java.util.Set<java.lang.String> names()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton constructor public (java.util.List<java.lang.Integer>, net.minestom.server.item.Material, java.lang.String, java.util.List<java.lang.String>, boolean, java.util.List<java.lang.String>, java.util.function.Consumer<net.minestom.server.entity.Player>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public boolean glow()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public java.lang.String name()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public java.util.List<java.lang.Integer> slots()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public java.util.List<java.lang.String> actions()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public java.util.List<java.lang.String> lore()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public java.util.function.Consumer<net.minestom.server.entity.Player> onClick()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public net.minestom.server.item.Material material()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton of(int, net.minestom.server.item.Material, java.lang.String, java.util.List<java.lang.String>, java.util.function.Consumer<net.minestom.server.entity.Player>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton withActions(int, net.minestom.server.item.Material, java.lang.String, java.util.List<java.lang.String>, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView constructor public (java.lang.String, int, java.util.List<io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public int rows()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public java.lang.String title()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView method public java.util.List<io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuButton> buttons()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus method public boolean exists(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus method public void close(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus method public void open(net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.Menus method public void register(java.lang.String, java.util.function.Function<net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.menu.MenuView>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public boolean create(java.lang.String, net.minestom.server.coordinate.Pos)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public boolean delete(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public boolean exists(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public boolean move(java.lang.String, net.minestom.server.coordinate.Pos)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public boolean setNameLines(java.lang.String, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public java.util.List<java.lang.String> setActions(java.lang.String, io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger, java.util.List<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public java.util.Set<java.lang.String> names()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs method public java.util.concurrent.CompletableFuture<java.lang.Boolean> setSkin(java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger ANY_CLICK
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger LEFT_CLICK
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger RIGHT_CLICK
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.npc.Npcs$Trigger[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderResolver interface
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderResolver method public io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue resolve(java.lang.String) [addons implement]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue interface sealed permits io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant, io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global, io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer, io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue method public boolean formatted()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue constant(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue global(java.time.Duration, java.util.function.Supplier<java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue perPlayer(java.time.Duration, java.util.function.Function<net.minestom.server.entity.Player, java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue relational(java.util.function.BiFunction<net.minestom.server.entity.Player, net.minestom.server.entity.Player, java.lang.String>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant constructor public (java.lang.String, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant method public boolean formatted()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant method public java.lang.String value()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Constant record implements io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global constructor public (java.util.function.Supplier<java.lang.String>, java.time.Duration, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public boolean formatted()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public java.time.Duration cacheTime()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global method public java.util.function.Supplier<java.lang.String> value()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Global record implements io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer constructor public (java.util.function.Function<net.minestom.server.entity.Player, java.lang.String>, java.time.Duration, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public boolean formatted()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public java.time.Duration cacheTime()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer method public java.util.function.Function<net.minestom.server.entity.Player, java.lang.String> value()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$PerPlayer record implements io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational constructor public (java.util.function.BiFunction<net.minestom.server.entity.Player, net.minestom.server.entity.Player, java.lang.String>, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational method public boolean formatted()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational method public java.util.function.BiFunction<net.minestom.server.entity.Player, net.minestom.server.entity.Player, java.lang.String> value()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue$Relational record implements io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderValue
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders method public java.lang.String fill(java.lang.String, net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.Placeholders method public void register(java.lang.String, io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder.PlaceholderResolver)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public <T> java.util.concurrent.CompletableFuture<T> supplyAsync(java.util.function.Supplier<T>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask later(java.time.Duration, java.lang.Runnable)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask repeat(java.time.Duration, java.lang.Runnable)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask repeatAsync(java.time.Duration, java.lang.Runnable)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public java.util.concurrent.CompletableFuture<java.lang.Void> async(java.lang.Runnable)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonScheduler method public void nextTick(java.lang.Runnable)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask method public boolean cancelled()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler.AddonTask method public void cancel()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients method public boolean legacy(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients method public boolean reported(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients method public int protocolVersion(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Clients method public java.lang.String versionName(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public boolean enabled()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public boolean equip(net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public boolean hidesOthers(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public boolean unlocked(net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public java.lang.String equipped(net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public java.util.List<java.lang.String> ids(io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics method public void unequip(net.minestom.server.entity.Player, io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind BALLOON
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind GADGET
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind HAT
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind OUTFIT
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind PET
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind TRAIL
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Cosmetics$Kind[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public boolean available()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public boolean serverOnline(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public int groupOnline(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public int online(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public int totalOnline()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus groupStatus(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public java.util.Map<java.lang.String, java.util.List<java.lang.String>> groups()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public java.util.Set<java.lang.String> servers()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public java.util.concurrent.CompletableFuture<java.lang.Boolean> connect(net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network method public java.util.concurrent.CompletableFuture<java.lang.Boolean> connectGroup(net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus enum
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus FULL
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus OFFLINE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus field public static final io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus ONLINE
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus valueOf(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus method public static io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network$GroupStatus[] values()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions method public boolean has(net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo rank(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings field public static final int MAX_KEY_LENGTH
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings field public static final int MAX_VALUE_LENGTH
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings method public java.util.concurrent.CompletableFuture<java.lang.Void> set(java.util.UUID, java.lang.String, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings method public java.util.concurrent.CompletableFuture<java.util.Optional<java.lang.String>> get(java.util.UUID, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp method public boolean available()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp method public boolean inArea(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp method public java.util.concurrent.CompletableFuture<io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record> stats(java.util.UUID)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp method public long combatSecondsLeft(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record constructor public (int, int, int, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public int bestStreak()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public int deaths()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public int kills()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record method public int streak()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp$Record record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo constructor public (java.lang.String, java.lang.String, java.lang.String, java.util.Map<java.lang.String, java.lang.String>, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public int weight()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public java.lang.String prefix()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public java.lang.String primaryGroup()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public java.lang.String suffix()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo method public java.util.Map<java.lang.String, java.lang.String> meta()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.RankInfo record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions method public boolean remove(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions method public io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region define(java.lang.String, net.minestom.server.coordinate.Point, net.minestom.server.coordinate.Point)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions method public java.util.List<io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region> at(net.minestom.server.coordinate.Point)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions method public java.util.List<io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region> at(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions method public java.util.List<io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region> own()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region constructor public (java.lang.String, java.lang.String, int, int, int, int, int, int)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public boolean contains(net.minestom.server.coordinate.Point)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public final boolean equals(java.lang.Object)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public final int hashCode()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public final java.lang.String toString()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int maxX()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int maxY()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int maxZ()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int minX()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int minY()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public int minZ()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public java.lang.String name()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region method public java.lang.String owner()
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions$Region record
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry method public <T> java.util.Optional<T> get(java.lang.Class<T>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry method public <T> void provide(java.lang.Class<T>, T)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry method public java.util.Optional<java.lang.String> provider(java.lang.Class<?>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry method public void remove(java.lang.Class<?>)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts method public net.kyori.adventure.text.Component render(java.lang.String, net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts method public void broadcast(java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts method public void send(net.minestom.server.entity.Player, java.lang.String)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish interface [lobby implements]
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish method public boolean seesVanished(net.minestom.server.entity.Player)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish method public boolean vanish(net.minestom.server.entity.Player, boolean)
+io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish method public boolean vanished(net.minestom.server.entity.Player)

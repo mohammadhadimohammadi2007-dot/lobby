@@ -42,6 +42,8 @@ public final class AddonManager {
     private final Map<String, Addon> addons = new LinkedHashMap<>();
     private final List<Addon> order = new ArrayList<>();
     private @Nullable AddonServices services;
+    /** The services addons provide each other. */
+    private final SharedServices sharedServices = new SharedServices();
 
     /** @param folder the addons folder, {@code <server>/addons} */
     public AddonManager(Path folder, PlaceholderService placeholders) {
@@ -256,7 +258,7 @@ public final class AddonManager {
             return;
         }
         AddonContextImpl context = new AddonContextImpl(addon, description, this, folder.resolve(description.id()),
-                loader, placeholders);
+                loader, placeholders, sharedServices);
         addon.started(loader, instance, context);
         addon.state(AddonState.LOADED, "");
         context.loading(true);

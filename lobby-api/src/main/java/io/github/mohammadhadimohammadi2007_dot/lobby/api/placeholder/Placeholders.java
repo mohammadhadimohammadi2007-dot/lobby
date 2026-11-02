@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.placeholder;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
  * it has to be rebuilt from the placeholders in it when it is read. Registering later throws
  * {@link IllegalStateException}. Namespaces are removed when the addon is disabled.
  */
+@NonExtendable
 public interface Placeholders {
 
     /**

@@ -26,6 +26,9 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.minestom.testing)
+    // A test addon uses the example addon's service and event (ExampleAddonTest). In the lobby they come from the
+    // example's jar: addons never see the test classpath, so these copies are only there for JUnit's class scan.
+    testImplementation(project(":example-addon"))
     testRuntimeOnly(libs.junit.launcher)
 }
 
@@ -41,6 +44,11 @@ tasks.test {
     systemProperty("minestom.inside-test", "true")
     // LOBBY_JFR=filename=<file>[,settings=<file.jfc>] records the run with Java Flight Recorder (see JoinCostTest).
     System.getenv("LOBBY_JFR")?.let { jvmArgs("-XX:StartFlightRecording=$it") }
+    // ExampleAddonTest starts the example addon (examples/addon-example) in a real lobby.
+    val exampleAddon = project(":example-addon").tasks.named<Jar>("jar")
+    dependsOn(exampleAddon)
+    inputs.file(exampleAddon.flatMap { it.archiveFile })
+    systemProperty("lobby.example.addon", exampleAddon.get().archiveFile.get().asFile.absolutePath)
 }
 
 // `./gradlew :lobby-server:run` starts a local server inside lobby-server/run/

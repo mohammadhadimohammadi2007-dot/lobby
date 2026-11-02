@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.server.addon;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.ApiVersion;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
@@ -14,6 +16,9 @@ import java.util.stream.Stream;
 /** Packs a test addon (classes of the tests' {@code testaddons} package) into a jar, as an addon developer would. */
 final class AddonJars {
 
+    /** The major and minor version of the API in this build, as an addon names it. */
+    static final String API_VERSION = ApiVersion.CURRENT.substring(0, ApiVersion.CURRENT.lastIndexOf('.'));
+
     private AddonJars() {
     }
 
@@ -21,7 +26,7 @@ final class AddonJars {
     static Path addon(Path folder, String id, Class<?> main, String extraJson, Map<String, String> files)
             throws IOException {
         String json = "{\"id\": \"" + id + "\", \"name\": \"" + id + "\", \"version\": \"1.0\", \"main\": \""
-                + main.getName() + "\", \"api-version\": \"0.3\"" + (extraJson.isEmpty() ? "" : ", " + extraJson) + "}";
+                + main.getName() + "\", \"api-version\": \"" + API_VERSION + "\"" + (extraJson.isEmpty() ? "" : ", " + extraJson) + "}";
         Path jar = folder.resolve(id + ".jar");
         Files.createDirectories(folder);
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {

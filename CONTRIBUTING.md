@@ -22,6 +22,11 @@ and developers. Please keep that in mind in every change.
   from an upstream source by a script in `tools/`, and the test rebuilds the result from a committed
   slice of that source.
 
+- **The addon API is a promise**: `lobby-api` changes follow its version rules, and every new feature
+  that addons could use opens extension points there (events, services, actions, placeholders). Run
+  `./gradlew :lobby-api:apiDump` after changing it; see
+  [Changing the API](docs/addon-development.md#for-lobby-maintainers-changing-the-api).
+
 ## Development setup
 
 You need JDK 25 and Git. Clone with `--recursive` (or run `git submodule update --init`): the LuckPerms

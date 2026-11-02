@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.command;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.command.builder.Command;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
  * may type them (add the command's name to a group there), and a permission given here is checked through
  * LuckPerms or the operators list. They are unregistered when the addon is disabled.
  */
+@NonExtendable
 public interface AddonCommands {
 
     /**

@@ -127,7 +127,9 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Supported client versions](docs/client-versions.md)
 - [Chat](docs/chat.md)
 - [Placeholders](docs/placeholders.md)
-- [Addons](docs/addons.md): installing them, and writing your own
+- [Addons](docs/addons.md): installing them
+- [Writing addons](docs/addon-development.md): the addon API 1.0, its compatibility promise, and an
+  [example addon](examples/addon-example) to start from
 - Integrations: [Database](docs/integrations/database.md) ·
   [LuckPerms](docs/integrations/luckperms.md) ·
   [LiteBans](docs/integrations/litebans.md) ·
@@ -165,6 +167,8 @@ Outputs:
 
 - `lobby-server/build/libs/lobby-server.jar` - the server
 - `lobby-bridge-velocity/build/libs/lobby-bridge.jar` - the Velocity plugin
+- `lobby-api/build/libs/lobby-api-<version>.jar` - the addon API (with sources and javadoc jars)
+- `examples/addon-example/build/libs/example-addon.jar` - the example addon
 
 Run a local test server (files go to `lobby-server/run/`):
 
@@ -178,9 +182,10 @@ Project layout:
 lobby-server/           Minestom server
 lobby-bridge-velocity/  Velocity plugin
 lobby-common/           Shared code (bridge message format)
-lobby-api/              The API addons are written against
+lobby-api/              The API addons are written against (recorded in lobby-api/api/lobby-api.api)
 lobby-luckperms/        LuckPerms support (off until enabled in integrations.yml)
 third_party/luckperms/  LuckPerms Minestom port (git submodule, built from source)
+examples/               An example network setup, and the example addon
 docs/                   Setup guides
 ```
 

@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * with {@code CosmeticChangeEvent} and {@code GadgetUseEvent}. Reading works on any thread; {@link #equip} and
  * {@link #unequip} on the tick thread.
  */
+@NonExtendable
 public interface Cosmetics {
 
     /** The kinds of cosmetics; a player uses at most one of each. */

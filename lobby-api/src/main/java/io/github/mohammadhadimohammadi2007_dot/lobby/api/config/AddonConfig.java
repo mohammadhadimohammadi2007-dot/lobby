@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.config;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.Set;
  * <p>Reads are from memory. {@link #reload()} and {@link #save()} touch the disk, so call them off the tick
  * thread.
  */
+@NonExtendable
 public interface AddonConfig {
 
     /** The text at {@code path}, or {@code def}. Numbers and booleans are returned as text. */

@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.menu;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 
 import java.util.function.Function;
@@ -10,6 +11,7 @@ import java.util.function.Function;
  * <p>Menus are read-only for players: every click is cancelled, and only the clicked button's actions run.
  * Registered menus are removed when the addon is disabled.
  */
+@NonExtendable
 public interface Menus {
 
     /** Opens a menu of menus.yml or a registered one. Nothing happens (but a warning) if there is none. Tick thread. */

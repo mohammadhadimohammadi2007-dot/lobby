@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
  * The network as the proxy bridge reports it (on Velocity with lobby-bridge.jar). Without the bridge every
  * count is 0 and nothing is online. Reads are from memory; any thread.
  */
+@NonExtendable
 public interface Network {
 
     /** How a group of servers is doing. */

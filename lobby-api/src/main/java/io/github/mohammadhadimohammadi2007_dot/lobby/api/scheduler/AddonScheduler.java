@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.scheduler;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -11,6 +12,7 @@ import java.util.function.Supplier;
  *
  * <p>Durations are rounded to whole ticks (50 ms) for tick-thread tasks.
  */
+@NonExtendable
 public interface AddonScheduler {
 
     /** Runs {@code task} on a virtual thread, where blocking (files, databases, web requests) is fine. */

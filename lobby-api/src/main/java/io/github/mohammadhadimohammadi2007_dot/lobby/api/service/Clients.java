@@ -1,11 +1,13 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 
 /**
  * Which Minecraft version a player really plays on. Behind ViaVersion the lobby only knows this from the
  * proxy bridge; without it every player counts as the lobby's own version. Any thread.
  */
+@NonExtendable
 public interface Clients {
 
     /** The client's protocol version number, e.g. 47 for 1.8.x. */

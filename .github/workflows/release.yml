@@ -68,7 +68,9 @@ jobs:
           cp lobby-bridge-velocity/build/libs/lobby-bridge.jar release/
           # The addon API under fixed names too; its own version is in the release notes.
           cp lobby-api/build/libs/lobby-api-*-sources.jar release/lobby-api-sources.jar
-          cp "$(ls lobby-api/build/libs/lobby-api-*.jar | grep -v -- -sources)" release/lobby-api.jar
+          cp lobby-api/build/libs/lobby-api-*-javadoc.jar release/lobby-api-javadoc.jar
+          cp "$(ls lobby-api/build/libs/lobby-api-*.jar | grep -v -e -sources -e -javadoc)" release/lobby-api.jar
+          cp examples/addon-example/build/libs/example-addon.jar release/
           (cd release && sha256sum *.jar > SHA256SUMS.txt)
           ls -l release
 
@@ -82,7 +84,8 @@ jobs:
             echo "|---|---|"
             echo "| \`lobby-server.jar\` | The lobby server ${TAG#v} (Java 25) |"
             echo "| \`lobby-bridge.jar\` | The Velocity plugin, bridge version $bridge_version |"
-            echo "| \`lobby-api.jar\`, \`lobby-api-sources.jar\` | The addon API $api_version, to compile addons against |"
+            echo "| \`lobby-api.jar\`, \`lobby-api-sources.jar\`, \`lobby-api-javadoc.jar\` | The addon API $api_version, to compile addons against |"
+            echo "| \`example-addon.jar\` | The example addon (docs/addon-development.md) |"
             echo "| \`SHA256SUMS.txt\` | Checksums of the jars |"
             echo
             echo "Before updating an existing lobby, read [upgrading.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAG}/docs/upgrading.md)."

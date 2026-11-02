@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.hologram;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.coordinate.Pos;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Set;
  * <p>Names: lowercase letters, digits, {@code -} and {@code _}. Methods that change a hologram return false
  * if there is none with that name.
  */
+@NonExtendable
 public interface Holograms {
 
     /** Every hologram's name. */

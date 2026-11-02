@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -13,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p>Both methods work in the background and never block the caller.
  */
+@NonExtendable
 public interface PlayerSettings {
 
     /** Longest key: lowercase letters, digits, {@code .}, {@code -} and {@code _}. */

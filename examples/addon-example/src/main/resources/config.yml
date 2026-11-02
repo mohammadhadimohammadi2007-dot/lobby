@@ -1,0 +1,13 @@
+# The example addon's settings. Copied to addons/example/config.yml on the first start.
+
+# Every this many NPC clicks a player gets a message (and other addons get a ClickMilestoneEvent).
+milestone: 10
+
+# Sent at each milestone. MiniMessage; <prefix> is the lobby's prefix, %player_name% and the other placeholders work.
+milestone-message: "<prefix><gold>%player_name%, that was your <white><clicks></white>th click on an NPC!"
+
+# An area of the map that greets players walking in: two corners, "x y z". Delete "zone" for none.
+zone:
+  from: "-3 60 -3"
+  to: "3 70 3"
+  message: "<prefix><aqua>Welcome to the example zone! You have <white>%example_clicks%</white> clicks."

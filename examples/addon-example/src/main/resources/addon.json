@@ -1,0 +1,8 @@
+{
+  "id": "example",
+  "name": "Example Click Counter",
+  "version": "${version}",
+  "main": "com.example.clicks.ClickCounterAddon",
+  "api-version": "1.0",
+  "authors": ["Lobby developers"]
+}

@@ -1,5 +1,7 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.action;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
+
 /**
  * New action types, usable everywhere actions are: NPCs, holograms, menus, portals and hotbar items. An
  * action is written {@code "type: argument"} in configs; for example after
@@ -15,6 +17,7 @@ package io.github.mohammadhadimohammadi2007_dot.lobby.api.action;
  * {@link IllegalStateException}. When the addon is disabled its types are removed, and entries using them
  * are reported as unknown (and skipped) from the next reload.
  */
+@NonExtendable
 public interface ActionTypes {
 
     /**

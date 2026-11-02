@@ -1,11 +1,13 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /** The lobby's PvP area, read only. Fights themselves are followed with the Pvp*Event events. Any thread. */
+@NonExtendable
 public interface Pvp {
 
     /** True if the area is set up and enabled in pvp.yml. */

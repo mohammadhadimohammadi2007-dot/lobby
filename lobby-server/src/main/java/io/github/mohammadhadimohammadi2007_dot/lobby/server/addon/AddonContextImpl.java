@@ -17,6 +17,9 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Network;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Permissions;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.PlayerSettings;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Pvp;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Regions;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.ServiceRegistry;
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Texts;
 import io.github.mohammadhadimohammadi2007_dot.lobby.api.service.Vanish;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.placeholder.PlaceholderService;
 import org.jetbrains.annotations.Nullable;
@@ -45,17 +48,18 @@ final class AddonContextImpl implements AddonContext {
     private final ApiActionTypes actionTypes;
     private final ApiScheduler scheduler;
     private final ApiEvents events;
+    private final ApiServiceRegistry services;
     private volatile boolean loading;
     private volatile @Nullable Enabled enabled;
 
     /** The services that only exist once the lobby runs. */
     private record Enabled(ApiCommands commands, ApiMenus menus, Holograms holograms, Npcs npcs,
                            Permissions permissions, PlayerSettings settings, Network network, Clients clients,
-                           Pvp pvp, Cosmetics cosmetics, Vanish vanish) {
+                           Pvp pvp, Cosmetics cosmetics, Vanish vanish, Texts texts, ApiRegions regions) {
     }
 
     AddonContextImpl(Addon addon, AddonDescription description, AddonManager manager, Path dataFolder,
-                     ClassLoader jar, PlaceholderService placeholderService) {
+                     ClassLoader jar, PlaceholderService placeholderService, SharedServices sharedServices) {
         this.addon = addon;
         this.description = description;
         this.manager = manager;
@@ -66,6 +70,7 @@ final class AddonContextImpl implements AddonContext {
         this.actionTypes = new ApiActionTypes(this, placeholderService);
         this.scheduler = new ApiScheduler(this);
         this.events = new ApiEvents(this);
+        this.services = new ApiServiceRegistry(description.id(), sharedServices);
     }
 
     // ---------------- Lifecycle, used by the manager ----------------
@@ -86,7 +91,8 @@ final class AddonContextImpl implements AddonContext {
                 new ApiPermissions(services.permissions()), new ApiPlayerSettings(this, services.settings()),
                 new ApiNetwork(services.bridge(), services.actions()), new ApiClients(services.bridge()),
                 new ApiPvp(services.pvp()), new ApiCosmetics(services.cosmetics()),
-                new ApiVanish(services.vanish()));
+                new ApiVanish(services.vanish()), new ApiTexts(services.text()),
+                new ApiRegions(description.id(), services.regions()));
     }
 
     /** True while the addon may run code (its listeners, actions and placeholders check this). */
@@ -112,7 +118,9 @@ final class AddonContextImpl implements AddonContext {
         if (services != null) {
             services.commands().cleanup();
             services.menus().cleanup();
+            services.regions().cleanup();
         }
+        this.services.cleanup();
         placeholders.cleanup();
         actionTypes.cleanup();
         enabled = null;
@@ -166,12 +174,12 @@ final class AddonContextImpl implements AddonContext {
 
     @Override
     public AddonCommands commands() {
-        return services().commands();
+        return enabled().commands();
     }
 
     @Override
     public AddonEvents events() {
-        services();
+        enabled();
         return events;
     }
 
@@ -182,55 +190,70 @@ final class AddonContextImpl implements AddonContext {
 
     @Override
     public Menus menus() {
-        return services().menus();
+        return enabled().menus();
     }
 
     @Override
     public Holograms holograms() {
-        return services().holograms();
+        return enabled().holograms();
     }
 
     @Override
     public Npcs npcs() {
-        return services().npcs();
+        return enabled().npcs();
     }
 
     @Override
     public Permissions permissions() {
-        return services().permissions();
+        return enabled().permissions();
     }
 
     @Override
     public PlayerSettings playerSettings() {
-        return services().settings();
+        return enabled().settings();
     }
 
     @Override
     public Network network() {
-        return services().network();
+        return enabled().network();
     }
 
     @Override
     public Clients clients() {
-        return services().clients();
+        return enabled().clients();
     }
 
     @Override
     public Pvp pvp() {
-        return services().pvp();
+        return enabled().pvp();
     }
 
     @Override
     public Cosmetics cosmetics() {
-        return services().cosmetics();
+        return enabled().cosmetics();
     }
 
     @Override
     public Vanish vanish() {
-        return services().vanish();
+        return enabled().vanish();
     }
 
-    private Enabled services() {
+    @Override
+    public ServiceRegistry services() {
+        return services;
+    }
+
+    @Override
+    public Texts texts() {
+        return enabled().texts();
+    }
+
+    @Override
+    public Regions regions() {
+        return enabled().regions();
+    }
+
+    private Enabled enabled() {
         Enabled services = enabled;
         if (services == null) {
             throw new IllegalStateException("Addon '" + description.id() + "': this part of the lobby is only available"

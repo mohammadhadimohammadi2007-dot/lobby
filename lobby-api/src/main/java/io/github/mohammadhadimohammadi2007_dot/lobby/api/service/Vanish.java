@@ -1,5 +1,6 @@
 package io.github.mohammadhadimohammadi2007_dot.lobby.api.service;
 
+import io.github.mohammadhadimohammadi2007_dot.lobby.api.annotation.NonExtendable;
 import net.minestom.server.entity.Player;
 
 /**
@@ -7,6 +8,7 @@ import net.minestom.server.entity.Player;
  * Changes are followed with {@code VanishChangeEvent}. Reading works on any thread; {@link #vanish} on the tick
  * thread.
  */
+@NonExtendable
 public interface Vanish {
 
     boolean vanished(Player player);
