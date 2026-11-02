@@ -66,8 +66,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * second), with 50 holograms and 30 NPCs (some with per-player text), the bundled scoreboard, tab list,
  * nametags and boss bar, hotbar items, player visibility, regions, jump pads and portals all running. 20 of the
  * players are in the PvP area instead, each hitting another about twice a second (kills, respawns and combat tags
- * included). Every walking player has a trail and every other one a hat (LOBBY_LOAD_TEST_COSMETICS=0 turns that
- * off, for comparison).
+ * included). Every walking player has a trail, every other one a hat, every third a pet, every fourth a balloon
+ * and every fifth an outfit (LOBBY_LOAD_TEST_COSMETICS=0 turns that off, for comparison).
  * Reports the tick time per minute (to see it does not grow), the display thread, and allocation and GC.
  *
  * <p>Off by default, like the chat load test: {@code LOBBY_LOAD_TEST=1 ./gradlew :lobby-server:test
@@ -92,7 +92,7 @@ class LobbyLoadTest {
     private static final boolean PVP = !"0".equals(System.getenv("LOBBY_LOAD_TEST_PVP"));
     /** LOBBY_LOAD_TEST_COSMETICS=0 runs the same test without cosmetics, for comparison. */
     private static final boolean COSMETICS = !"0".equals(System.getenv("LOBBY_LOAD_TEST_COSMETICS"));
-    /** One trail of each style and a hat, free for everyone, so every walking player can use them. */
+    /** One trail of each style, a hat, a pet, a balloon and an outfit, free for everyone. */
     private static final String LOAD_COSMETICS = """
             trails:
               feet:
@@ -108,6 +108,20 @@ class LobbyLoadTest {
                 particle: note
                 style: spiral
                 permission: ""
+              ring:
+                particle: witch
+                style: ring
+                permission: ""
+              wings:
+                particle: dust
+                color: "#ffffff"
+                style: wings
+                permission: ""
+              cloud:
+                particle: cloud
+                drip: dripping_water
+                style: cloud
+                permission: ""
             hats:
               glass:
                 material: glass
@@ -116,8 +130,24 @@ class LobbyLoadTest {
               leap:
                 type: leap
                 permission: ""
+            pets:
+              dog:
+                entity: wolf
+                name-tag: "%player_name%'s dog"
+                permission: ""
+            balloons:
+              red:
+                material: red_wool
+                permission: ""
+            outfits:
+              red:
+                chest: leather_chestplate
+                legs: leather_leggings
+                feet: leather_boots
+                color: "#cc3333"
+                permission: ""
             """;
-    private static final List<String> TRAILS = List.of("feet", "halo", "spiral");
+    private static final List<String> TRAILS = List.of("feet", "halo", "spiral", "ring", "wings", "cloud");
 
     @TempDir
     Path dir;
@@ -211,11 +241,21 @@ class LobbyLoadTest {
             settings.load(id);
             players.add(env.createConnection(new GameProfile(id, "P" + tier + i)).connect(map, home(i)));
             if (COSMETICS && i >= FIGHTERS) {
-                // Every walking player has a trail (the three styles in turn), every other one a hat.
+                // Every walking player has a trail (the styles in turn), every other one a hat, every third a pet,
+                // every fourth a balloon and every fifth an outfit.
                 Player joined = players.getLast();
                 cosmetics.equip(joined, cosmetics.config().find(CosmeticType.TRAIL, TRAILS.get(i % TRAILS.size())));
                 if (i % 2 == 0) {
                     cosmetics.equip(joined, cosmetics.config().find(CosmeticType.HAT, "glass"));
+                }
+                if (i % 3 == 0) {
+                    cosmetics.equip(joined, cosmetics.config().find(CosmeticType.PET, "dog"));
+                }
+                if (i % 4 == 0) {
+                    cosmetics.equip(joined, cosmetics.config().find(CosmeticType.BALLOON, "red"));
+                }
+                if (i % 5 == 0) {
+                    cosmetics.equip(joined, cosmetics.config().find(CosmeticType.OUTFIT, "red"));
                 }
             }
             // One join per tick, as when a full lobby fills up, with everyone already there walking.
@@ -316,9 +356,9 @@ class LobbyLoadTest {
             return "  cosmetics: off (LOBBY_LOAD_TEST_COSMETICS=0)\n";
         }
         StringBuilder text = new StringBuilder(String.format(Locale.ROOT, "  cosmetics: %d walking players with a"
-                + " trail, half with a hat; effects thread last minute %.1f%% busy, longest cycle %.1f ms; %d particle"
-                + " packets dropped by the limits%n", PLAYERS - FIGHTERS, last.busyPercent(), last.longestCycleMillis(),
-                dropped));
+                + " trail, half with a hat, a third with a pet, a quarter with a balloon, a fifth with an outfit;"
+                + " effects thread last minute %.1f%% busy, longest cycle %.1f ms; %d particle packets dropped by the"
+                + " limits%n", PLAYERS - FIGHTERS, last.busyPercent(), last.longestCycleMillis(), dropped));
         for (int minute = 0; minute < perMinute.size(); minute++) {
             text.append(String.format(Locale.ROOT, "    minute %d: effects thread %.1f%% busy, longest %.1f ms%n",
                     minute + 1, perMinute.get(minute).busyPercent(), perMinute.get(minute).longestCycleMillis()));

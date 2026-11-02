@@ -6,7 +6,10 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.menu.MenuConfig;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.util.RGBLike;
+import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.PlayerSkin;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.FireworkExplosion;
 import net.minestom.server.network.player.ResolvableProfile;
@@ -22,7 +25,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * cosmetics.yml: the trails, hats and gadgets players can choose, and the limits that keep particles cheap.
+ * cosmetics.yml: the trails, hats, gadgets, pets, balloons and outfits players can choose, and the limits that keep
+ * particles cheap.
  * A cosmetic that cannot be read is reported by name and left out; the others still work.
  *
  * @param viewDistance  players further away (blocks) do not get someone's particles and gadget effects
@@ -39,6 +43,12 @@ public record CosmeticsConfig(boolean enabled, double viewDistance, int perViewe
     public static final int MAX_PER_TYPE = 45;
     private static final int MAX_AMOUNT = 20;
     private static final int MAX_COOLDOWN_SECONDS = 3600;
+    private static final int MAX_RANGE = 64;
+    private static final List<String> DEFAULT_PAINT = List.of("red_wool", "orange_wool", "yellow_wool", "lime_wool",
+            "light_blue_wool", "magenta_wool");
+    /** The option name of each armor slot in an outfit. */
+    private static final Map<String, EquipmentSlot> OUTFIT_SLOTS = Map.of("helmet", EquipmentSlot.HELMET,
+            "chest", EquipmentSlot.CHESTPLATE, "legs", EquipmentSlot.LEGGINGS, "feet", EquipmentSlot.BOOTS);
 
     public CosmeticsConfig {
         Map<CosmeticType, List<Cosmetic>> copy = new EnumMap<>(CosmeticType.class);
@@ -119,32 +129,35 @@ public record CosmeticsConfig(boolean enabled, double viewDistance, int perViewe
                 return null;
             }
         }
-        return switch (type) {
-            case TRAIL -> {
-                Cosmetic.Trail trail = trail(reader, path);
-                Material icon = icon(reader, path, "blaze_powder", minProtocol);
-                yield trail == null || icon == null ? null
-                        : new Cosmetic(type, id, name, lore, icon, permission, minProtocol, trail, null, null);
-            }
-            case HAT -> {
-                Cosmetic.Hat hat = hat(reader, path, minProtocol);
-                yield hat == null ? null
-                        : new Cosmetic(type, id, name, lore, hat.material(), permission, minProtocol, null, hat, null);
-            }
-            case GADGET -> {
-                Cosmetic.Gadget gadget = gadget(reader, path);
-                if (gadget == null) {
-                    yield null;
-                }
-                Material icon = icon(reader, path, switch (gadget.type()) {
-                    case FIREWORK -> "firework_rocket";
-                    case LEAP -> "feather";
-                    case BURST -> "nether_star";
-                }, minProtocol);
-                yield icon == null ? null
-                        : new Cosmetic(type, id, name, lore, icon, permission, minProtocol, null, null, gadget);
-            }
+        Cosmetic.Look look = switch (type) {
+            case TRAIL -> trail(reader, path);
+            case HAT -> hat(reader, path, minProtocol);
+            case GADGET -> gadget(reader, path);
+            case PET -> pet(reader, path);
+            case BALLOON -> balloon(reader, path, minProtocol);
+            case OUTFIT -> outfit(reader, path, minProtocol);
         };
+        if (look == null) {
+            return null;
+        }
+        Material icon = switch (look) {
+            case Cosmetic.Hat hat -> hat.material();
+            case Cosmetic.Balloon balloon -> balloon.look().material();
+            case Cosmetic.Trail ignored -> icon(reader, path, "blaze_powder", minProtocol);
+            case Cosmetic.Pet ignored -> icon(reader, path, "bone", minProtocol);
+            case Cosmetic.Outfit ignored -> icon(reader, path, "leather_chestplate", minProtocol);
+            case Cosmetic.Gadget gadget -> icon(reader, path, switch (gadget.type()) {
+                case FIREWORK -> "firework_rocket";
+                case LEAP -> "feather";
+                case BURST -> "nether_star";
+                case PAINTBALL -> "snowball";
+                case GRAPPLE -> "fishing_rod";
+                case CONFETTI -> "paper";
+                case TNT -> "tnt";
+                case LIGHTNING -> "blaze_rod";
+            }, minProtocol);
+        };
+        return icon == null ? null : new Cosmetic(type, id, name, lore, icon, permission, minProtocol, look);
     }
 
     private static @Nullable Material icon(ConfigReader reader, String path, String fallback, int minProtocol) {
@@ -189,11 +202,70 @@ public record CosmeticsConfig(boolean enabled, double viewDistance, int perViewe
         try {
             style = Cosmetic.TrailStyle.valueOf(styleName);
         } catch (IllegalArgumentException e) {
-            reader.reportInvalid(path + ".style", styleName.toLowerCase(Locale.ROOT), "feet, halo or spiral");
+            reader.reportInvalid(path + ".style", styleName.toLowerCase(Locale.ROOT), Arrays.stream(
+                    Cosmetic.TrailStyle.values()).map(Cosmetic.TrailStyle::configName).toList().toString());
             return null;
         }
+        String dripName = reader.string(path + ".drip", "").strip();
+        Particle drip = null;
+        if (!dripName.isEmpty()) {
+            if (style != Cosmetic.TrailStyle.CLOUD) {
+                reader.addWarning(reader.fileName() + ": '" + path + ".drip' only works with style: cloud;"
+                        + " it is ignored here.");
+            } else {
+                drip = particle(reader, path + ".drip", dripName);
+            }
+        }
         return new Cosmetic.Trail(particle, reader.integer(path + ".amount", 1, MAX_AMOUNT, 2),
-                reader.decimal(path + ".spread", 0, 2, 0.1), reader.decimal(path + ".speed", 0, 1, 0), style);
+                reader.decimal(path + ".spread", 0, 2, 0.1), reader.decimal(path + ".speed", 0, 1, 0), style, drip);
+    }
+
+    private static Cosmetic.@Nullable Pet pet(ConfigReader reader, String path) {
+        String name = reader.string(path + ".entity", "").strip().toLowerCase(Locale.ROOT);
+        EntityType entity = name.isEmpty() ? null : EntityType.fromKey(name.contains(":") ? name : "minecraft:" + name);
+        if (entity == null || !PetTypes.living(entity)) {
+            reader.reportInvalid(path + ".entity", name, "an animal or mob like \"wolf\"");
+            return null;
+        }
+        // Animals without babies are simply shown grown up.
+        boolean baby = reader.bool(path + ".baby", true) && PetTypes.ageable(entity);
+        return new Cosmetic.Pet(entity, baby, reader.string(path + ".name-tag", ""));
+    }
+
+    private static Cosmetic.@Nullable Balloon balloon(ConfigReader reader, String path, int minProtocol) {
+        Cosmetic.Hat look = hat(reader, path, minProtocol);
+        return look == null ? null : new Cosmetic.Balloon(look, reader.bool(path + ".leash", true));
+    }
+
+    private static Cosmetic.@Nullable Outfit outfit(ConfigReader reader, String path, int minProtocol) {
+        Map<EquipmentSlot, Material> pieces = new EnumMap<>(EquipmentSlot.class);
+        for (String option : List.of("helmet", "chest", "legs", "feet")) {
+            String name = reader.string(path + "." + option, "").strip();
+            if (name.isEmpty()) {
+                continue;
+            }
+            Material material = material(reader, path + "." + option, name, minProtocol);
+            if (material == null) {
+                return null;
+            }
+            pieces.put(OUTFIT_SLOTS.get(option), material);
+        }
+        if (pieces.isEmpty()) {
+            reader.reportInvalid(path, "", "at least one of helmet, chest, legs and feet");
+            return null;
+        }
+        String colorName = reader.string(path + ".color", "").strip();
+        TextColor color = null;
+        if (!colorName.isEmpty()) {
+            color = color(colorName);
+            if (color == null) {
+                reader.reportInvalid(path + ".color", colorName, "a color like \"#ff5555\" or \"red\"");
+            } else if (pieces.values().stream().noneMatch(Cosmetic.Outfit::dyeable)) {
+                reader.addWarning(reader.fileName() + ": '" + path + ".color' only dyes leather armor;"
+                        + " it is ignored here.");
+            }
+        }
+        return new Cosmetic.Outfit(pieces, color);
     }
 
     /** {@code material}, with a head's {@code texture} (a skin value) or {@code head-owner} (a player name). */
@@ -232,15 +304,46 @@ public record CosmeticsConfig(boolean enabled, double viewDistance, int perViewe
         try {
             type = Cosmetic.GadgetType.valueOf(typeName);
         } catch (IllegalArgumentException e) {
-            reader.reportInvalid(path + ".type", typeName.toLowerCase(Locale.ROOT), "firework, leap or burst");
+            reader.reportInvalid(path + ".type", typeName.toLowerCase(Locale.ROOT), Arrays.stream(
+                    Cosmetic.GadgetType.values()).map(Cosmetic.GadgetType::configName).toList().toString());
             return null;
         }
         long cooldown = reader.integer(path + ".cooldown", 1, MAX_COOLDOWN_SECONDS, 10) * 1000L;
-        String particleName = reader.string(path + ".particle", type == Cosmetic.GadgetType.LEAP ? "cloud" : "heart");
-        Particle particle = type == Cosmetic.GadgetType.FIREWORK || particleName.isBlank() ? null
+        boolean usesParticle = switch (type) {
+            case LEAP, BURST, GRAPPLE -> true;
+            default -> false;
+        };
+        String particleName = reader.string(path + ".particle", switch (type) {
+            case LEAP -> "cloud";
+            case GRAPPLE -> "crit";
+            default -> "heart";
+        });
+        Particle particle = !usesParticle || particleName.isBlank() ? null
                 : particle(reader, path + ".particle", particleName);
         SoundEvent sound = sound(reader, path + ".sound", reader.string(path + ".sound", ""));
-        double power = reader.decimal(path + ".power", 0.1, 5, type == Cosmetic.GadgetType.LEAP ? 1.2 : 1.5);
+        double power = reader.decimal(path + ".power", type == Cosmetic.GadgetType.TNT ? 0 : 0.1, 5, switch (type) {
+            case LEAP -> 1.2;
+            case PAINTBALL -> 1.5;
+            case BURST -> 1.5;
+            default -> 1;
+        });
+        int range = reader.integer(path + ".range", 3, MAX_RANGE, type == Cosmetic.GadgetType.GRAPPLE ? 25 : 30);
+        long duration = reader.integer(path + ".duration", 1, 60, 5) * 1000L;
+        List<Block> blocks = new ArrayList<>();
+        if (type == Cosmetic.GadgetType.PAINTBALL) {
+            for (String name : reader.stringList(path + ".blocks", DEFAULT_PAINT)) {
+                String key = name.strip().toLowerCase(Locale.ROOT);
+                Block block = Block.fromKey(key.contains(":") ? key : "minecraft:" + key);
+                if (block == null || !block.solid()) {
+                    reader.reportInvalid(path + ".blocks", name, "solid blocks like \"red_wool\"");
+                } else {
+                    blocks.add(block);
+                }
+            }
+            if (blocks.isEmpty()) {
+                blocks.add(Block.RED_WOOL);
+            }
+        }
         List<RGBLike> colors = new ArrayList<>();
         for (String name : reader.stringList(path + ".colors", List.of("#ff5555", "#ffff55", "#55ffff"))) {
             TextColor color = color(name);
@@ -262,7 +365,7 @@ public record CosmeticsConfig(boolean enabled, double viewDistance, int perViewe
                     FireworkExplosion.Shape.values()).map(s -> s.name().toLowerCase(Locale.ROOT)).toList().toString());
             shape = FireworkExplosion.Shape.LARGE_BALL;
         }
-        return new Cosmetic.Gadget(type, cooldown, power, particle, sound, colors, shape);
+        return new Cosmetic.Gadget(type, cooldown, power, particle, sound, colors, shape, range, duration, blocks);
     }
 
     private static @Nullable Particle particle(ConfigReader reader, String option, String name) {

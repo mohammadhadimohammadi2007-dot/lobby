@@ -117,7 +117,7 @@ These work without the bridge: they are about the lobbies of **this** server.
 
 | Placeholder | Value |
 |---|---|
-| `%cosmetics_trail%`, `%cosmetics_hat%`, `%cosmetics_gadget%` | The name of the player's trail, hat or gadget (without colors), or `none` |
+| `%cosmetics_trail%`, `%cosmetics_hat%`, `%cosmetics_gadget%`, `%cosmetics_pet%`, `%cosmetics_balloon%`, `%cosmetics_outfit%` | The name of the player's trail, hat, gadget, pet, balloon or outfit (without colors), or `none` |
 | `%cosmetics_unlocked%`, `%cosmetics_total%` | How many cosmetics the player has unlocked, and how many their version can show |
 
 ## Adding your own (for developers)

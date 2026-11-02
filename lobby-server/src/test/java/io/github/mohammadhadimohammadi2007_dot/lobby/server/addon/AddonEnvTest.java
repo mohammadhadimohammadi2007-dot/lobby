@@ -125,7 +125,7 @@ class AddonEnvTest {
         assertEquals("for Steve", System.getProperty("recording.mark"));
         assertTrue(MinecraftServer.getCommandManager().commandExists("recording"));
         assertTrue(lobby.menus().exists("recording-menu"));
-        assertEquals("5", System.getProperty("recording.trails"), "context.cosmetics() lists the bundled trails");
+        assertEquals("12", System.getProperty("recording.trails"), "context.cosmetics() lists the bundled trails");
         var cosmetics = lobby.cosmetics();
         assertEquals(CosmeticsService.Change.DONE,
                 cosmetics.equip(steve, cosmetics.config().find(CosmeticType.TRAIL, "flame")));

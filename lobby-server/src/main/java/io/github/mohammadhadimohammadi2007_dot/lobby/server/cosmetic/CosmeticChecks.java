@@ -29,9 +29,11 @@ public final class CosmeticChecks {
         }
         long free = config.cosmetics().values().stream().flatMap(List::stream)
                 .filter(cosmetic -> cosmetic.permission().isEmpty()).count();
-        checks.add(Check.ok(TITLE, String.format(Locale.ROOT, "%d trails, %d hats, %d gadgets (%d free for everyone)",
-                config.of(CosmeticType.TRAIL).size(), config.of(CosmeticType.HAT).size(),
-                config.of(CosmeticType.GADGET).size(), free)));
+        StringBuilder counts = new StringBuilder();
+        for (CosmeticType type : CosmeticType.values()) {
+            counts.append(counts.isEmpty() ? "" : ", ").append(config.of(type).size()).append(' ').append(type.section());
+        }
+        checks.add(Check.ok(TITLE, String.format(Locale.ROOT, "%s (%d free for everyone)", counts, free)));
         boolean menuItem = hotbar.enabled() && hotbar.items().stream().anyMatch(item -> item.actions().actions().stream()
                 .anyMatch(action -> action.describe().equalsIgnoreCase(OPEN_MENU)));
         if (!menuItem) {
@@ -43,9 +45,9 @@ public final class CosmeticChecks {
             checks.add(Check.warn("Gadgets", "players can pick a gadget but cannot use it: hotbar.yml has no item"
                     + " with \"type: gadget\" (docs/cosmetics.md)", null));
         }
-        if (!config.of(CosmeticType.HAT).isEmpty() && !hotbar.enabled()) {
-            checks.add(Check.warn("Hats", "hats are put on with the hotbar items, and hotbar.yml has enabled: false",
-                    null));
+        if ((!config.of(CosmeticType.HAT).isEmpty() || !config.of(CosmeticType.OUTFIT).isEmpty()) && !hotbar.enabled()) {
+            checks.add(Check.warn("Hats and outfits", "they are put on with the hotbar items, and hotbar.yml has"
+                    + " enabled: false", null));
         }
         if (!ranksPlugin && free < config.count()) {
             checks.add(Check.info("Locked cosmetics", (config.count() - free) + " need a permission, and without"

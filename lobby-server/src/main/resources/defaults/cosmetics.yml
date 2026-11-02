@@ -1,5 +1,5 @@
 # =====================================================================
-#  Cosmetics - trails, hats and gadgets players pick in the cosmetics menu
+#  Cosmetics - trails, hats, outfits, pets, balloons and gadgets players pick in the cosmetics menu
 #  (the hotbar's "cosmetics" item, "open_menu: cosmetics" anywhere, or /cosmetics).
 #  A player uses one of each kind at a time; their choice is saved.
 #  Changes apply with /setup-lobby reload. Guide: docs/cosmetics.md
@@ -8,7 +8,7 @@
 # false turns every cosmetic off (the menu says so, nothing is shown).
 enabled: true
 
-# Players further away than this (blocks) do not get someone's trail and gadget effects.
+# Players further away than this (blocks) do not get someone's trail, gadget effects, pet and balloon.
 view-distance: 24
 
 # Particles are packets: these limits keep a crowd at the spawn from flooding clients or the connection.
@@ -19,7 +19,7 @@ limits:
   # Most trail particle packets the whole server sends per tick.
   per-tick: 1000
 
-# How long a preview from the menu (right-click a trail or gadget) lasts, in seconds.
+# How long a preview from the menu (right-click a trail, gadget, pet or balloon) lasts, in seconds.
 preview-seconds: 5
 
 # true: cosmetics a player has not unlocked are listed as "Locked" (so they know what exists).
@@ -40,7 +40,12 @@ show-locked: true
 
 trails:
   # particle: any particle name ("flame", "heart", "note", "dust"...)
-  # style:    feet (behind you while walking), halo (a ring above your head) or spiral (around you)
+  # style:    feet   (behind you while walking)
+  #           halo   (a ring above your head)
+  #           spiral (around you, from the feet to the head)
+  #           ring   (a turning ring on the ground around you)
+  #           wings  (flapping wings on your back)
+  #           cloud  (a little cloud above your head; drip: what falls from it, e.g. "dripping_water")
   # amount, spread, speed: how many particles per puff, how far they scatter, how fast they move
   # color:    for the particle "dust" only, e.g. "#ff55ff"
   # icon:     the menu item
@@ -84,6 +89,54 @@ trails:
     particle: end_rod
     style: halo
     min-version: "1.9"
+  angel:
+    name: "<white>Angel Wings"
+    lore:
+      - "<gray>White wings on your back."
+    icon: feather
+    particle: dust
+    color: "#ffffff"
+    style: wings
+  demon:
+    name: "<dark_red>Fire Wings"
+    lore:
+      - "<gray>Wings of fire."
+    icon: magma_cream
+    particle: flame
+    style: wings
+  rain:
+    name: "<aqua>Rain Cloud"
+    lore:
+      - "<gray>Your own little rain cloud."
+    icon: water_bucket
+    particle: cloud
+    drip: dripping_water
+    style: cloud
+    amount: 3
+  magic:
+    name: "<dark_purple>Magic Circle"
+    lore:
+      - "<gray>A ring of magic at your feet."
+    icon: enchanted_book
+    particle: witch
+    style: ring
+  emerald:
+    name: "<green>Emerald Ring"
+    icon: emerald
+    particle: happy_villager
+    style: ring
+    permission: ""
+  portal:
+    name: "<light_purple>Portal Swirl"
+    icon: obsidian
+    particle: portal
+    style: spiral
+  totem:
+    name: "<yellow>Totem Spirit"
+    icon: totem_of_undying
+    particle: totem_of_undying
+    style: spiral
+    min-version: "1.11"
 
 hats:
   # material: any item or block. A block shows as a block on the head.
@@ -101,14 +154,170 @@ hats:
     name: "<yellow>Cake Head"
     material: player_head
     head-owner: MHF_Cake
+  tnt:
+    name: "<red>TNT Head"
+    material: tnt
+  beacon:
+    name: "<aqua>Beacon"
+    material: beacon
+  slime:
+    name: "<green>Slime Block"
+    material: slime_block
+  glowstone:
+    name: "<yellow>Glowstone"
+    material: glowstone
+    permission: ""
+  gold:
+    name: "<gold>Gold Block"
+    material: gold_block
+  creeper:
+    name: "<green>Creeper Mask"
+    material: creeper_head
+  chest:
+    name: "<gold>Chest Head"
+    material: player_head
+    head-owner: MHF_Chest
+
+outfits:
+  # helmet, chest, legs, feet: the armor (any item). Leave out the ones you do not want.
+  #   The helmet is only worn when the player has no hat.
+  # color: dyes the leather pieces, e.g. "#ff5555"
+  # icon:  the menu shows the chest piece (or the first piece there is)
+  red:
+    name: "<red>Red Tracksuit"
+    chest: leather_chestplate
+    legs: leather_leggings
+    feet: leather_boots
+    color: "#cc3333"
+    permission: ""
+  ocean:
+    name: "<blue>Ocean Suit"
+    helmet: leather_helmet
+    chest: leather_chestplate
+    legs: leather_leggings
+    feet: leather_boots
+    color: "#3366cc"
+  ninja:
+    name: "<dark_gray>Ninja"
+    helmet: leather_helmet
+    chest: leather_chestplate
+    legs: leather_leggings
+    feet: leather_boots
+    color: "#1d1d21"
+  knight:
+    name: "<gray>Knight"
+    chest: chainmail_chestplate
+    legs: chainmail_leggings
+    feet: chainmail_boots
+  king:
+    name: "<gold>Golden King"
+    chest: golden_chestplate
+    legs: golden_leggings
+    feet: golden_boots
+  diamond:
+    name: "<aqua>Diamond Suit"
+    chest: diamond_chestplate
+    legs: diamond_leggings
+    feet: diamond_boots
+
+pets:
+  # entity:   any animal or mob ("wolf", "pig", "fox"...)
+  # baby:     true shows a baby, for animals that have babies (default true)
+  # name-tag: the name above it, MiniMessage and placeholders of its owner, e.g. "%player_name%'s dog"
+  #           ("" = no name)
+  # icon:     the menu item
+  # Pets only exist for players (packets), they walk behind their owner and cannot be hit.
+  dog:
+    name: "<white>Puppy"
+    icon: bone
+    entity: wolf
+    name-tag: "<gray>%player_name%'s puppy"
+    permission: ""
+  piggy:
+    name: "<light_purple>Piglet"
+    icon: carrot
+    entity: pig
+  chick:
+    name: "<yellow>Chick"
+    icon: egg
+    entity: chicken
+  lamb:
+    name: "<white>Lamb"
+    icon: white_wool
+    entity: sheep
+  bunny:
+    name: "<gold>Bunny"
+    icon: rabbit_foot
+    entity: rabbit
+  kitten:
+    name: "<gold>Kitten"
+    icon: cod
+    entity: cat
+    min-version: "1.14"
+  fox:
+    name: "<gold>Fox Cub"
+    icon: sweet_berries
+    entity: fox
+    min-version: "1.14"
+  panda:
+    name: "<white>Panda Cub"
+    icon: bamboo
+    entity: panda
+    min-version: "1.14"
+  bee:
+    name: "<yellow>Bee"
+    icon: honeycomb
+    entity: bee
+    min-version: "1.15"
+  axolotl:
+    name: "<light_purple>Axolotl"
+    icon: tropical_fish
+    entity: axolotl
+    min-version: "1.17"
+
+balloons:
+  # material, head-owner, texture: what the balloon is, like a hat (a block or a head)
+  # leash: true ties it to the player with a lead (default true)
+  red:
+    name: "<red>Red Balloon"
+    material: red_wool
+    permission: ""
+  blue:
+    name: "<blue>Blue Balloon"
+    material: light_blue_wool
+  rainbow:
+    name: "<light_purple>Rainbow Glass"
+    material: magenta_stained_glass
+  melon:
+    name: "<green>Melon Balloon"
+    material: melon
+  tnt:
+    name: "<red>TNT Balloon"
+    material: tnt
+  present:
+    name: "<gold>Present"
+    material: player_head
+    head-owner: MHF_Chest
 
 gadgets:
-  # type:     firework (a firework goes up and explodes), leap (throws you forward and up) or
-  #           burst (a ring of particles around you)
+  # type:     firework  (a firework goes up and explodes)
+  #           leap      (throws you forward and up)
+  #           burst     (a ring of particles around you)
+  #           paintball (paints the blocks you look at for a few seconds; only players see it, the map stays)
+  #           grapple   (pulls you to the block you look at)
+  #           confetti  (shoots confetti where you look)
+  #           tnt       (a TNT that explodes after 2 seconds; pushes players away, breaks nothing)
+  #           lightning (lightning strikes where you look; nobody is hurt)
   # cooldown: seconds between two uses
-  # power:    leap: how far it throws (1 = a big jump); burst: the ring's size in blocks
-  # particle: leap and burst; colors and shape: firework (shape: small_ball, large_ball, star, creeper, burst)
-  # sound:    played where it is used, e.g. "entity.player.levelup" ("" = none)
+  # power:    leap: how far it throws (1 = a big jump); burst: the ring's size in blocks;
+  #           paintball: the splash's size in blocks; grapple: how hard it pulls;
+  #           confetti: how much confetti; tnt: how hard it pushes (0 = not at all)
+  # range:    paintball, grapple, lightning: the farthest block they reach (default 30, grapple 25)
+  # duration: paintball: seconds the paint stays (default 5)
+  # blocks:   paintball: the paint colors (blocks), one picked at random for each block
+  # particle: leap, burst and grapple (its rope); colors and shape: firework; colors: confetti
+  #           (shape: small_ball, large_ball, star, creeper, burst)
+  # sound:    played where it is used, e.g. "entity.player.levelup" ("" = none); tnt: when it explodes
   # The gadget shows in the hotbar slot of the item with "type: gadget" in hotbar.yml.
   firework:
     name: "<red>Firework"
@@ -132,3 +341,39 @@ gadgets:
     power: 1.5
     particle: heart
     sound: "entity.player.levelup"
+  paintball:
+    name: "<gold>Paintball Gun"
+    type: paintball
+    cooldown: 3
+    power: 1.5
+    range: 30
+    duration: 5
+    blocks: [red_wool, orange_wool, yellow_wool, lime_wool, light_blue_wool, magenta_wool]
+    sound: "entity.chicken.egg"
+    permission: ""
+  grapple:
+    name: "<gray>Grappling Hook"
+    type: grapple
+    cooldown: 5
+    power: 1
+    range: 25
+    particle: crit
+    sound: "entity.fishing_bobber.throw"
+  confetti:
+    name: "<yellow>Confetti Cannon"
+    type: confetti
+    cooldown: 5
+    power: 1.5
+    colors: ["#ff5555", "#ffff55", "#55ff55", "#55ffff", "#ff55ff"]
+    sound: "entity.firework_rocket.blast"
+  tnt:
+    name: "<red>Fake TNT"
+    type: tnt
+    cooldown: 15
+    power: 1
+    sound: "entity.generic.explode"
+  lightning:
+    name: "<yellow>Thunder Rod"
+    type: lightning
+    cooldown: 20
+    range: 40

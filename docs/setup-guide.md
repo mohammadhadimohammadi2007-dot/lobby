@@ -195,7 +195,7 @@ name shows up there).
 - What players may type: [commands.md](commands.md) (`commands.yml`)
 - Server list text and player limit: `config.yml` `server:`
 - A PvP area with kits and leaderboards: [pvp.md](pvp.md)
-- Trails, hats and gadgets (on by default; add your own or lock them for your store): [cosmetics.md](cosmetics.md)
+- Trails, hats, outfits, pets, balloons and gadgets (on by default; add your own or lock them for your store): [cosmetics.md](cosmetics.md)
 
 Every change applies with `/setup-lobby reload`, which also says if something needs a restart.
 

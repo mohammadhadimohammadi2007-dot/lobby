@@ -121,7 +121,7 @@ Operators (`/op`, stored in `data/ops.yml`) have every permission, also with Luc
 - [Menus and the server selector](docs/menus.md)
 - [Movement and portals](docs/movement-and-portals.md)
 - [PvP area](docs/pvp.md)
-- [Cosmetics: trails, hats and gadgets](docs/cosmetics.md)
+- [Cosmetics: trails, hats, outfits, pets, balloons and gadgets](docs/cosmetics.md)
 - [Vanish for staff](docs/vanish.md)
 - [Manual test checklist](docs/manual-test-checklist.md)
 - [Supported client versions](docs/client-versions.md)

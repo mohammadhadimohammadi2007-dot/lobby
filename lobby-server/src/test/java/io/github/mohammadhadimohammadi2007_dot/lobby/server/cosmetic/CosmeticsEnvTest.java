@@ -9,10 +9,18 @@ import io.github.mohammadhadimohammadi2007_dot.lobby.server.hotbar.HotbarService
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.player.SpawnListener;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.pvp.Kit;
 import io.github.mohammadhadimohammadi2007_dot.lobby.server.region.Region;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.Player;
+import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.AttachEntityPacket;
+import net.minestom.server.network.packet.server.play.BlockChangePacket;
+import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
+import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.inventory.AbstractInventory;
@@ -138,7 +146,140 @@ class CosmeticsEnvTest {
         click(old, oldMain, new Click.Left(10));
         AbstractInventory oldTrails = awaitMenu(env, old, oldMain);
         assertEquals(Material.SUGAR, oldTrails.getItemStack(3).material());
-        assertTrue(oldTrails.getItemStack(4).isAir(), "1.8 cannot show sparkle, so it is not listed");
+        assertEquals(Material.FEATHER, oldTrails.getItemStack(4).material(),
+                "1.8 cannot show sparkle, so it is not listed and the angel wings come next");
+    }
+
+    @Test
+    void aPetAndABalloonFollowTheirOwnerForPlayersNearby(Env env) throws Exception {
+        LobbyServer lobby = start(null);
+        CosmeticsService cosmetics = lobby.cosmetics();
+        Joined steve = join(env, lobby, "Steve", 0, Vec.ZERO);
+        Joined near = join(env, lobby, "Near", 0, new Vec(3, 0, 0));
+        Joined far = join(env, lobby, "Far", 0, new Vec(40, 0, 0));
+        Collector<SpawnEntityPacket> nearSpawns = near.connection().trackIncoming(SpawnEntityPacket.class);
+        Collector<SpawnEntityPacket> farSpawns = far.connection().trackIncoming(SpawnEntityPacket.class);
+        Collector<AttachEntityPacket> leashes = near.connection().trackIncoming(AttachEntityPacket.class);
+
+        assertEquals(CosmeticsService.Change.DONE, cosmetics.equip(steve.player(), cosmetics.config().find(CosmeticType.PET, "dog")));
+        assertEquals(CosmeticsService.Change.DONE, cosmetics.equip(steve.player(), cosmetics.config().find(CosmeticType.BALLOON, "red")));
+        assertEquals(CosmeticsService.Change.LOCKED, cosmetics.equip(steve.player(), cosmetics.config().find(CosmeticType.PET, "piggy")));
+        ticks(env, lobby, 3);
+        assertEquals(2, cosmetics.followerCount());
+        List<SpawnEntityPacket> spawned = nearSpawns.collect();
+        assertEquals(1, spawned.stream().filter(p -> p.type() == EntityType.WOLF).count(), "the pet");
+        assertEquals(1, spawned.stream().filter(p -> p.type() == EntityType.ARMOR_STAND).count(), "the balloon");
+        assertEquals(0, farSpawns.collect().size(), "40 blocks away: nothing");
+        List<AttachEntityPacket> attached = leashes.collect();
+        assertEquals(1, attached.size());
+        assertEquals(steve.player().getEntityId(), attached.getFirst().holdingEntityId(), "the lead is in Steve's hand");
+
+        int pet = cosmetics.followerIds(steve.player(), CosmeticType.PET).getFirst();
+        Collector<EntityTeleportPacket> moves = near.connection().trackIncoming(EntityTeleportPacket.class);
+        steve.player().teleport(steve.player().getPosition().add(4, 0, 0)).join();
+        ticks(env, lobby, 6);
+        assertTrue(moves.collect().stream().anyMatch(p -> p.entityId() == pet), "the pet walks after Steve");
+
+        Collector<DestroyEntitiesPacket> removed = near.connection().trackIncoming(DestroyEntitiesPacket.class);
+        cosmetics.unequip(steve.player(), CosmeticType.PET);
+        ticks(env, lobby, 2);
+        assertTrue(removed.collect().stream().anyMatch(p -> p.entityIds().contains(pet)), "taken off: it goes");
+        assertEquals(1, cosmetics.followerCount());
+
+        int balloon = cosmetics.followerIds(steve.player(), CosmeticType.BALLOON).getFirst();
+        cosmetics.toggleHideOthers(near.player());
+        Collector<DestroyEntitiesPacket> hidden = near.connection().trackIncoming(DestroyEntitiesPacket.class);
+        ticks(env, lobby, Followers.VIEWERS_EVERY + 1);
+        assertTrue(hidden.collect().stream().anyMatch(p -> p.entityIds().contains(balloon)),
+                "the balloon goes for a player hiding other players' cosmetics");
+    }
+
+    @Test
+    void anOutfitIsWornAndItsHelmetOnlyWithoutAHat(Env env) throws Exception {
+        LobbyServer lobby = start("""
+                outfits:
+                  suit:
+                    helmet: leather_helmet
+                    chest: leather_chestplate
+                    feet: iron_boots
+                    color: "#ff0000"
+                    permission: ""
+                """);
+        CosmeticsService cosmetics = lobby.cosmetics();
+        Player steve = join(env, lobby, "Steve", 0, Vec.ZERO).player();
+
+        cosmetics.equip(steve, cosmetics.config().find(CosmeticType.OUTFIT, "suit"));
+        env.tickWhile(() -> steve.getEquipment(EquipmentSlot.CHESTPLATE).material() != Material.LEATHER_CHESTPLATE, WAIT);
+        ItemStack chest = steve.getEquipment(EquipmentSlot.CHESTPLATE);
+        assertEquals(HotbarService.OUTFIT_ITEM, chest.getTag(HotbarService.ITEM_TAG), "locked like the hotbar items");
+        assertEquals(255, chest.get(DataComponents.DYED_COLOR).red(), "dyed");
+        assertEquals(Material.IRON_BOOTS, steve.getEquipment(EquipmentSlot.BOOTS).material());
+        assertTrue(steve.getEquipment(EquipmentSlot.LEGGINGS).isAir(), "no leggings in this outfit");
+        assertEquals(Material.LEATHER_HELMET, steve.getEquipment(EquipmentSlot.HELMET).material(), "no hat: its helmet");
+
+        cosmetics.equip(steve, cosmetics.config().find(CosmeticType.HAT, "glass"));
+        env.tickWhile(() -> steve.getEquipment(EquipmentSlot.HELMET).material() != Material.GLASS, WAIT);
+        assertEquals(Material.LEATHER_CHESTPLATE, steve.getEquipment(EquipmentSlot.CHESTPLATE).material(),
+                "the hat wins the head, the rest stays");
+
+        cosmetics.unequip(steve, CosmeticType.OUTFIT);
+        env.tickWhile(() -> !steve.getEquipment(EquipmentSlot.CHESTPLATE).isAir(), WAIT);
+        assertTrue(steve.getEquipment(EquipmentSlot.BOOTS).isAir());
+        assertEquals(Material.GLASS, steve.getEquipment(EquipmentSlot.HELMET).material());
+    }
+
+    @Test
+    void aPaintballPaintsForEveryoneNearbyAndThePaintGoesAway(Env env) throws Exception {
+        LobbyServer lobby = start("""
+                gadgets:
+                  paint:
+                    type: paintball
+                    duration: 1
+                    permission: ""
+                  boom:
+                    type: tnt
+                    permission: ""
+                """);
+        CosmeticsService cosmetics = lobby.cosmetics();
+        Joined steve = join(env, lobby, "Steve", 0, Vec.ZERO);
+        Joined near = join(env, lobby, "Near", 0, new Vec(2, 0, 0));
+        Player player = steve.player();
+        cosmetics.equip(player, cosmetics.config().find(CosmeticType.GADGET, "paint"));
+
+        // Looking at the sky: nothing to paint, and no cooldown.
+        player.teleport(player.getPosition().withView(0, -90)).join();
+        Collector<BlockChangePacket> missed = near.connection().trackIncoming(BlockChangePacket.class);
+        cosmetics.useGadget(player);
+        ticks(env, lobby, 2);
+        assertEquals(0, missed.collect().size());
+
+        // Looking down at the floor.
+        player.teleport(player.getPosition().withView(0, 90)).join();
+        Collector<BlockChangePacket> painted = near.connection().trackIncoming(BlockChangePacket.class);
+        cosmetics.useGadget(player);
+        ticks(env, lobby, 2);
+        List<BlockChangePacket> paint = painted.collect();
+        assertTrue(paint.size() > 0, "the floor is painted");
+        Block floor = player.getInstance().getBlock(paint.getFirst().blockPosition());
+        assertTrue(paint.stream().noneMatch(p -> p.blockStateId() == floor.stateId()), "in paint colors");
+        assertEquals(floor, player.getInstance().getBlock(paint.getFirst().blockPosition()), "the map does not change");
+
+        Collector<BlockChangePacket> restored = near.connection().trackIncoming(BlockChangePacket.class);
+        ticks(env, lobby, 25);
+        List<BlockChangePacket> back = restored.collect();
+        assertEquals(paint.size(), back.size(), "after the duration every block is put back");
+        assertTrue(back.stream().allMatch(p -> p.blockStateId()
+                == player.getInstance().getBlock(p.blockPosition()).stateId()));
+
+        // A TNT blinks, explodes, and pushes the player next to it.
+        cosmetics.equip(player, cosmetics.config().find(CosmeticType.GADGET, "boom"));
+        Collector<SpawnEntityPacket> tnt = near.connection().trackIncoming(SpawnEntityPacket.class);
+        cosmetics.useGadget(player);
+        ticks(env, lobby, 2);
+        assertEquals(1, tnt.collect().stream().filter(p -> p.type() == EntityType.TNT).count());
+        near.player().setVelocity(Vec.ZERO);
+        ticks(env, lobby, CosmeticsService.TNT_FUSE_TICKS);
+        assertTrue(near.player().getVelocity().y() > 0, "pushed away and up");
     }
 
     @Test

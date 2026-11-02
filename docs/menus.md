@@ -99,7 +99,7 @@ replaces it completely.
 ## The cosmetics menu
 
 `open_menu: cosmetics` (or `/cosmetics`) opens the lobby's own [cosmetics menu](cosmetics.md#the-menu): trails,
-hats and gadgets, with left-click to use and right-click to preview. It needs no entry in `menus.yml`; a menu
+hats, outfits, pets, balloons and gadgets, with left-click to use and right-click to preview. It needs no entry in `menus.yml`; a menu
 called `cosmetics` there replaces it.
 
 ## Items on 1.8

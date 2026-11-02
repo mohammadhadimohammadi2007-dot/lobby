@@ -161,6 +161,21 @@ The lobby lists a player NPC in a 1.8 client's tab list while it appears, then r
 - [ ] Rejoin (and, with a shared database, join another lobby server): the same cosmetics are on.
 - [ ] 30+ players at the spawn with trails: `/setup-lobby info` shows the effects thread busy % and dropped
       particle packets; the 1.8 client stays smooth.
+- [ ] "Angel Wings": white wings on your back, turning with you (F5); "Rain Cloud" rains above your head;
+      "Emerald Ring" turns at your feet. All three on 1.8 too.
+- [ ] Outfit "Red Tracksuit": red leather armor seen by both clients, locked in the inventory; with "Glass Helmet"
+      on, an outfit's helmet is not worn. In the PvP area the kit's armor replaces it, and it comes back outside.
+- [ ] Pet "Puppy": a baby wolf with your name above it walks behind you, up and down steps, and sits still next to
+      you when you stop; the other player sees it (1.8 too). It cannot be hit. Walk 40 blocks away from the other
+      player: it disappears for them, and comes back when you return.
+- [ ] Balloon "Red Balloon": red wool floating above you with a lead to your hand, on both clients (check the lead
+      on 1.8 especially). It drifts behind when you walk.
+- [ ] Teleport to another lobby instance (`/lobbies 2`) with a pet and balloon: they follow, and players in the old
+      instance no longer see them.
+- [ ] Gadgets: "Paintball Gun" paints the floor where you look for 5 seconds, seen by the other player; looking at
+      the sky says "Look at a block..." and costs no cooldown. Signs and heads are never painted.
+- [ ] "Fake TNT" blinks for 2 seconds and explodes; a player next to it is pushed away, the map is unchanged.
+      "Grappling Hook" pulls you to the block you look at; "Thunder Rod" strikes lightning where you look (1.8 too).
 ## 5d. Vanish
 
 - [ ] An operator types `/vanish`: the other player (no permissions, 1.8 and latest) no longer sees them or their

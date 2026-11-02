@@ -4,6 +4,14 @@ Changes that need something from you when you update an existing lobby. Newest f
 
 ## Phase 4
 
+- **More cosmetics** ([cosmetics.md](cosmetics.md)): outfits, pets and balloons, the trail styles `ring`, `wings`
+  and `cloud`, and the gadgets `paintball`, `grapple`, `confetti`, `tnt` and `lightning`. An existing
+  `cosmetics.yml` is not changed: copy what you want from the new default (delete the file to get it), or add your
+  own. The cosmetics menu now has 4 rows. New placeholders `%cosmetics_pet%`, `%cosmetics_balloon%`,
+  `%cosmetics_outfit%`; new messages `cosmetics-pets`, `cosmetics-balloons`, `cosmetics-outfits` and
+  `cosmetics-gadget-no-target`. Outfit pieces are tagged and locked like the hat; a PvP kit's armor still replaces
+  them in the PvP area. The Addon API's `Cosmetics.Kind` gains `PET`, `BALLOON` and `OUTFIT` (still 0.3.0, which
+  is not released yet).
 - **Vanish** ([vanish.md](vanish.md)): `/vanish` for staff. Give your staff group `lobby.command.vanish` and
   `lobby.vanish.see` with LuckPerms (operators have them). The settings table `<prefix>chat_settings` gets a
   `vanished` column automatically. `%server_online%`, `%lobby_online%`, the server list and `/list` no longer count

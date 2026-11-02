@@ -365,19 +365,22 @@ pvp-proxy-blocked: "<red>You cannot switch servers during a fight (<seconds>s le
 transfer-not-supported: "<prefix><red>Your Minecraft version cannot switch servers this way. Join <white><host></white> directly."
 
 # ---------------- Cosmetics (docs/cosmetics.md) ----------------
-# The menu. cosmetics-page-title: <kind> (one of the three below).
+# The menu. cosmetics-page-title: <kind> (one of the six below).
 cosmetics-menu-title: "<dark_purple>Cosmetics"
 cosmetics-page-title: "<dark_purple>Cosmetics: <kind>"
 cosmetics-trails: "<gold>Trails"
 cosmetics-hats: "<aqua>Hats"
 cosmetics-gadgets: "<light_purple>Gadgets"
-# Lore of the three kinds. <unlocked> <total> <current>
+cosmetics-pets: "<yellow>Pets"
+cosmetics-balloons: "<red>Balloons"
+cosmetics-outfits: "<green>Outfits"
+# Lore of the six kinds. <unlocked> <total> <current>
 cosmetics-kind-unlocked: "<gray>Unlocked: <white><unlocked></white> of <white><total>"
 cosmetics-kind-using: "<gray>Using: <white><current>"
 cosmetics-nothing: "nothing"
 cosmetics-others-shown: "<green>Other players' cosmetics: shown"
 cosmetics-others-hidden: "<red>Other players' cosmetics: hidden"
-cosmetics-others-lore: "<gray>Click to switch. Hats are always shown."
+cosmetics-others-lore: "<gray>Click to switch. Hats and outfits are always shown."
 cosmetics-clear-all: "<red>Take everything off"
 cosmetics-back: "<gray>Back"
 cosmetics-take-off: "<red>Take it off"
@@ -392,14 +395,16 @@ cosmetics-removed: "<prefix><gray>You took off <name><gray>."
 cosmetics-cleared: "<prefix><gray>You took off every cosmetic."
 cosmetics-locked: "<prefix><red>You have not unlocked <name><red>."
 cosmetics-preview: "<prefix><gray>Preview of <name><gray> for <seconds> seconds, only you see it (F5 to look at yourself)."
-cosmetics-others-now-hidden: "<prefix><gray>You no longer see other players' trails and gadgets."
-cosmetics-others-now-shown: "<prefix><gray>You see other players' trails and gadgets again."
+cosmetics-others-now-hidden: "<prefix><gray>You no longer see other players' trails, gadgets, pets and balloons."
+cosmetics-others-now-shown: "<prefix><gray>You see other players' trails, gadgets, pets and balloons again."
 cosmetics-disabled: "<prefix><red>Cosmetics are turned off on this server."
 cosmetics-not-here: "<prefix><red>You cannot use that here."
 # The last lore line of the gadget in the hotbar. <seconds> is its cooldown.
 cosmetics-gadget-use: "<gray>Right-click to use (every <seconds>s)."
 # Above the hotbar while the gadget is not ready. <name> <seconds>
 cosmetics-gadget-cooldown: "<name> <gray>is ready in <white><seconds>s"
+# Above the hotbar when a gadget that aims (paintball, grapple) has no block in reach. <blocks> is its range.
+cosmetics-gadget-no-target: "<gray>Look at a block closer than <white><blocks></white> blocks."
 
 # ---------------- Vanish (docs/vanish.md) ----------------
 vanish-on: "<prefix><gray>You are <white>vanished</white>: only staff with lobby.vanish.see see you. <white>/vanish</white> again to show yourself."

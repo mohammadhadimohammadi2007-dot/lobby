@@ -6,15 +6,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * The lobby's cosmetics: trails, hats and gadgets from cosmetics.yml. Changes are followed with
- * {@code CosmeticChangeEvent} and {@code GadgetUseEvent}. Reading works on any thread; {@link #equip} and
+ * The lobby's cosmetics: trails, hats, gadgets, pets, balloons and outfits from cosmetics.yml. Changes are followed
+ * with {@code CosmeticChangeEvent} and {@code GadgetUseEvent}. Reading works on any thread; {@link #equip} and
  * {@link #unequip} on the tick thread.
  */
 public interface Cosmetics {
 
     /** The kinds of cosmetics; a player uses at most one of each. */
     enum Kind {
-        TRAIL, HAT, GADGET
+        TRAIL, HAT, GADGET, PET, BALLOON, OUTFIT
     }
 
     /** False if cosmetics are turned off in cosmetics.yml. */
@@ -40,6 +40,6 @@ public interface Cosmetics {
     /** Takes off the player's cosmetic of this kind, if any. */
     void unequip(Player player, Kind kind);
 
-    /** True if the player chose not to see other players' trails and gadget effects. */
+    /** True if the player chose not to see other players' trails, gadget effects, pets and balloons. */
     boolean hidesOthers(Player player);
 }

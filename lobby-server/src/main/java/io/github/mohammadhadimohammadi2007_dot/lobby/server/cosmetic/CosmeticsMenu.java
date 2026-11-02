@@ -32,10 +32,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 /**
- * The cosmetics menu ({@code open_menu: cosmetics} and {@code /cosmetics}): a page with the three kinds, the
+ * The cosmetics menu ({@code open_menu: cosmetics} and {@code /cosmetics}): a page with the six kinds, the
  * "other players' cosmetics" switch and "take everything off", and one page per kind listing its cosmetics.
  *
- * <p>Left-click puts a cosmetic on or takes it off; right-click previews a trail or gadget for the player only.
+ * <p>Left-click puts a cosmetic on or takes it off; right-click previews a trail, gadget, pet or balloon for the
+ * player only.
  * Cosmetics the player's client cannot show are not listed; locked ones are listed as locked unless
  * {@code show-locked: false}. Like every menu, nothing can be taken out: every click is cancelled.
  */
@@ -46,16 +47,20 @@ public final class CosmeticsMenu {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CosmeticsMenu.class);
     private static final long CLICK_COOLDOWN_MILLIS = 250;
-    private static final int MAIN_ROWS = 3;
+    private static final int MAIN_ROWS = 4;
     private static final Map<CosmeticType, Integer> CATEGORY_SLOTS = Map.of(CosmeticType.TRAIL, 10,
-            CosmeticType.HAT, 12, CosmeticType.GADGET, 14);
-    private static final int HIDE_OTHERS_SLOT = 16;
-    private static final int CLEAR_ALL_SLOT = 22;
+            CosmeticType.HAT, 11, CosmeticType.OUTFIT, 12, CosmeticType.PET, 14, CosmeticType.BALLOON, 15,
+            CosmeticType.GADGET, 16);
+    private static final int HIDE_OTHERS_SLOT = 30;
+    private static final int CLEAR_ALL_SLOT = 32;
     private static final Map<CosmeticType, Material> CATEGORY_ICONS = Map.of(CosmeticType.TRAIL, Material.BLAZE_POWDER,
-            CosmeticType.HAT, Material.GOLDEN_HELMET, CosmeticType.GADGET, Material.FIREWORK_ROCKET);
+            CosmeticType.HAT, Material.GOLDEN_HELMET, CosmeticType.GADGET, Material.FIREWORK_ROCKET,
+            CosmeticType.PET, Material.BONE, CosmeticType.BALLOON, Material.LEAD,
+            CosmeticType.OUTFIT, Material.LEATHER_CHESTPLATE);
     private static final Map<CosmeticType, MessageKey> CATEGORY_NAMES = Map.of(CosmeticType.TRAIL,
             MessageKey.COSMETICS_TRAILS, CosmeticType.HAT, MessageKey.COSMETICS_HATS, CosmeticType.GADGET,
-            MessageKey.COSMETICS_GADGETS);
+            MessageKey.COSMETICS_GADGETS, CosmeticType.PET, MessageKey.COSMETICS_PETS, CosmeticType.BALLOON,
+            MessageKey.COSMETICS_BALLOONS, CosmeticType.OUTFIT, MessageKey.COSMETICS_OUTFITS);
 
     /** What a slot does when clicked. */
     private sealed interface Button {

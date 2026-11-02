@@ -29,7 +29,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,10 +55,12 @@ public final class HotbarService {
 
     /** The item on the head of a player who wears a hat (locked like the hotbar items). */
     public static final String HAT_ITEM = "cosmetic:hat";
+    /** The {@link #ITEM_TAG} of the outfit's pieces. */
+    public static final String OUTFIT_ITEM = "cosmetic:outfit";
 
     /**
-     * Items that come from elsewhere: the hat a player wears and their gadget, from the cosmetics. Called while
-     * the items are built, on a virtual thread; {@link #useGadget} on the tick thread.
+     * Items that come from elsewhere: the hat and outfit a player wears and their gadget, from the cosmetics. Called
+     * while the items are built, on a virtual thread; {@link #useGadget} on the tick thread.
      */
     public interface Extras {
         Extras NONE = new Extras() {
@@ -77,13 +81,25 @@ public final class HotbarService {
 
         @Nullable ItemStack hat(Player player);
 
+        /** Armor worn as clothes, by slot; empty for none. A helmet here is only used when there is no hat. */
+        default Map<EquipmentSlot, ItemStack> outfit(Player player) {
+            return Map.of();
+        }
+
         @Nullable ItemStack gadget(Player player, boolean legacyClient);
 
         void useGadget(Player player);
     }
 
-    /** What {@link #give} puts in the inventory: hotbar items by slot, and the hat (or {@code null}). */
-    private record Built(Map<Integer, ItemStack> items, @Nullable ItemStack hat) {
+    /** The armor slots an outfit can use, other than the hat's. */
+    private static final List<EquipmentSlot> OUTFIT_SLOTS = List.of(EquipmentSlot.CHESTPLATE, EquipmentSlot.LEGGINGS,
+            EquipmentSlot.BOOTS);
+
+    /**
+     * What {@link #give} puts in the inventory: hotbar items by slot, the hat (or {@code null}), and the outfit's
+     * pieces by slot.
+     */
+    private record Built(Map<Integer, ItemStack> items, @Nullable ItemStack hat, Map<EquipmentSlot, ItemStack> outfit) {
     }
 
     private volatile Predicate<Player> exempt = player -> false;
@@ -206,7 +222,11 @@ public final class HotbarService {
             items.put(item.slot(), MenuItems.build(item.look(mode), player, text, legacy).withTag(ITEM_TAG, item.id()));
         }
         ItemStack hat = extras.hat(player);
-        return new Built(items, hat == null ? null : hat.withTag(ITEM_TAG, HAT_ITEM));
+        Map<EquipmentSlot, ItemStack> outfit = new EnumMap<>(EquipmentSlot.class);
+        extras.outfit(player).forEach((slot, piece) -> outfit.put(slot, piece.withTag(ITEM_TAG, OUTFIT_ITEM)));
+        // The outfit's helmet only when there is no hat.
+        ItemStack helmet = outfit.remove(EquipmentSlot.HELMET);
+        return new Built(items, hat != null ? hat.withTag(ITEM_TAG, HAT_ITEM) : helmet, outfit);
     }
 
     private static void apply(Player player, HotbarConfig hotbar, Built built) {
@@ -228,6 +248,14 @@ public final class HotbarService {
         } else if (isHotbarItem(helmet)) {
             // The hat of before, if the inventory was not cleared.
             player.setEquipment(EquipmentSlot.HELMET, ItemStack.AIR);
+        }
+        for (EquipmentSlot slot : OUTFIT_SLOTS) {
+            ItemStack piece = built.outfit().get(slot);
+            if (piece != null) {
+                player.setEquipment(slot, piece);
+            } else if (isHotbarItem(player.getEquipment(slot))) {
+                player.setEquipment(slot, ItemStack.AIR);
+            }
         }
     }
 

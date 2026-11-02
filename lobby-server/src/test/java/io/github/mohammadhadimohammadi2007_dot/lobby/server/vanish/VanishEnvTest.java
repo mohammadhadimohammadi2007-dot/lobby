@@ -97,6 +97,9 @@ class VanishEnvTest {
         assertTrue(tab.collect().stream().anyMatch(packet -> packet.actions().contains(PlayerInfoUpdatePacket.Action.UPDATE_LISTED)
                 && packet.entries().stream().anyMatch(entry -> entry.uuid().equals(STAFF) && !entry.listed())),
                 "taken out of the player's tab list");
+        // The count is cached for a moment, and the scoreboard may have read it just before.
+        env.tickWhile(() -> !"2".equals(lobby.text().placeholders().plainText("%server_online%", null)),
+                java.time.Duration.ofSeconds(5));
         assertEquals("2", lobby.text().placeholders().plainText("%server_online%", null), "3 online, 1 vanished");
         assertEquals("1", lobby.text().placeholders().plainText("%vanish_count%", null));
         assertTrue(lobby.chat().settings().get(STAFF).vanished(), "kept for the next join");

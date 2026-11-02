@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 /**
- * {@code %cosmetics_...%}: {@code trail}, {@code hat} and {@code gadget} (the name of what the player uses, without
- * colors, or {@code none}); {@code unlocked} (how many they have unlocked) and {@code total} (how many there are,
- * of those their client can show).
+ * {@code %cosmetics_...%}: {@code trail}, {@code hat}, {@code gadget}, {@code pet}, {@code balloon} and
+ * {@code outfit} (the name of what the player uses, without colors, or {@code none}); {@code unlocked} (how many they
+ * have unlocked) and {@code total} (how many there are, of those their client can show).
  */
 public final class CosmeticsPlaceholders implements PlaceholderNamespace {
 
